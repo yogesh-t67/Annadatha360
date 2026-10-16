@@ -5,6 +5,7 @@ from app.models.diagnosis import Diagnosis
 from app.models.farmer import Farmer
 from app.models.field import Field
 from app.models.market import MarketPrice
+from app.models.scheme import Scheme
 from app.models.shop import CartItem, Order, OrderItem, Product, ProductCategory
 
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     "Product",
     "ProductCategory",
     "RefreshToken",
+    "Scheme",
 ]

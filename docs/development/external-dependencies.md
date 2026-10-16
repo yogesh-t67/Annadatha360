@@ -12,6 +12,7 @@ dev fallback. Owner = who has to act.
 | **data.gov.in API key** | Mandi prices | ⛔ Not provided | No live sync; sample data in tests | Anyone (free signup) |
 | **Razorpay account** (KYC) | Agri Mart payments | ⛔ Not started | `PAYMENT_PROVIDER=fake` + dev-complete endpoint | Business — needs PAN, bank account, GST |
 | **Product catalogue** | Agri Mart | ⛔ No real data | `sample_data/products.sample.json` | Business — products, prices, images, stock |
+| **Scheme content** | Government Schemes | ⛔ No real data | `sample_data/schemes.sample.json` | Someone to research official portals; Telugu translation |
 
 ## DLT registration → MSG91
 
@@ -59,3 +60,16 @@ see `docs/api/assistant.md`. Raise it before launch.
 5. Test a full UPI payment in test mode before going live. The adapter is tested against mocks only so far.
 
 Selling pesticides and fertilisers may need state dealer licences — confirm with the business before launch.
+
+## Scheme content
+
+Load with `python -m app.jobs.load_schemes schemes.json` (format in that file's docstring and
+`sample_data/schemes.sample.json`). For each scheme:
+
+1. Copy the facts from the **official** portal (central: the scheme's .gov.in site; AP / Telangana: the state
+   agriculture department). Put that page in `source_url` and today's date in `last_verified_on`.
+2. Write `en`; add `te` (native-speaker reviewed).
+3. Set `max_land_acres` / `crop_codes` only if the official criteria say so — they drive the "may be
+   eligible" hint.
+4. Load with `"published": false`, have a second person check against the source, then publish.
+5. Re-check every scheme at least each season; amounts and names change with state budgets.
