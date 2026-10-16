@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { Image, ImageSourcePropType, Modal, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Check, ChevronDown } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
@@ -11,6 +11,25 @@ export interface SelectOption<T extends string> {
   value: T;
   label: string;
   icon?: LucideIcon;
+  /** Photo thumbnail; takes precedence over icon. */
+  image?: ImageSourcePropType;
+}
+
+function OptionLeading<T extends string>({ option, size }: { option: SelectOption<T>; size: number }) {
+  if (option.image) {
+    return (
+      <Image
+        source={option.image}
+        accessibilityIgnoresInvertColors
+        style={{ width: size, height: size, borderRadius: Math.round(size * 0.24) }}
+      />
+    );
+  }
+  if (option.icon) {
+    const Icon = option.icon;
+    return <Icon size={Math.round(size * 0.65)} color={theme.color.surface.brandDeep} strokeWidth={2} />;
+  }
+  return null;
 }
 
 export interface SelectFieldProps<T extends string> {
@@ -47,7 +66,7 @@ export function SelectField<T extends string>({ label, value, options, onChange 
           backgroundColor: pressed ? theme.color.surface.sunken : theme.color.surface.base,
         })}
       >
-        {current?.icon ? <current.icon size={20} color={theme.color.surface.brandDeep} strokeWidth={2} /> : null}
+        {current ? <OptionLeading option={current} size={32} /> : null}
         <Text variant="label" weight="medium" style={{ flex: 1 }}>
           {current?.label}
         </Text>
@@ -103,7 +122,7 @@ export function SelectField<T extends string>({ label, value, options, onChange 
                     backgroundColor: selected || pressed ? theme.color.surface.brandSoft : theme.color.surface.base,
                   })}
                 >
-                  {option.icon ? <option.icon size={22} color={theme.color.surface.brandDeep} strokeWidth={2} /> : null}
+                  <OptionLeading option={option} size={40} />
                   <Text variant="label" weight={selected ? 'bold' : 'medium'} style={{ flex: 1 }}>
                     {option.label}
                   </Text>

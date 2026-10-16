@@ -6,10 +6,10 @@ import { ArrowRight } from 'lucide-react-native';
 import { theme } from '../../theme';
 import { Card, Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
-import { IconChip } from '../../components/IconChip';
+import { CropImage } from '../../components/CropImage';
 import { FeatureTile, TileGrid } from '../../components/FeatureTile';
 import { Notice } from '../../components/Notice';
-import { cropIcon, soilStates } from '../../data/farm';
+import { soilStates } from '../../data/farm';
 import { useFarmStore } from '../../store/farmStore';
 
 export function IrrigationScreen() {
@@ -24,7 +24,7 @@ export function IrrigationScreen() {
 
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-          <IconChip icon={cropIcon(crop)} tint="leaf" size={54} />
+          <CropImage code={crop} size={56} />
           <View style={{ flex: 1 }}>
             <Text variant="h2">{t(`crops.${crop}`)}</Text>
             <Text variant="body" color={theme.color.text.muted}>

@@ -4,6 +4,7 @@ import type { Tint } from '../theme';
 import { cropCatalog } from './cropCatalog';
 
 export { cropIcon, cropCategory } from './cropCatalog';
+export { cropImages } from './cropImages';
 export type { CropCategory } from './cropCatalog';
 
 export const crops = cropCatalog;

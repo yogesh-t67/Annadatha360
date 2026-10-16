@@ -8,10 +8,10 @@ import { Minus, Smartphone, TrendingDown, TrendingUp, TriangleAlert } from 'luci
 import { theme } from '../../theme';
 import { Button, Card, Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
-import { IconChip } from '../../components/IconChip';
+import { CropImage } from '../../components/CropImage';
 import { SelectField } from '../../components/SelectField';
 import { Notice } from '../../components/Notice';
-import { CropKey, cropIcon, crops, marketDistricts } from '../../data/farm';
+import { CropKey, cropImages, crops, marketDistricts } from '../../data/farm';
 import { useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { getMarketPrices } from '../../api/endpoints';
@@ -77,7 +77,7 @@ export function MarketPricesScreen() {
       <SelectField
         label={t('market.crop')}
         value={crop}
-        options={crops.map((c) => ({ value: c.code, label: t(`crops.${c.code}`), icon: cropIcon(c.code) }))}
+        options={crops.map((c) => ({ value: c.code, label: t(`crops.${c.code}`), image: cropImages[c.code] }))}
         onChange={setCrop}
       />
       <SelectField
@@ -106,7 +106,7 @@ export function MarketPricesScreen() {
       ) : !prices || prices.length === 0 ? (
         <Card style={{ gap: theme.spacing.sm }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-            <IconChip icon={cropIcon(crop)} tint="sun" size={54} />
+            <CropImage code={crop} size={56} />
             <Text variant="h2" style={{ flex: 1 }}>
               {`${t(`crops.${crop}`)} · ${t(`districts.${market}`)}`}
             </Text>
@@ -125,7 +125,7 @@ export function MarketPricesScreen() {
           {prices.map((p, i) => (
             <Card key={`${p.market}-${p.variety}-${i}`} style={{ gap: theme.spacing.xs }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-                <IconChip icon={cropIcon(crop)} tint="sun" size={44} />
+                <CropImage code={crop} size={44} />
                 <View style={{ flex: 1 }}>
                   <Text variant="bodyStrong">{`${p.market}, ${p.district}`}</Text>
                   <Text variant="caption" color={theme.color.text.muted}>

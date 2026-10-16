@@ -8,7 +8,8 @@ import { theme } from '../../theme';
 import { Button, Card, Text, TextField } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { SelectField } from '../../components/SelectField';
-import { cropIcon, crops, stages } from '../../data/farm';
+import { CropImage } from '../../components/CropImage';
+import { cropImages, crops, stages } from '../../data/farm';
 import { FarmProfile, useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 
@@ -34,26 +35,13 @@ export function MyFarmScreen() {
     setJustSaved(false);
   }
 
-  const SavedCropIcon = cropIcon(saved.crop);
-
   return (
     <ScreenContainer>
       <Text variant="h1">{t('farm.title')}</Text>
 
       <Card tone="brand">
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-          <View
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 16,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: theme.color.surface.base,
-            }}
-          >
-            <SavedCropIcon size={30} color={theme.color.surface.brandDeep} strokeWidth={1.75} />
-          </View>
+          <CropImage code={saved.crop} size={64} />
           <View style={{ flex: 1, gap: 2 }}>
             <Text variant="h1" color={theme.color.text.inverse}>
               {t(`crops.${saved.crop}`)}
@@ -71,7 +59,7 @@ export function MyFarmScreen() {
       <SelectField
         label={t('farm.crop')}
         value={draft.crop}
-        options={crops.map((c) => ({ value: c.code, label: t(`crops.${c.code}`), icon: cropIcon(c.code) }))}
+        options={crops.map((c) => ({ value: c.code, label: t(`crops.${c.code}`), image: cropImages[c.code] }))}
         onChange={(v) => change({ crop: v })}
       />
       <TextField

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight } from 'lucide-react-native';
 
@@ -8,9 +8,8 @@ import { Button, Text, TextField } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { ScreenTitle, StepProgress } from '../../components/Blocks';
 import { SelectedBadge, TileGrid } from '../../components/FeatureTile';
-import { IconChip } from '../../components/IconChip';
 import { SelectField } from '../../components/SelectField';
-import { cropIcon, crops, stages } from '../../data/farm';
+import { cropImages, crops, stages } from '../../data/farm';
 import { useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { hasSession } from '../../api/tokens';
@@ -43,24 +42,27 @@ export function CropSelectionScreen() {
               style={({ pressed }) => ({
                 flexBasis: '30%',
                 flexGrow: 1,
-                minHeight: 104,
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: theme.spacing.xs,
-                paddingVertical: theme.spacing.sm,
-                paddingHorizontal: theme.spacing.xs,
+                maxWidth: '32%',
+                overflow: 'hidden',
                 borderRadius: theme.radius.lg,
-                borderWidth: selected ? 2 : 1,
+                borderWidth: selected ? 2.5 : 1,
                 borderColor: selected ? theme.color.surface.brand : theme.color.border.default,
                 backgroundColor: selected ? theme.color.surface.brandSoft : theme.color.surface.base,
                 transform: [{ scale: pressed ? 0.98 : 1 }],
                 ...theme.elevation.level1,
               })}
             >
-              <IconChip icon={cropIcon(c.code)} tint={selected ? 'leaf' : 'stone'} size={44} />
-              <Text variant="bodyStrong" weight="bold" align="center" numberOfLines={2}>
-                {t(`crops.${c.code}`)}
-              </Text>
+              <Image
+                source={cropImages[c.code]}
+                accessibilityIgnoresInvertColors
+                resizeMode="cover"
+                style={{ width: '100%', aspectRatio: 1, backgroundColor: theme.color.surface.sunken }}
+              />
+              <View style={{ paddingHorizontal: theme.spacing.xs, paddingVertical: theme.spacing.xs, minHeight: 44, justifyContent: 'center' }}>
+                <Text variant="caption" weight="bold" align="center" numberOfLines={2}>
+                  {t(`crops.${c.code}`)}
+                </Text>
+              </View>
               {selected ? <SelectedBadge /> : null}
             </Pressable>
           );

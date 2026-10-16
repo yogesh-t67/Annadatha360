@@ -259,7 +259,9 @@
     "notifications": "Notifications (demo)",
     "editProfile": "Edit Profile",
     "manageFarm": "Manage Farm",
-    "version": "Annadata 360 v{{version}}"
+    "version": "Annadata 360 v{{version}}",
+    "photoCredits": "Photo credits",
+    "photoCreditsBody": "Crop photos are from Wikimedia Commons under free licenses. Tap a crop to see the original."
   },
   "verifyPhone": {
     "title": "Verify your phone",

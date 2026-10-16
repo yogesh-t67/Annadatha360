@@ -10,7 +10,7 @@ import { ScreenContainer } from '../../components/ScreenContainer';
 import { Pill } from '../../components/Blocks';
 import { FeatureTile, TileGrid } from '../../components/FeatureTile';
 import { MicButton } from '../../components/MicButton';
-import { cropIcon } from '../../data/farm';
+import { CropImage } from '../../components/CropImage';
 import { CONDITION_ICON } from '../../data/weatherIcons';
 import { useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
@@ -38,7 +38,6 @@ export function HomeScreen() {
 
   const trimmedName = name.trim();
   const location = [village.trim(), t(`districts.${district}`)].filter(Boolean).join(', ');
-  const CropIcon = cropIcon(crop);
   const today = home?.weather?.today;
   const TodayIcon = today ? CONDITION_ICON[today.condition] : Thermometer;
 
@@ -78,18 +77,7 @@ export function HomeScreen() {
           {t('home.myCrop')}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-          <View
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 16,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: theme.color.surface.base,
-            }}
-          >
-            <CropIcon size={30} color={theme.color.surface.brandDeep} strokeWidth={1.75} />
-          </View>
+          <CropImage code={crop} size={64} />
           <View style={{ flex: 1 }}>
             <Text variant="h1" color={theme.color.text.inverse}>
               {t(`crops.${crop}`)}
