@@ -4,8 +4,11 @@
     "crop_code": "paddy",
     "growth_stage": "vegetative",
     "category": "nutrition",
-    "title": {"en": "Sample: paddy at vegetative stage"},
-    "body": {"en": "DEV SAMPLE DATA — not agronomic advice.\n\nShows how a crop + stage advisory renders."},
+    "title": {"en": "Sample: paddy at vegetative stage", "te": "నమూనా: వరి పెరుగుదల దశలో"},
+    "body": {
+      "en": "DEV SAMPLE DATA — not agronomic advice.\n\nShows how a crop + stage advisory renders.",
+      "te": "నమూనా డేటా — ఇది నిజమైన వ్యవసాయ సలహా కాదు.\n\nపంట + దశ సలహా ఎలా కనిపిస్తుందో చూపించడానికి మాత్రమే."
+    },
     "source_url": "https://example.org",
     "last_verified_on": "2026-10-16",
     "published": true
@@ -15,8 +18,11 @@
     "crop_code": "paddy",
     "growth_stage": null,
     "category": "pest_disease",
-    "title": {"en": "Sample: paddy, any stage"},
-    "body": {"en": "DEV SAMPLE DATA — not agronomic advice."},
+    "title": {"en": "Sample: paddy, any stage", "te": "నమూనా: వరి, ఏ దశలోనైనా"},
+    "body": {
+      "en": "DEV SAMPLE DATA — not agronomic advice.",
+      "te": "నమూనా డేటా — ఇది నిజమైన వ్యవసాయ సలహా కాదు."
+    },
     "source_url": "https://example.org",
     "last_verified_on": "2026-10-10",
     "published": true
@@ -26,8 +32,11 @@
     "crop_code": null,
     "growth_stage": null,
     "category": "weather",
-    "title": {"en": "Sample: general seasonal tip"},
-    "body": {"en": "DEV SAMPLE DATA — not agronomic advice."},
+    "title": {"en": "Sample: general seasonal tip", "te": "నమూనా: సాధారణ కాలానుగుణ సూచన"},
+    "body": {
+      "en": "DEV SAMPLE DATA — not agronomic advice.",
+      "te": "నమూనా డేటా — ఇది నిజమైన వ్యవసాయ సలహా కాదు."
+    },
     "source_url": "https://example.org",
     "last_verified_on": "2026-10-01",
     "published": true

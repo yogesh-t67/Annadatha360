@@ -64,10 +64,10 @@ export function AppHeader({ showBack = false }: { showBack?: boolean }) {
       )}
 
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text variant="h2" color={theme.color.surface.brandDeep} numberOfLines={1} style={{ lineHeight: 26 }}>
+        <Text variant="h2" color={theme.color.surface.brandDeep} numberOfLines={1}>
           అన్నదాత 360
         </Text>
-        <Text variant="micro" color={theme.color.text.muted} style={{ letterSpacing: 1.6, fontSize: 10, lineHeight: 12 }}>
+        <Text variant="micro" color={theme.color.text.muted} style={{ letterSpacing: 1.6, fontSize: 10 }}>
           ANNADATA 360
         </Text>
       </View>

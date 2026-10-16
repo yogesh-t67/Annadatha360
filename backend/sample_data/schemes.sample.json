@@ -4,12 +4,24 @@
     "authority": "central",
     "state": null,
     "category": "income_support",
-    "name": {"en": "Sample central income support scheme"},
-    "summary": {"en": "DEV SAMPLE DATA — not a real scheme. Shows how a central scheme renders."},
-    "benefits": {"en": "Sample benefit text."},
-    "eligibility": [{"en": "Sample eligibility line 1"}, {"en": "Sample eligibility line 2"}],
-    "documents": [{"en": "Aadhaar card"}, {"en": "Land record"}],
-    "steps": [{"en": "Sample step 1"}, {"en": "Sample step 2"}],
+    "name": {"en": "Sample central income support scheme", "te": "నమూనా కేంద్ర ఆదాయ మద్దతు పథకం"},
+    "summary": {
+      "en": "DEV SAMPLE DATA — not a real scheme. Shows how a central scheme renders.",
+      "te": "నమూనా డేటా — ఇది నిజమైన పథకం కాదు. కేంద్ర పథకం ఎలా కనిపిస్తుందో చూపించడానికి మాత్రమే."
+    },
+    "benefits": {"en": "Sample benefit text.", "te": "నమూనా ప్రయోజన వివరణ."},
+    "eligibility": [
+      {"en": "Sample eligibility line 1", "te": "నమూనా అర్హత వివరం 1"},
+      {"en": "Sample eligibility line 2", "te": "నమూనా అర్హత వివరం 2"}
+    ],
+    "documents": [
+      {"en": "Aadhaar card", "te": "ఆధార్ కార్డు"},
+      {"en": "Land record", "te": "భూమి రికార్డు"}
+    ],
+    "steps": [
+      {"en": "Sample step 1", "te": "నమూనా దశ 1"},
+      {"en": "Sample step 2", "te": "నమూనా దశ 2"}
+    ],
     "application_url": "https://example.gov.in/apply",
     "source_url": "https://example.gov.in",
     "max_land_acres": null,
@@ -22,12 +34,15 @@
     "authority": "state",
     "state": "AP",
     "category": "subsidy",
-    "name": {"en": "Sample AP small-farmer subsidy"},
-    "summary": {"en": "DEV SAMPLE DATA — not a real scheme. Has a 5-acre land limit to exercise possibly_eligible."},
-    "benefits": {"en": "Sample benefit text."},
-    "eligibility": [{"en": "Up to 5 acres (sample)"}],
+    "name": {"en": "Sample AP small-farmer subsidy", "te": "నమూనా ఆంధ్రప్రదేశ్ చిన్న రైతు సబ్సిడీ"},
+    "summary": {
+      "en": "DEV SAMPLE DATA — not a real scheme. Has a 5-acre land limit to exercise possibly_eligible.",
+      "te": "నమూనా డేటా — ఇది నిజమైన పథకం కాదు. అర్హత తనిఖీ కోసం 5 ఎకరాల పరిమితి ఉంది."
+    },
+    "benefits": {"en": "Sample benefit text.", "te": "నమూనా ప్రయోజన వివరణ."},
+    "eligibility": [{"en": "Up to 5 acres (sample)", "te": "5 ఎకరాల వరకు (నమూనా)"}],
     "documents": [],
-    "steps": [{"en": "Sample step"}],
+    "steps": [{"en": "Sample step", "te": "నమూనా దశ"}],
     "application_url": null,
     "source_url": "https://example.gov.in",
     "max_land_acres": 5,
@@ -40,10 +55,13 @@
     "authority": "state",
     "state": "TG",
     "category": "other",
-    "name": {"en": "Sample Telangana chilli scheme"},
-    "summary": {"en": "DEV SAMPLE DATA — not a real scheme. Crop-limited to chilli."},
+    "name": {"en": "Sample Telangana chilli scheme", "te": "నమూనా తెలంగాణ మిరప పథకం"},
+    "summary": {
+      "en": "DEV SAMPLE DATA — not a real scheme. Crop-limited to chilli.",
+      "te": "నమూనా డేటా — ఇది నిజమైన పథకం కాదు. మిరప పంటకు మాత్రమే పరిమితం."
+    },
     "benefits": {},
-    "eligibility": [{"en": "Chilli growers (sample)"}],
+    "eligibility": [{"en": "Chilli growers (sample)", "te": "మిరప రైతులు (నమూనా)"}],
     "documents": [],
     "steps": [],
     "application_url": null,
