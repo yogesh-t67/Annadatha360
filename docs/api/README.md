@@ -15,7 +15,8 @@ changes to anything already in use get a heads-up before they land.
 | Crop diagnosis (photo) | [diagnosis.md](diagnosis.md) | ✅ P1 built |
 | Agri Mart (catalogue, cart, orders, Razorpay) | [agri-mart.md](agri-mart.md) | ✅ P2 built |
 | Government schemes | [schemes.md](schemes.md) | ✅ P2 built (no real content yet) |
-| Labour, Farm services, Farm management | — | P2, not started |
+| Labour & Farm services (providers, bookings, requirements) | [services.md](services.md) | ✅ P2 built |
+| Farm management (crop plans, harvests) | — | P2, not started |
 
 Open decisions that affect the contract: [open-decisions.md](open-decisions.md).
 

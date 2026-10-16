@@ -35,7 +35,7 @@ In development (`SMS_PROVIDER=console`) OTPs are printed to the server log inste
 | Cancel unpaid orders, release stock | `python -m app.jobs.expire_unpaid_orders` | Every 5 minutes |
 
 Content loading (manual, no admin UI yet): `python -m app.jobs.load_products products.json` and
-`python -m app.jobs.load_schemes schemes.json`. For local dev, `sample_data/` has clearly-labelled sample files.
+`python -m app.jobs.load_schemes schemes.json` and `python -m app.jobs.load_providers providers.json`. For local dev, `sample_data/` has clearly-labelled sample files.
 
 No scheduler is wired up yet; run it from cron (or the host's scheduler) in the API's environment.
 

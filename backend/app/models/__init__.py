@@ -6,6 +6,7 @@ from app.models.farmer import Farmer
 from app.models.field import Field
 from app.models.market import MarketPrice
 from app.models.scheme import Scheme
+from app.models.services import LabourRequirement, ServiceBooking, ServiceOffering, ServiceProvider
 from app.models.shop import CartItem, Order, OrderItem, Product, ProductCategory
 
 __all__ = [
@@ -17,6 +18,7 @@ __all__ = [
     "Diagnosis",
     "Farmer",
     "Field",
+    "LabourRequirement",
     "MarketPrice",
     "Order",
     "OrderItem",
@@ -25,4 +27,7 @@ __all__ = [
     "ProductCategory",
     "RefreshToken",
     "Scheme",
+    "ServiceBooking",
+    "ServiceOffering",
+    "ServiceProvider",
 ]

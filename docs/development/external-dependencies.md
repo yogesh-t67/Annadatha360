@@ -12,6 +12,7 @@ dev fallback. Owner = who has to act.
 | **data.gov.in API key** | Mandi prices | ⛔ Not provided | No live sync; sample data in tests | Anyone (free signup) |
 | **Razorpay account** (KYC) | Agri Mart payments | ⛔ Not started | `PAYMENT_PROVIDER=fake` + dev-complete endpoint | Business — needs PAN, bank account, GST |
 | **Product catalogue** | Agri Mart | ⛔ No real data | `sample_data/products.sample.json` | Business — products, prices, images, stock |
+| **Service providers** | Labour & Farm Services | ⛔ No real data | `sample_data/providers.sample.json` | Business — onboard and verify providers |
 | **Scheme content** | Government Schemes | ⛔ No real data | `sample_data/schemes.sample.json` | Someone to research official portals; Telugu translation |
 
 ## DLT registration → MSG91
