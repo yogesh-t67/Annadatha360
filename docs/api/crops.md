@@ -18,4 +18,4 @@ Sorted by category, then code. Categories: `cereal` `pulse` `oilseed` `commercia
 
 Current list (19): paddy, maize, jowar, red_gram, bengal_gram, black_gram, green_gram, groundnut, sunflower,
 castor, oil_palm, cotton, sugarcane, chilli, turmeric, tomato, onion, mango, banana. Names in `en` + `te`;
-Telugu names are pending native-speaker review.
+Telugu names verified by a native speaker.

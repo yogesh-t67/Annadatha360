@@ -5,8 +5,8 @@ should be treated as correct either — "it renders" is not "it's right".
 
 | Area | Where | Languages | Status | Notes |
 |---|---|---|---|---|
-| Crop names | `backend/app/db/seed_crops.py` (seeded by migration 0001) | te | ⏳ Needs review | 19 names written by the backend dev, not a native speaker. Fixes need a new data migration. |
-| Agri Mart category names | `backend/app/db/seed_shop.py` (migration 0005) | te | ⏳ Needs review | 4 names. |
+| Crop names | `backend/app/db/seed_crops.py` (seeded by migration 0001) | te | ✅ Verified 2026-10-16 | All 19 confirmed correct by a native Telugu speaker. Future fixes need a new data migration. |
+| Agri Mart category names | `backend/app/db/seed_shop.py` (migration 0005) | te | ✅ Verified 2026-10-16 | All 4 confirmed correct. |
 | Product names / descriptions | Catalogue JSON | te | Not started | Supplied with the real catalogue; `en` required, `te` optional per product. |
 | Mobile UI strings | `mobile/` i18n files | te | ⏳ Needs review | Owned by the mobile dev. |
 | hi / ta / kn / mr / gu | everywhere | — | Not started | Fall back to English. |

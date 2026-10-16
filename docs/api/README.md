@@ -59,5 +59,5 @@ Supported language codes: `en`, `te`, `hi`, `ta`, `kn`, `mr`, `gu`.
 
 Content the server owns (crop names now; scheme text and advisory copy later) is returned **already resolved**
 to the farmer's `preferred_language`, falling back to English when a translation is missing. Today crop names
-exist in `en` and `te` only (pending native-speaker review — see `docs/development/localization-review.md`).
+exist in `en` and `te` only (Telugu verified; other languages fall back to English).
 Public endpoints take `?lang=` instead.

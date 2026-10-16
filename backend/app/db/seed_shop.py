@@ -1,4 +1,4 @@
-"""Agri Mart categories. Telugu names need native-speaker review (docs/development/localization-review.md).
+"""Agri Mart categories. Telugu names verified by a native speaker on 2026-10-16.
 Migration 0005 inserts these; later edits need a new data migration."""
 
 CATEGORIES: list[dict] = [
