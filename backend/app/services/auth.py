@@ -52,7 +52,13 @@ def request_otp(db: Session, phone: str, sms: SmsSender) -> OtpChallenge:
     )
     db.add(challenge)
     db.commit()
-    sms.send_otp(phone, code)
+    try:
+        sms.send_otp(phone, code)
+    except Exception:
+        # Don't let an undelivered OTP count towards cooldown / hourly limits.
+        db.delete(challenge)
+        db.commit()
+        raise
     return challenge
 
 
