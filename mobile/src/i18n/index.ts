@@ -20,6 +20,13 @@ export async function getStoredLanguage(): Promise<LanguageCode | null> {
 export async function setStoredLanguage(code: LanguageCode): Promise<void> {
   await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, code);
   await i18n.changeLanguage(code);
+  // Best-effort: keep the backend's preferred_language (used for AI replies) in sync with the UI
+  // language. Fire-and-forget so switching language never blocks on network, and silent if signed out.
+  const { hasSession } = await import('../api/tokens');
+  if (await hasSession()) {
+    const { updateMe } = await import('../api/endpoints');
+    updateMe({ preferred_language: code }).catch(() => undefined);
+  }
 }
 
 const deviceLanguageTag = Localization.getLocales()[0]?.languageCode ?? 'te';
