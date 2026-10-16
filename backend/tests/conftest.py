@@ -32,13 +32,21 @@ def sms():
 
 @pytest.fixture
 def db_session():
-    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    # Default: in-memory SQLite. Set TEST_DATABASE_URL to run against a real (throwaway!) Postgres;
+    # every table in it is dropped after each test.
+    url = os.environ.get("TEST_DATABASE_URL")
+    if url:
+        engine = create_engine(url)
+    else:
+        engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
     with Session() as s:
         s.add_all(Crop(**c) for c in CROPS)
         s.commit()
     yield Session
+    Base.metadata.drop_all(engine)
     engine.dispose()
 
 

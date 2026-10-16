@@ -11,6 +11,9 @@ docker compose up --build
 # API: http://localhost:8000  ·  Swagger UI: http://localhost:8000/docs
 ```
 
+If 5432/8000 are taken by other projects, pick other host ports:
+`ANNADATA_DB_PORT=5440 ANNADATA_API_PORT=8010 docker compose up --build`.
+
 **Without Docker** (needs a Postgres you can reach):
 
 ```sh
@@ -30,8 +33,17 @@ In development (`SMS_PROVIDER=console`) OTPs are printed to the server log inste
 pytest
 ```
 
-Tests run against in-memory SQLite, so no database is needed. Models avoid Postgres-only types except through
-portable variants (`JSONType` = JSONB on Postgres, JSON elsewhere).
+Tests run against in-memory SQLite by default, so no database is needed. Models avoid Postgres-only types except
+through portable variants (`JSONType` = JSONB on Postgres, JSON elsewhere).
+
+Run the same suite against real Postgres before merging schema changes. Use a **throwaway** database — tables are
+dropped after every test:
+
+```sh
+docker compose up -d db
+docker compose exec db psql -U annadata -c "CREATE DATABASE annadata_test"
+TEST_DATABASE_URL=postgresql+psycopg://annadata:annadata@127.0.0.1:5432/annadata_test pytest
+```
 
 ## Layout
 

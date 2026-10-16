@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -75,13 +76,20 @@ def verify_otp(db: Session, phone: str, code: str) -> tuple[Farmer, bool]:
         raise AppError(400, "otp_invalid", "Incorrect OTP")
 
     challenge.consumed_at = now
+    db.commit()
+
     farmer = db.scalar(select(Farmer).where(Farmer.phone == phone))
-    is_new = farmer is None
-    if is_new:
+    if farmer is not None:
+        return farmer, False
+    try:
         farmer = Farmer(phone=phone)
         db.add(farmer)
-    db.commit()
-    return farmer, is_new
+        db.commit()
+        return farmer, True
+    except IntegrityError:
+        # A concurrent verify for the same phone created the farmer first.
+        db.rollback()
+        return db.scalar(select(Farmer).where(Farmer.phone == phone)), False
 
 
 def issue_tokens(db: Session, farmer_id: int) -> dict:
