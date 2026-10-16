@@ -1,70 +1,47 @@
 import React, { useState } from 'react';
 import { TextInput, TextInputProps, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
-import { theme } from '../../theme';
+import { resolveFontFamily, theme } from '../../theme';
 import { Text } from './Text';
 
 export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
-  /** Omit for a label-less field (e.g. a search bar); accessibilityLabel then falls back to placeholder. */
+  /** Omit for a label-less field; accessibilityLabel then falls back to placeholder. */
   label?: string;
-  error?: string;
-  helperText?: string;
-  icon?: React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 }
 
-export function TextField({ label, error, helperText, icon: Icon, editable = true, ...rest }: TextFieldProps) {
+export function TextField({ label, multiline, ...rest }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
-
-  const borderColor = error
-    ? theme.color.status.dangerText
-    : focused
-    ? theme.color.border.focus
-    : theme.color.border.default;
+  const { i18n } = useTranslation();
 
   return (
-    <View style={{ gap: theme.spacing.xxs }}>
+    <View style={{ gap: theme.spacing.xs }}>
       {label ? (
-        <Text variant="caption" weight="medium" color={theme.color.text.secondary}>
+        <Text variant="bodyStrong" color={theme.color.text.secondary}>
           {label}
         </Text>
       ) : null}
-      <View
+      <TextInput
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        placeholderTextColor={theme.color.text.tertiary}
+        multiline={multiline}
+        textAlignVertical={multiline ? 'top' : 'center'}
+        accessibilityLabel={label ?? rest.placeholder}
         style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: theme.spacing.xs,
+          minHeight: multiline ? 110 : 56,
           borderWidth: 1.5,
-          borderColor,
-          borderRadius: theme.radius.sm,
-          paddingHorizontal: theme.spacing.sm,
-          height: theme.touchTarget.minimum,
-          backgroundColor: editable ? theme.color.surface.base : theme.color.surface.sunken,
+          borderColor: focused ? theme.color.border.focus : theme.color.border.default,
+          borderRadius: theme.radius.md,
+          paddingHorizontal: theme.spacing.md,
+          paddingVertical: theme.spacing.sm,
+          backgroundColor: theme.color.surface.base,
+          color: theme.color.text.primary,
+          fontFamily: resolveFontFamily(i18n.language, 'medium'),
+          fontSize: theme.typography.label.fontSize,
         }}
-      >
-        {Icon ? <Icon size={20} color={theme.color.text.tertiary} strokeWidth={2} /> : null}
-        <TextInput
-          editable={editable}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          placeholderTextColor={theme.color.text.tertiary}
-          style={{
-            flex: 1,
-            fontSize: theme.typography.body.fontSize,
-            color: theme.color.text.primary,
-          }}
-          accessibilityLabel={label ?? rest.placeholder}
-          {...rest}
-        />
-      </View>
-      {error ? (
-        <Text variant="micro" color={theme.color.status.dangerText}>
-          {error}
-        </Text>
-      ) : helperText ? (
-        <Text variant="micro" color={theme.color.text.tertiary}>
-          {helperText}
-        </Text>
-      ) : null}
+        {...rest}
+      />
     </View>
   );
 }

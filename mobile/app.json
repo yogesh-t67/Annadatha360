@@ -25,7 +25,15 @@
     },
     "plugins": [
       "expo-localization",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Annadata 360 uses the camera to photograph crop problems.",
+          "photosPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ]
   }
 }

@@ -1,154 +1,148 @@
 import React from 'react';
+import { Text as RNText, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Home, Leaf, ShoppingBag, User, Wrench } from 'lucide-react-native';
 
-import { theme } from '../theme';
-import { HomeScreen } from '../screens/home/HomeScreen';
-import { AiAssistantScreen } from '../screens/home/AiAssistantScreen';
-import { WeatherScreen } from '../screens/home/WeatherScreen';
-import { MarketPricesScreen } from '../screens/home/MarketPricesScreen';
-import { CropAdvisoryScreen } from '../screens/advisories/CropAdvisoryScreen';
-import { FarmManagementScreen } from '../screens/advisories/FarmManagementScreen';
-import { AgriMartScreen } from '../screens/shop/AgriMartScreen';
-import { CartScreen } from '../screens/shop/CartScreen';
-import { FarmServicesScreen } from '../screens/services/FarmServicesScreen';
-import { LabourServicesScreen } from '../screens/services/LabourServicesScreen';
-import { GovernmentSchemesScreen } from '../screens/services/GovernmentSchemesScreen';
-import { ProfileDashboardScreen } from '../screens/profile/ProfileDashboardScreen';
+import { resolveFontFamily, theme } from '../theme';
+import { HomeScreen } from '../screens/main/HomeScreen';
+import { VoiceAssistantScreen } from '../screens/main/VoiceAssistantScreen';
+import { MyFarmScreen } from '../screens/main/MyFarmScreen';
+import { ServicesScreen } from '../screens/main/ServicesScreen';
+import { CropDiagnosisScreen } from '../screens/features/CropDiagnosisScreen';
+import { WeatherScreen } from '../screens/features/WeatherScreen';
+import { IrrigationScreen } from '../screens/features/IrrigationScreen';
+import { MarketPricesScreen } from '../screens/features/MarketPricesScreen';
+import { GovernmentSchemesScreen } from '../screens/features/GovernmentSchemesScreen';
+import { ExpertHelpScreen } from '../screens/features/ExpertHelpScreen';
+import { AlertsScreen } from '../screens/features/AlertsScreen';
+import { SettingsScreen } from '../screens/features/SettingsScreen';
 import {
-  AdvisoriesStackParamList,
+  AskStackParamList,
+  FarmStackParamList,
+  FeatureStackParamList,
   HomeStackParamList,
   MainTabParamList,
-  ProfileStackParamList,
   ServicesStackParamList,
-  ShopStackParamList,
 } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
-const ShopStack = createNativeStackNavigator<ShopStackParamList>();
+const AskStack = createNativeStackNavigator<AskStackParamList>();
+const FarmStack = createNativeStackNavigator<FarmStackParamList>();
 const ServicesStack = createNativeStackNavigator<ServicesStackParamList>();
-const AdvisoriesStack = createNativeStackNavigator<AdvisoriesStackParamList>();
-const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
+
+const featureScreens: { name: keyof FeatureStackParamList; component: React.ComponentType }[] = [
+  { name: 'Diagnosis', component: CropDiagnosisScreen },
+  { name: 'Weather', component: WeatherScreen },
+  { name: 'Irrigation', component: IrrigationScreen },
+  { name: 'Market', component: MarketPricesScreen },
+  { name: 'Schemes', component: GovernmentSchemesScreen },
+  { name: 'Expert', component: ExpertHelpScreen },
+  { name: 'Alerts', component: AlertsScreen },
+  { name: 'Settings', component: SettingsScreen },
+];
+
+type AnyStack = ReturnType<typeof createNativeStackNavigator<FeatureStackParamList>>;
+
+function featureRoutes(StackNav: AnyStack) {
+  return featureScreens.map((s) => <StackNav.Screen key={s.name} name={s.name} component={s.component} />);
+}
+
+const stackOptions = { headerShown: false, contentStyle: { backgroundColor: theme.color.surface.canvas } };
 
 function HomeStackNavigator() {
   return (
-    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
-      <HomeStack.Screen name="HomeDashboard" component={HomeScreen} />
-      <HomeStack.Screen name="Weather" component={WeatherScreen} options={{ headerShown: true, title: '' }} />
-      <HomeStack.Screen
-        name="MarketPrices"
-        component={MarketPricesScreen}
-        options={{ headerShown: true, title: '' }}
-      />
-      <HomeStack.Screen name="AiAssistant" component={AiAssistantScreen} />
+    <HomeStack.Navigator screenOptions={stackOptions}>
+      <HomeStack.Screen name="Home" component={HomeScreen} />
+      {featureRoutes(HomeStack as unknown as AnyStack)}
     </HomeStack.Navigator>
   );
 }
 
-function ShopStackNavigator() {
+function AskStackNavigator() {
   return (
-    <ShopStack.Navigator screenOptions={{ headerShown: false }}>
-      <ShopStack.Screen name="AgriMart" component={AgriMartScreen} />
-      <ShopStack.Screen name="Cart" component={CartScreen} options={{ headerShown: true, title: '' }} />
-    </ShopStack.Navigator>
+    <AskStack.Navigator screenOptions={stackOptions}>
+      <AskStack.Screen name="Voice" component={VoiceAssistantScreen} />
+      {featureRoutes(AskStack as unknown as AnyStack)}
+    </AskStack.Navigator>
+  );
+}
+
+function FarmStackNavigator() {
+  return (
+    <FarmStack.Navigator screenOptions={stackOptions}>
+      <FarmStack.Screen name="MyFarm" component={MyFarmScreen} />
+      {featureRoutes(FarmStack as unknown as AnyStack)}
+    </FarmStack.Navigator>
   );
 }
 
 function ServicesStackNavigator() {
   return (
-    <ServicesStack.Navigator screenOptions={{ headerShown: false }}>
-      <ServicesStack.Screen name="FarmServices" component={FarmServicesScreen} />
-      <ServicesStack.Screen
-        name="LabourServices"
-        component={LabourServicesScreen}
-        options={{ headerShown: true, title: '' }}
-      />
-      <ServicesStack.Screen
-        name="GovernmentSchemes"
-        component={GovernmentSchemesScreen}
-        options={{ headerShown: true, title: '' }}
-      />
+    <ServicesStack.Navigator screenOptions={stackOptions}>
+      <ServicesStack.Screen name="Services" component={ServicesScreen} />
+      {featureRoutes(ServicesStack as unknown as AnyStack)}
     </ServicesStack.Navigator>
   );
 }
 
-function AdvisoriesStackNavigator() {
+function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
   return (
-    <AdvisoriesStack.Navigator screenOptions={{ headerShown: false }}>
-      <AdvisoriesStack.Screen name="CropAdvisory" component={CropAdvisoryScreen} />
-      <AdvisoriesStack.Screen
-        name="FarmManagement"
-        component={FarmManagementScreen}
-        options={{ headerShown: true, title: '' }}
-      />
-    </AdvisoriesStack.Navigator>
+    <View
+      style={{
+        width: 52,
+        height: 30,
+        borderRadius: theme.radius.full,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: focused ? theme.color.surface.brandMid : 'transparent',
+      }}
+    >
+      <RNText style={{ fontSize: 19 }}>{emoji}</RNText>
+    </View>
   );
 }
 
-function ProfileStackNavigator() {
-  return (
-    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
-      <ProfileStack.Screen name="ProfileDashboard" component={ProfileDashboardScreen} />
-    </ProfileStack.Navigator>
-  );
-}
+const tabs: { name: keyof MainTabParamList; component: React.ComponentType; emoji: string; label: string }[] = [
+  { name: 'HomeTab', component: HomeStackNavigator, emoji: '🏠', label: 'nav.home' },
+  { name: 'AskTab', component: AskStackNavigator, emoji: '🎙️', label: 'nav.ask' },
+  { name: 'FarmTab', component: FarmStackNavigator, emoji: '🌱', label: 'nav.farm' },
+  { name: 'ServicesTab', component: ServicesStackNavigator, emoji: '🧰', label: 'nav.services' },
+];
 
 export function MainTabs() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.color.interactive.primaryBg,
-        tabBarInactiveTintColor: theme.color.text.tertiary,
-        tabBarStyle: { height: 64, paddingBottom: 8, paddingTop: 8 },
-        tabBarLabelStyle: { fontSize: theme.typography.micro.fontSize },
+        tabBarActiveTintColor: theme.color.surface.brandDeep,
+        tabBarInactiveTintColor: theme.color.text.muted,
+        tabBarStyle: {
+          paddingTop: theme.spacing.xs,
+          borderTopColor: theme.color.border.default,
+          backgroundColor: theme.color.surface.base,
+        },
+        tabBarLabelStyle: {
+          fontFamily: resolveFontFamily(i18n.language, 'semibold'),
+          fontSize: theme.typography.micro.fontSize,
+          marginTop: 2,
+        },
       }}
     >
-      <Tab.Screen
-        name="HomeTab"
-        component={HomeStackNavigator}
-        options={{
-          title: t('nav.home'),
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} strokeWidth={2} />,
-        }}
-      />
-      <Tab.Screen
-        name="ShopTab"
-        component={ShopStackNavigator}
-        options={{
-          title: t('nav.shop'),
-          tabBarIcon: ({ color, size }) => <ShoppingBag color={color} size={size} strokeWidth={2} />,
-        }}
-      />
-      <Tab.Screen
-        name="ServicesTab"
-        component={ServicesStackNavigator}
-        options={{
-          title: t('nav.services'),
-          tabBarIcon: ({ color, size }) => <Wrench color={color} size={size} strokeWidth={2} />,
-        }}
-      />
-      <Tab.Screen
-        name="AdvisoriesTab"
-        component={AdvisoriesStackNavigator}
-        options={{
-          title: t('nav.advisories'),
-          tabBarIcon: ({ color, size }) => <Leaf color={color} size={size} strokeWidth={2} />,
-        }}
-      />
-      <Tab.Screen
-        name="ProfileTab"
-        component={ProfileStackNavigator}
-        options={{
-          title: t('nav.profile'),
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} strokeWidth={2} />,
-        }}
-      />
+      {tabs.map((tab) => (
+        <Tab.Screen
+          key={tab.name}
+          name={tab.name}
+          component={tab.component}
+          options={{
+            title: t(tab.label),
+            tabBarIcon: ({ focused }) => <TabIcon emoji={tab.emoji} focused={focused} />,
+          }}
+        />
+      ))}
     </Tab.Navigator>
   );
 }

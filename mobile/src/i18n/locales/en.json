@@ -1,211 +1,209 @@
 {
   "common": {
+    "next": "Next",
     "continue": "Continue",
-    "back": "Back",
     "getStarted": "Get Started",
-    "cancel": "Cancel",
-    "retry": "Try again"
+    "finish": "Finish",
+    "back": "Back",
+    "demoNotice": "Demo only. No verified live data or production AI is connected."
   },
-  "languages": {
-    "en": "English",
-    "te": "Telugu",
-    "hi": "Hindi",
-    "ta": "Tamil",
-    "kn": "Kannada",
-    "mr": "Marathi",
-    "gu": "Gujarati"
-  },
-  "onboarding": {
-    "brand": "Annadata 360",
-    "tagline": "Your 360° Farming Partner",
-    "subtitle": "Weather, market prices, crop advisory, and government schemes — all in one app."
-  },
-  "languageSelect": {
-    "title": "Choose your language",
-    "subtitle": "You can change this anytime from Profile."
+  "languageName": {
+    "te": "తెలుగు",
+    "en": "English"
   },
   "nav": {
     "home": "Home",
-    "shop": "Shop",
-    "services": "Services",
-    "advisories": "Advisories",
-    "profile": "Profile"
+    "ask": "Ask",
+    "farm": "My Farm",
+    "services": "Services"
+  },
+  "welcome": {
+    "title": "Welcome to Annadata 360",
+    "subtitle": "Your farming companion in Telugu.",
+    "motto": "Speak. Ask. Grow.",
+    "mottoBody": "Simple farming help without complicated menus."
+  },
+  "language": {
+    "title": "Choose language"
+  },
+  "farmerProfile": {
+    "title": "Farmer profile",
+    "name": "Name",
+    "phone": "Phone (optional in demo)"
+  },
+  "farmLocation": {
+    "title": "Farm location",
+    "state": "State",
+    "district": "District",
+    "village": "Village"
+  },
+  "cropSelection": {
+    "title": "Select your crop",
+    "area": "Area (acres)",
+    "stage": "Crop stage"
+  },
+  "crops": {
+    "paddy": "Paddy",
+    "chilli": "Chilli",
+    "cotton": "Cotton",
+    "maize": "Maize",
+    "tomato": "Tomato",
+    "groundnut": "Groundnut"
+  },
+  "stages": {
+    "sowing": "Sowing",
+    "growing": "Growing",
+    "flowering": "Flowering",
+    "harvest": "Harvest"
+  },
+  "states": {
+    "ap": "Andhra Pradesh",
+    "ts": "Telangana"
+  },
+  "districts": {
+    "guntur": "Guntur",
+    "krishna": "Krishna",
+    "kurnool": "Kurnool",
+    "prakasam": "Prakasam",
+    "warangal": "Warangal",
+    "nizamabad": "Nizamabad",
+    "khammam": "Khammam",
+    "karimnagar": "Karimnagar",
+    "vijayawada": "Vijayawada"
   },
   "home": {
-    "greeting": "Smart Farming, Brighter Tomorrows",
-    "greetingSubtitle": "Your farm, our support",
-    "searchPlaceholder": "Search crops, schemes, services…",
-    "weatherAlertTitle": "Weather Alert",
-    "weatherAlertBody": "Light to moderate rain expected in the next 24 hours. Plan field activities accordingly.",
-    "exploreTitle": "Explore services",
-    "latestAdvisoryTitle": "Latest Advisory",
-    "latestAdvisoryBody": "Time your next irrigation for early morning to reduce water loss and improve yield in paddy.",
+    "hello": "Hello",
+    "helloName": "Hello, {{name}}",
+    "myCrop": "MY CROP",
+    "acresValue": "{{acres}} acres",
+    "manageCrop": "Manage crop",
+    "askTitle": "What would you like to ask?",
+    "tapMic": "Tap the microphone",
+    "exploreServices": "Explore Services",
     "tiles": {
+      "cropProblem": "Crop Problem",
       "weather": "Weather",
-      "marketPrices": "Market Prices",
-      "agriMart": "Agri Mart",
-      "aiAssistant": "AI Assistant",
-      "cropAdvisory": "Crop Advisory",
-      "farmServices": "Farm Services",
-      "farmManagement": "Farm Management",
-      "governmentSchemes": "Govt Schemes"
+      "irrigation": "Irrigation",
+      "marketPrices": "Market Prices"
+    }
+  },
+  "voice": {
+    "title": "Ask Annadata AI",
+    "prompt": "Speak or type your question",
+    "placeholder": "Your farming question",
+    "commonQuestions": "Common questions",
+    "questions": {
+      "yellowLeaves": "My crop leaves are yellow",
+      "whenIrrigate": "When should I irrigate?",
+      "insects": "My crop has insects",
+      "whenSell": "When should I sell?"
+    },
+    "getAnswer": "Get Answer",
+    "sampleTitle": "Sample response",
+    "sampleBody": "Tell us the crop age, symptoms and location. Different causes need different treatments. Do not apply chemicals until the cause is confirmed.",
+    "listen": "Listen",
+    "listenText": "Tell us the crop age, symptoms and location. Avoid applying chemicals until the problem is identified.",
+    "viewDiagnosis": "View crop diagnosis",
+    "micUnavailable": "Voice input isn't available in the app yet. Type your question instead."
+  },
+  "diagnosis": {
+    "title": "Crop Diagnosis",
+    "photoPrompt": "Take a photo of the affected crop",
+    "openCamera": "Open camera",
+    "retake": "Take another photo",
+    "photoNote": "Photo stays on your phone; no diagnosis is performed.",
+    "cameraDenied": "Camera permission is needed to take a photo. Allow it in your phone settings.",
+    "chooseSymptom": "Choose symptom",
+    "symptoms": {
+      "yellowLeaves": "Yellow leaves",
+      "brownSpots": "Brown spots",
+      "insects": "Insects",
+      "wilting": "Wilting"
     }
   },
   "weather": {
-    "title": "Weather",
-    "demoDataNote": "Demo data",
-    "conditionLabel": "Partly cloudy with light rain",
-    "humidity": "Humidity",
-    "wind": "Wind",
-    "alertTitle": "Weather Alert",
-    "alertBody": "Light to moderate rain expected in the next 24 hours. Plan field activities accordingly.",
-    "forecastTitle": "7 Day Forecast",
-    "today": "Today"
+    "title": "Farm Weather",
+    "illustrative": "Illustrative conditions, NOT live",
+    "threeDay": "3-day sample",
+    "day": "Day {{n}}",
+    "irrigationAdvice": "Irrigation Advice"
   },
-  "marketPrices": {
+  "irrigation": {
+    "title": "Irrigation Assistant",
+    "soilQuestion": "How is the soil?",
+    "soil": {
+      "dry": "Dry",
+      "moist": "Moist",
+      "wet": "Waterlogged",
+      "unknown": "Not sure"
+    },
+    "nextStep": "Suggested next step",
+    "wetAdvice": "Check drainage before adding more water.",
+    "defaultAdvice": "Check root-zone moisture, crop stage and verified forecast before irrigating."
+  },
+  "market": {
     "title": "Market Prices",
-    "demoDataNote": "Illustrative rates",
-    "searchPlaceholder": "Search crop or market…",
-    "perQuintal": "/ Quintal",
-    "categories": {
-      "all": "All Crops",
-      "cereals": "Cereals",
-      "pulses": "Pulses",
-      "oilseeds": "Oilseeds"
-    },
-    "crops": {
-      "paddy": "Paddy (Rice)",
-      "maize": "Maize",
-      "redChilli": "Red Chilli",
-      "cotton": "Cotton",
-      "groundnut": "Groundnut",
-      "blackGram": "Black Gram"
-    }
+    "crop": "Crop",
+    "market": "Market",
+    "unavailable": "Live price unavailable",
+    "apiNote": "A verified mandi API must provide price, unit, date and market."
   },
-  "agriMart": {
-    "title": "Agri Mart",
-    "searchPlaceholder": "Search products…",
-    "catalogPendingNote": "Full catalog connects once the store API is live — showing today's deals below.",
-    "categories": {
-      "seeds": "Seeds",
-      "fertilizers": "Fertilizers",
-      "pesticides": "Pesticides",
-      "equipment": "Farm Equipment",
-      "irrigation": "Irrigation",
-      "tools": "Tools"
-    },
-    "dealsTitle": "Best Deals",
-    "addToCart": "Add to Cart",
-    "products": {
-      "bayerNativo": "Bayer Nativo Fungicide 500g",
-      "iffcoDap": "IFFCO DAP Fertilizer 50kg"
-    }
-  },
-  "cart": {
-    "title": "Cart & Checkout",
-    "emptyTitle": "Your cart is empty",
-    "emptyBody": "Items you add from Agri Mart will appear here.",
-    "browseShop": "Browse Agri Mart",
-    "totalLabel": "Total Amount",
-    "checkout": "Proceed to Checkout",
-    "paymentMethods": "Payment Methods",
-    "checkoutPendingNote": "Payment integration connects once the backend is live."
-  },
-  "cropAdvisory": {
-    "title": "Crop Advisory",
-    "tabs": { "cropCare": "Crop Care", "stageGuide": "Stage Guide" },
-    "featured": {
-      "title": "Leaf Blight in Paddy — What to do?",
-      "body": "Fungal disease. Use recommended fungicides and maintain proper water management.",
-      "cta": "Take a Photo for Diagnosis"
-    },
-    "diagnosisPendingTitle": "Diagnosis not connected yet",
-    "diagnosisPendingBody": "Photo-based crop diagnosis needs a vision AI integration on the backend. This button will work once that's wired up.",
-    "otherAdvisoriesTitle": "Other Advisories",
-    "crops": { "rice": "Rice", "maize": "Maize", "chilli": "Chilli", "cotton": "Cotton" }
-  },
-  "labourServices": {
-    "title": "Labour Services",
-    "demoDataNote": "Demo data",
-    "findTab": "Find Labour",
-    "bookingsTab": "My Bookings",
-    "postRequirement": "Post Labour Requirement",
-    "perDay": "/ day",
-    "workers": {
-      "ramesh": { "name": "Ramesh Kumar", "skill": "Harvesting" },
-      "lakshmi": { "name": "Lakshmi Devi", "skill": "Transplanting" },
-      "suresh": { "name": "Suresh Reddy", "skill": "Sowing" },
-      "anitha": { "name": "Anitha Rani", "skill": "General Farm Work" }
-    },
-    "bookCta": "Book",
-    "noBookingsTitle": "No bookings yet",
-    "noBookingsBody": "Labour you book will show up here, with status and contact details."
-  },
-  "farmServices": {
-    "title": "Farm Services",
-    "demoDataNote": "Demo data",
-    "perHour": "/ hour",
-    "bookCta": "Book Now",
-    "services": {
-      "tractorRental": "Tractor Rental",
-      "harvesting": "Harvesting Equipment",
-      "droneSpraying": "Drone Spraying",
-      "soilTesting": "Soil Testing",
-      "customHiring": "Custom Hiring Services",
-      "transport": "Transport",
-      "labourSupport": "Labour Support",
-      "irrigationServices": "Irrigation Services"
-    }
-  },
-  "governmentSchemes": {
+  "schemes": {
     "title": "Government Schemes",
-    "centralTab": "Central Schemes",
-    "stateTab": "State Schemes",
-    "schemes": {
-      "pmKisan": { "name": "PM-KISAN", "description": "Income support for farmers" },
-      "pmfby": { "name": "PM Crop Insurance (PMFBY)", "description": "Crop insurance scheme" },
-      "kcc": { "name": "Kisan Credit Card (KCC)", "description": "Agricultural credit facilities" },
-      "soilHealthCard": { "name": "Soil Health Card", "description": "Soil testing and recommendations" },
-      "equipmentSubsidy": { "name": "Subsidy on Farm Equipment", "description": "Tractor, tools, and machinery" },
-      "stateAgriSchemes": { "name": "State Agriculture Schemes", "description": "Check state-specific schemes" }
-    }
+    "pmKisan": "Income support for eligible farmers",
+    "pmfby": "Crop insurance",
+    "kcc": "Agricultural credit",
+    "askEligibility": "Ask about eligibility"
   },
-  "farmManagement": {
-    "title": "Farm Management",
-    "tabs": { "myFields": "My Fields", "activities": "Activities", "expenses": "Expenses" },
-    "fieldAcres": "{{acres}} Acres",
-    "actions": { "addField": "Add Field", "cropPlan": "Crop Plan", "irrigation": "Irrigation", "harvest": "Harvest" },
-    "addNewCrop": "Add New Crop",
-    "myCropsTitle": "My Crops",
-    "stages": { "growing": "Growing", "sowing": "Sowing", "planning": "Planning" },
-    "crops": { "paddy": "Paddy", "maize": "Maize", "cotton": "Cotton" }
+  "expert": {
+    "title": "Expert Help",
+    "notConnected": "Expert network is not connected yet.",
+    "topic": "Topic",
+    "topics": {
+      "cropDisease": "Crop disease",
+      "fertilizer": "Fertilizer",
+      "irrigation": "Irrigation",
+      "market": "Market"
+    },
+    "requestCallback": "Request Callback (Demo)",
+    "noCallback": "No callback was sent."
   },
-  "profile": {
-    "title": "My Profile",
-    "mockName": "Ramu Naik",
-    "mockLocation": "Hyderabad, Telangana",
-    "menu": {
-      "myFields": "My Fields",
-      "myOrders": "My Orders",
-      "savedProducts": "Saved Products",
-      "notifications": "Notifications",
-      "advisoryHistory": "My Advisory History",
-      "settings": "Settings",
-      "helpSupport": "Help & Support",
-      "logout": "Logout"
-    }
+  "alerts": {
+    "title": "Alerts & Reminders",
+    "weather": "Weather alerts",
+    "crop": "Crop reminders",
+    "market": "Market price updates",
+    "schemes": "Scheme announcements",
+    "available": "Available after live integrations."
   },
-  "aiAssistant": {
-    "title": "AI Assistant",
-    "greeting": "Hello! I am your Annadata 360 Assistant. Ask me about crops, weather, market prices, government schemes, or any farming query.",
-    "inputPlaceholder": "Type your question…",
-    "micHint": "Tap to speak",
-    "suggestions": [
-      "What is the best time to sow rice?",
-      "Current market price of maize?",
-      "How to control leaf blight?",
-      "Tell me about PM-KISAN scheme",
-      "How to improve soil health?"
-    ]
+  "farm": {
+    "title": "My Farm",
+    "crop": "Crop",
+    "area": "Area in acres",
+    "stage": "Crop stage",
+    "save": "Save Changes",
+    "saved": "Saved on this phone",
+    "diagnosis": "Crop Diagnosis"
+  },
+  "services": {
+    "title": "Farmer Services",
+    "askAi": "Ask AI",
+    "diagnosis": "Crop Diagnosis",
+    "weather": "Weather",
+    "irrigation": "Irrigation",
+    "market": "Market Prices",
+    "schemes": "Government Schemes",
+    "expert": "Expert Help",
+    "alerts": "Alerts",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "voice": "Voice assistance (demo)",
+    "notifications": "Notifications (demo)",
+    "editProfile": "Edit Profile",
+    "manageFarm": "Manage Farm",
+    "version": "Annadata 360 v{{version}}"
   }
 }

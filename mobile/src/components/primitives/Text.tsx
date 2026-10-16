@@ -21,7 +21,7 @@ export function Text({ variant = 'body', weight, color, align, style, children, 
   const { i18n } = useTranslation();
   const variantConfig = theme.typography[variant];
   const resolvedWeight = weight ?? variantConfig.weight;
-  const fontFamily = resolveFontFamily(i18n.language, resolvedWeight);
+  const fontFamily = resolveFontFamily(i18n.language, resolvedWeight, variantConfig.display);
 
   return (
     <RNText

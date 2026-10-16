@@ -1,19 +1,25 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { SplashScreen } from '../screens/onboarding/SplashScreen';
-import { LanguageSelectScreen } from '../screens/onboarding/LanguageSelectScreen';
+import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
+import { LanguageScreen } from '../screens/onboarding/LanguageScreen';
+import { FarmerProfileScreen } from '../screens/onboarding/FarmerProfileScreen';
+import { FarmLocationScreen } from '../screens/onboarding/FarmLocationScreen';
+import { CropSelectionScreen } from '../screens/onboarding/CropSelectionScreen';
 import { MainTabs } from './MainTabs';
 import { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-export function RootNavigator() {
+export function RootNavigator({ onboarded }: { onboarded: boolean }) {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Splash" component={SplashScreen} />
-      <Stack.Screen name="LanguageSelect" component={LanguageSelectScreen} />
-      <Stack.Screen name="MainTabs" component={MainTabs} />
+    <Stack.Navigator initialRouteName={onboarded ? 'Main' : 'Welcome'} screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="Language" component={LanguageScreen} />
+      <Stack.Screen name="FarmerProfile" component={FarmerProfileScreen} />
+      <Stack.Screen name="FarmLocation" component={FarmLocationScreen} />
+      <Stack.Screen name="CropSelection" component={CropSelectionScreen} />
+      <Stack.Screen name="Main" component={MainTabs} />
     </Stack.Navigator>
   );
 }
