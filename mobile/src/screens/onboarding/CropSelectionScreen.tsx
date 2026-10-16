@@ -1,14 +1,16 @@
 import React from 'react';
-import { Pressable, Text as RNText } from 'react-native';
+import { Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { ArrowRight } from 'lucide-react-native';
 
 import { theme } from '../../theme';
 import { Button, Text, TextField } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { ScreenTitle, StepProgress } from '../../components/Blocks';
 import { SelectedBadge, TileGrid } from '../../components/FeatureTile';
+import { IconChip } from '../../components/IconChip';
 import { SelectField } from '../../components/SelectField';
-import { crops, stages } from '../../data/farm';
+import { cropIcon, crops, stages } from '../../data/farm';
 import { useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { hasSession } from '../../api/tokens';
@@ -30,21 +32,23 @@ export function CropSelectionScreen() {
 
       <TileGrid>
         {crops.map((c) => {
-          const selected = crop === c.key;
+          const selected = crop === c.code;
           return (
             <Pressable
-              key={c.key}
+              key={c.code}
               accessibilityRole="radio"
               accessibilityState={{ selected }}
-              accessibilityLabel={t(`crops.${c.key}`)}
-              onPress={() => update({ crop: c.key })}
+              accessibilityLabel={t(`crops.${c.code}`)}
+              onPress={() => update({ crop: c.code })}
               style={({ pressed }) => ({
-                flexBasis: '46%',
+                flexBasis: '30%',
                 flexGrow: 1,
-                minHeight: 112,
+                minHeight: 104,
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: theme.spacing.xxs,
+                gap: theme.spacing.xs,
+                paddingVertical: theme.spacing.sm,
+                paddingHorizontal: theme.spacing.xs,
                 borderRadius: theme.radius.lg,
                 borderWidth: selected ? 2 : 1,
                 borderColor: selected ? theme.color.surface.brand : theme.color.border.default,
@@ -53,9 +57,9 @@ export function CropSelectionScreen() {
                 ...theme.elevation.level1,
               })}
             >
-              <RNText style={{ fontSize: 38, lineHeight: 46 }}>{c.emoji}</RNText>
-              <Text variant="label" weight="bold">
-                {t(`crops.${c.key}`)}
+              <IconChip icon={cropIcon(c.code)} tint={selected ? 'leaf' : 'stone'} size={44} />
+              <Text variant="bodyStrong" weight="bold" align="center" numberOfLines={2}>
+                {t(`crops.${c.code}`)}
               </Text>
               {selected ? <SelectedBadge /> : null}
             </Pressable>
@@ -77,7 +81,7 @@ export function CropSelectionScreen() {
       />
       <Button
         label={t('common.finish')}
-        trailing="→"
+        trailingIcon={ArrowRight}
         onPress={() => {
           completeOnboarding();
           enterApp();

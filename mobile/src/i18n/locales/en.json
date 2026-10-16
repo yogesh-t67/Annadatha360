@@ -48,7 +48,20 @@
     "cotton": "Cotton",
     "maize": "Maize",
     "tomato": "Tomato",
-    "groundnut": "Groundnut"
+    "groundnut": "Groundnut",
+    "jowar": "Jowar",
+    "sugarcane": "Sugarcane",
+    "banana": "Banana",
+    "mango": "Mango",
+    "castor": "Castor",
+    "oil_palm": "Oil Palm",
+    "sunflower": "Sunflower",
+    "bengal_gram": "Bengal Gram",
+    "black_gram": "Black Gram",
+    "green_gram": "Green Gram",
+    "red_gram": "Red Gram",
+    "turmeric": "Turmeric",
+    "onion": "Onion"
   },
   "stages": {
     "sowing": "Sowing",

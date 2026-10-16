@@ -1,12 +1,14 @@
 import React from 'react';
-import { Text as RNText, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Info } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
 
 import { theme } from '../theme';
 import { Text } from './primitives';
 
 /** Amber info strip. Defaults to the "demo only" notice shown under every feature that has no live data yet. */
-export function Notice({ message, emoji = 'ℹ️' }: { message?: string; emoji?: string }) {
+export function Notice({ message, icon: Icon = Info }: { message?: string; icon?: LucideIcon }) {
   const { t } = useTranslation();
   return (
     <View
@@ -22,7 +24,7 @@ export function Notice({ message, emoji = 'ℹ️' }: { message?: string; emoji?
         backgroundColor: theme.color.status.warningBg,
       }}
     >
-      <RNText style={{ fontSize: 16, lineHeight: 20 }}>{emoji}</RNText>
+      <Icon size={16} color={theme.color.status.warningText} strokeWidth={2.25} style={{ marginTop: 2 }} />
       <Text variant="caption" color={theme.color.status.warningText} style={{ flex: 1 }}>
         {message ?? t('common.demoNotice')}
       </Text>

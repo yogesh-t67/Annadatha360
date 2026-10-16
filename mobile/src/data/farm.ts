@@ -1,14 +1,13 @@
-import type { Tint } from '../theme';
+import { CloudSun, Droplet, Droplets, HelpCircle } from 'lucide-react-native';
 
-export const crops = [
-  { key: 'paddy', emoji: '🌾' },
-  { key: 'chilli', emoji: '🌶️' },
-  { key: 'cotton', emoji: '☁️' },
-  { key: 'maize', emoji: '🌽' },
-  { key: 'tomato', emoji: '🍅' },
-  { key: 'groundnut', emoji: '🥜' },
-] as const;
-export type CropKey = (typeof crops)[number]['key'];
+import type { Tint } from '../theme';
+import { cropCatalog } from './cropCatalog';
+
+export { cropIcon, cropCategory } from './cropCatalog';
+export type { CropCategory } from './cropCatalog';
+
+export const crops = cropCatalog;
+export type CropKey = (typeof cropCatalog)[number]['code'];
 
 export const stages = ['sowing', 'growing', 'flowering', 'harvest'] as const;
 export type StageKey = (typeof stages)[number];
@@ -31,13 +30,9 @@ export const marketDistricts = ['guntur', 'vijayawada', 'warangal', 'nizamabad',
 
 export type DistrictKey = (typeof farmDistricts)[number] | (typeof marketDistricts)[number];
 
-export const soilStates: { key: 'dry' | 'moist' | 'wet' | 'unknown'; emoji: string; tint: Tint }[] = [
-  { key: 'dry', emoji: '🏜️', tint: 'sun' },
-  { key: 'moist', emoji: '🌱', tint: 'leaf' },
-  { key: 'wet', emoji: '🌊', tint: 'water' },
-  { key: 'unknown', emoji: '❓', tint: 'stone' },
+export const soilStates: { key: 'dry' | 'moist' | 'wet' | 'unknown'; icon: typeof Droplet; tint: Tint }[] = [
+  { key: 'dry', icon: CloudSun, tint: 'sun' },
+  { key: 'moist', icon: Droplet, tint: 'leaf' },
+  { key: 'wet', icon: Droplets, tint: 'water' },
+  { key: 'unknown', icon: HelpCircle, tint: 'stone' },
 ];
-
-export function cropEmoji(key: CropKey): string {
-  return crops.find((c) => c.key === key)?.emoji ?? '🌾';
-}

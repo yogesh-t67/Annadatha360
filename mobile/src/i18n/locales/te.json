@@ -48,7 +48,20 @@
     "cotton": "పత్తి",
     "maize": "మొక్కజొన్న",
     "tomato": "టమాటా",
-    "groundnut": "వేరుశనగ"
+    "groundnut": "వేరుశనగ",
+    "jowar": "జొన్న",
+    "sugarcane": "చెరకు",
+    "banana": "అరటి",
+    "mango": "మామిడి",
+    "castor": "ఆముదం",
+    "oil_palm": "ఆయిల్ పామ్",
+    "sunflower": "పొద్దుతిరుగుడు",
+    "bengal_gram": "శనగ",
+    "black_gram": "మినుము",
+    "green_gram": "పెసర",
+    "red_gram": "కంది",
+    "turmeric": "పసుపు",
+    "onion": "ఉల్లిపాయ"
   },
   "stages": {
     "sowing": "విత్తడం",

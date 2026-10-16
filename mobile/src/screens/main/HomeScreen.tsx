@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
-import { Text as RNText, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
+import { CloudSun, Droplet, Leaf, MapPin, Thermometer, TrendingUp, Wrench } from 'lucide-react-native';
 
 import { theme } from '../../theme';
 import { Button, Card, Text } from '../../components/primitives';
@@ -9,25 +10,13 @@ import { ScreenContainer } from '../../components/ScreenContainer';
 import { Pill } from '../../components/Blocks';
 import { FeatureTile, TileGrid } from '../../components/FeatureTile';
 import { MicButton } from '../../components/MicButton';
-import { cropEmoji } from '../../data/farm';
+import { cropIcon } from '../../data/farm';
+import { CONDITION_ICON } from '../../data/weatherIcons';
 import { useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { getHome } from '../../api/endpoints';
 import { hasSession } from '../../api/tokens';
 import type { HomeOut } from '../../api/types';
-
-const HOME_CONDITION_EMOJI: Record<string, string> = {
-  clear: '☀️',
-  partly_cloudy: '🌤️',
-  overcast: '☁️',
-  fog: '🌫️',
-  drizzle: '🌦️',
-  rain: '🌧️',
-  heavy_rain: '🌧️',
-  snow: '❄️',
-  thunderstorm: '⛈️',
-  unknown: '🌡️',
-};
 
 export function HomeScreen() {
   const { t } = useTranslation();
@@ -49,28 +38,29 @@ export function HomeScreen() {
 
   const trimmedName = name.trim();
   const location = [village.trim(), t(`districts.${district}`)].filter(Boolean).join(', ');
+  const CropIcon = cropIcon(crop);
+  const today = home?.weather?.today;
+  const TodayIcon = today ? CONDITION_ICON[today.condition] : Thermometer;
 
   return (
     <ScreenContainer>
       <View style={{ gap: theme.spacing.xs }}>
-        <Text variant="h1">{`${trimmedName ? t('home.helloName', { name: trimmedName }) : t('home.hello')}! 🙏`}</Text>
-        <Pill>{`📍 ${location} · ${t(`states.${region}`)}`}</Pill>
+        <Text variant="h1">{trimmedName ? t('home.helloName', { name: trimmedName }) : t('home.hello')}</Text>
+        <Pill icon={MapPin}>{`${location} · ${t(`states.${region}`)}`}</Pill>
       </View>
 
-      {home?.weather?.today || home?.latest_advisory ? (
+      {today || home?.latest_advisory ? (
         <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
-          {home.weather?.today ? (
+          {today ? (
             <Card style={{ flex: 1, alignItems: 'center', gap: 2 }} onPress={() => open('Weather')}>
-              <RNText style={{ fontSize: 28 }}>{HOME_CONDITION_EMOJI[home.weather.today.condition] ?? '🌡️'}</RNText>
-              <Text variant="h2">
-                {home.weather.today.temp_max_c != null ? `${Math.round(home.weather.today.temp_max_c)}°C` : '—'}
-              </Text>
+              <TodayIcon size={28} color={theme.color.status.infoText} strokeWidth={1.75} />
+              <Text variant="h2">{today.temp_max_c != null ? `${Math.round(today.temp_max_c)}°C` : '—'}</Text>
               <Text variant="caption" color={theme.color.text.muted}>
                 {t('home.todayWeather')}
               </Text>
             </Card>
           ) : null}
-          {home.latest_advisory ? (
+          {home?.latest_advisory ? (
             <Card style={{ flex: 2, gap: 2, justifyContent: 'center' }}>
               <Text variant="caption" weight="semibold" color={theme.color.text.muted}>
                 {t('home.latestAdvisory')}
@@ -98,14 +88,14 @@ export function HomeScreen() {
               backgroundColor: theme.color.surface.base,
             }}
           >
-            <RNText style={{ fontSize: 32 }}>{cropEmoji(crop)}</RNText>
+            <CropIcon size={30} color={theme.color.surface.brandDeep} strokeWidth={1.75} />
           </View>
           <View style={{ flex: 1 }}>
             <Text variant="h1" color={theme.color.text.inverse}>
               {t(`crops.${crop}`)}
             </Text>
             <Text variant="body" color={theme.color.text.inverseMuted}>
-              {`🌱 ${t(`stages.${stage}`)} · ${t('home.acresValue', { acres })}`}
+              {`${t(`stages.${stage}`)} · ${t('home.acresValue', { acres })}`}
             </Text>
           </View>
         </View>
@@ -123,13 +113,13 @@ export function HomeScreen() {
       </View>
 
       <TileGrid>
-        <FeatureTile emoji="🌿" tint="clay" label={t('home.tiles.cropProblem')} showArrow onPress={() => open('Diagnosis')} />
-        <FeatureTile emoji="🌦️" tint="sky" label={t('home.tiles.weather')} showArrow onPress={() => open('Weather')} />
-        <FeatureTile emoji="💧" tint="water" label={t('home.tiles.irrigation')} showArrow onPress={() => open('Irrigation')} />
-        <FeatureTile emoji="💰" tint="sun" label={t('home.tiles.marketPrices')} showArrow onPress={() => open('Market')} />
+        <FeatureTile icon={Leaf} tint="clay" label={t('home.tiles.cropProblem')} showArrow onPress={() => open('Diagnosis')} />
+        <FeatureTile icon={CloudSun} tint="sky" label={t('home.tiles.weather')} showArrow onPress={() => open('Weather')} />
+        <FeatureTile icon={Droplet} tint="water" label={t('home.tiles.irrigation')} showArrow onPress={() => open('Irrigation')} />
+        <FeatureTile icon={TrendingUp} tint="sun" label={t('home.tiles.marketPrices')} showArrow onPress={() => open('Market')} />
       </TileGrid>
 
-      <Button label={t('home.exploreServices')} variant="soft" emoji="🧰" onPress={() => tab('ServicesTab')} />
+      <Button label={t('home.exploreServices')} variant="soft" icon={Wrench} onPress={() => tab('ServicesTab')} />
     </ScreenContainer>
   );
 }

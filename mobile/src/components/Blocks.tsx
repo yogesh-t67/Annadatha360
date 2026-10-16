@@ -1,11 +1,12 @@
 import React from 'react';
-import { Text as RNText, View, ViewStyle } from 'react-native';
+import { View, ViewStyle } from 'react-native';
+import type { LucideIcon } from 'lucide-react-native';
 
 import { theme } from '../theme';
 import { Text } from './primitives';
 
-/** Soft green-to-amber panel that leads a screen with one large emoji. */
-export function Hero({ emoji, style, children }: { emoji?: string; style?: ViewStyle; children?: React.ReactNode }) {
+/** Soft green-to-amber panel that leads a screen with one large icon. */
+export function Hero({ icon: Icon, style, children }: { icon?: LucideIcon; style?: ViewStyle; children?: React.ReactNode }) {
   return (
     <View
       style={[
@@ -22,17 +23,33 @@ export function Hero({ emoji, style, children }: { emoji?: string; style?: ViewS
         style,
       ]}
     >
-      {emoji ? <RNText style={{ fontSize: 62, lineHeight: 76 }}>{emoji}</RNText> : null}
+      {Icon ? (
+        <View
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: 36,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: theme.color.surface.base,
+          }}
+        >
+          <Icon size={38} color={theme.color.surface.brandDeep} strokeWidth={1.75} />
+        </View>
+      ) : null}
       {children}
     </View>
   );
 }
 
-export function Pill({ children }: { children: React.ReactNode }) {
+export function Pill({ icon: Icon, children }: { icon?: LucideIcon; children: React.ReactNode }) {
   return (
     <View
       style={{
         alignSelf: 'flex-start',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
         paddingHorizontal: theme.spacing.sm,
         paddingVertical: theme.spacing.xxs,
         borderRadius: theme.radius.full,
@@ -41,6 +58,7 @@ export function Pill({ children }: { children: React.ReactNode }) {
         backgroundColor: theme.color.surface.base,
       }}
     >
+      {Icon ? <Icon size={14} color={theme.color.text.secondary} strokeWidth={2.25} /> : null}
       <Text variant="caption" weight="medium" color={theme.color.text.secondary}>
         {children}
       </Text>
@@ -72,6 +90,11 @@ export function StepProgress({ step, total = 3 }: { step: number; total?: number
   );
 }
 
-export function ScreenTitle({ emoji, children }: { emoji?: string; children: React.ReactNode }) {
-  return <Text variant="h1">{emoji ? `${emoji} ${children}` : children}</Text>;
+export function ScreenTitle({ icon: Icon, children }: { icon?: LucideIcon; children: React.ReactNode }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
+      {Icon ? <Icon size={24} color={theme.color.text.primary} strokeWidth={2.25} /> : null}
+      <Text variant="h1">{children}</Text>
+    </View>
+  );
 }

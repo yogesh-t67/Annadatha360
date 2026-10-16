@@ -1,6 +1,7 @@
 import React from 'react';
-import { Text as RNText, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { ArrowRight, Mic, Sprout, UsersRound } from 'lucide-react-native';
 
 import { theme } from '../../theme';
 import { Button, Text } from '../../components/primitives';
@@ -8,13 +9,15 @@ import { ScreenContainer } from '../../components/ScreenContainer';
 import { Hero } from '../../components/Blocks';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 
+const highlights = [Mic, UsersRound, Sprout];
+
 export function WelcomeScreen() {
   const { t } = useTranslation();
   const { navigation } = useAppNavigation();
 
   return (
     <ScreenContainer>
-      <Hero emoji="👩🏽‍🌾🌾">
+      <Hero icon={Sprout}>
         <Text variant="display" align="center">
           {t('welcome.title')}
         </Text>
@@ -24,9 +27,9 @@ export function WelcomeScreen() {
       </Hero>
 
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: theme.spacing.sm }} accessibilityElementsHidden>
-        {['🗣️', '🙋🏽', '🌱'].map((emoji) => (
+        {highlights.map((Icon, i) => (
           <View
-            key={emoji}
+            key={i}
             style={{
               width: 60,
               height: 60,
@@ -39,7 +42,7 @@ export function WelcomeScreen() {
               ...theme.elevation.level1,
             }}
           >
-            <RNText style={{ fontSize: 28 }}>{emoji}</RNText>
+            <Icon size={26} color={theme.color.surface.brandDeep} strokeWidth={2} />
           </View>
         ))}
       </View>
@@ -51,7 +54,7 @@ export function WelcomeScreen() {
         {t('welcome.mottoBody')}
       </Text>
 
-      <Button label={t('common.getStarted')} trailing="→" onPress={() => navigation.navigate('Language')} />
+      <Button label={t('common.getStarted')} trailingIcon={ArrowRight} onPress={() => navigation.navigate('Language')} />
     </ScreenContainer>
   );
 }

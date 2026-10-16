@@ -1,7 +1,21 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text as RNText, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { RouteProp, useFocusEffect, useRoute } from '@react-navigation/native';
+import {
+  ArrowRight,
+  Bug,
+  CalendarClock,
+  Droplet,
+  Leaf,
+  MessageCircle,
+  Mic,
+  Send,
+  Smartphone,
+  Square,
+  TriangleAlert,
+  Volume2,
+} from 'lucide-react-native';
 
 import { theme } from '../../theme';
 import { Button, Card, Text, TextField } from '../../components/primitives';
@@ -18,10 +32,10 @@ import { speak, stopSpeaking } from '../../voice/speech';
 import { SpeechInputError, useSpeechInput } from '../../voice/useSpeechInput';
 
 const commonQuestions = [
-  { key: 'yellowLeaves', emoji: '🍂' },
-  { key: 'whenIrrigate', emoji: '🚿' },
-  { key: 'insects', emoji: '🐛' },
-  { key: 'whenSell', emoji: '🏷️' },
+  { key: 'yellowLeaves', icon: Leaf },
+  { key: 'whenIrrigate', icon: Droplet },
+  { key: 'insects', icon: Bug },
+  { key: 'whenSell', icon: CalendarClock },
 ] as const;
 
 const MIC_ERROR_KEYS: Record<SpeechInputError, string> = {
@@ -127,14 +141,14 @@ export function VoiceAssistantScreen() {
           {speech.partial}
         </Text>
       ) : null}
-      {speech.error ? <Notice emoji="🎙️" message={t(MIC_ERROR_KEYS[speech.error])} /> : null}
+      {speech.error ? <Notice icon={Mic} message={t(MIC_ERROR_KEYS[speech.error])} /> : null}
 
       {signedIn === false ? (
         <Card tone="soft" style={{ gap: theme.spacing.sm }}>
           <Text variant="body">{t('voice.signInNeeded')}</Text>
           <Button
             label={t('voice.verifyNow')}
-            emoji="📱"
+            icon={Smartphone}
             compact
             onPress={() => navigation.navigate('VerifyPhone', { returnTo: 'back' })}
           />
@@ -175,7 +189,7 @@ export function VoiceAssistantScreen() {
               backgroundColor: pressed ? theme.color.surface.brandSoft : theme.color.surface.base,
             })}
           >
-            <RNText style={{ fontSize: 20 }}>{q.emoji}</RNText>
+            <q.icon size={20} color={theme.color.surface.brandDeep} strokeWidth={2} />
             <Text variant="bodyStrong" color={theme.color.text.secondary} style={{ flex: 1 }}>
               {t(`voice.questions.${q.key}`)}
             </Text>
@@ -185,23 +199,26 @@ export function VoiceAssistantScreen() {
 
       <Button
         label={asking ? t('voice.thinking') : t('voice.getAnswer')}
-        trailing="➤"
+        trailingIcon={Send}
         loading={asking}
         disabled={!question.trim() || asking}
         onPress={() => ask(question)}
       />
 
-      {errorKey ? <Notice emoji="⚠️" message={t(errorKey)} /> : null}
+      {errorKey ? <Notice icon={TriangleAlert} message={t(errorKey)} /> : null}
 
       {answer ? (
         <Card tone="soft" style={{ gap: theme.spacing.sm }}>
-          <Text variant="h2">{`💬 ${t('voice.answerTitle')}`}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
+            <MessageCircle size={20} color={theme.color.surface.brandDeep} strokeWidth={2.25} />
+            <Text variant="h2">{t('voice.answerTitle')}</Text>
+          </View>
           <Text variant="body" color={theme.color.text.secondary}>
             {answer}
           </Text>
           <Button
             label={speaking ? t('voice.stopSpeaking') : t('voice.listen')}
-            emoji={speaking ? '⏹️' : '🔊'}
+            icon={speaking ? Square : Volume2}
             variant="soft"
             compact
             onPress={() => {
@@ -213,7 +230,7 @@ export function VoiceAssistantScreen() {
               }
             }}
           />
-          <Button label={t('voice.viewDiagnosis')} variant="secondary" compact trailing="→" onPress={() => open('Diagnosis')} />
+          <Button label={t('voice.viewDiagnosis')} variant="secondary" compact trailingIcon={ArrowRight} onPress={() => open('Diagnosis')} />
         </Card>
       ) : null}
     </ScreenContainer>

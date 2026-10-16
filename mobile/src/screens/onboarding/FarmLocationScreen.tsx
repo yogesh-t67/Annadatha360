@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArrowRight, MapPin } from 'lucide-react-native';
 
 import { Button, TextField } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
@@ -20,7 +21,7 @@ export function FarmLocationScreen() {
   return (
     <ScreenContainer showBack>
       <StepProgress step={2} />
-      <ScreenTitle emoji="📍">{t('farmLocation.title')}</ScreenTitle>
+      <ScreenTitle icon={MapPin}>{t('farmLocation.title')}</ScreenTitle>
       <SelectField
         label={t('farmLocation.state')}
         value={region}
@@ -34,7 +35,7 @@ export function FarmLocationScreen() {
         onChange={(v) => update({ district: v })}
       />
       <TextField label={t('farmLocation.village')} value={village} onChangeText={(v) => update({ village: v })} />
-      <Button label={t('common.next')} trailing="→" onPress={() => navigation.navigate('CropSelection')} />
+      <Button label={t('common.next')} trailingIcon={ArrowRight} onPress={() => navigation.navigate('CropSelection')} />
     </ScreenContainer>
   );
 }

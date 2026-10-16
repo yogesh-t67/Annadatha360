@@ -1,12 +1,14 @@
 import React from 'react';
-import { Pressable, Text as RNText, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { ArrowUpRight, Check } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
 
 import { theme, Tint } from '../theme';
 import { Text } from './primitives';
-import { EmojiChip } from './EmojiChip';
+import { IconChip } from './IconChip';
 
 export interface FeatureTileProps {
-  emoji: string;
+  icon: LucideIcon;
   label: string;
   tint: Tint;
   onPress: () => void;
@@ -14,8 +16,8 @@ export interface FeatureTileProps {
   showArrow?: boolean;
 }
 
-/** Two-per-row card with a tinted emoji chip; one tint per feature across the app. */
-export function FeatureTile({ emoji, label, tint, onPress, selected = false, showArrow = false }: FeatureTileProps) {
+/** Two-per-row card with a tinted icon chip; one tint per feature across the app. */
+export function FeatureTile({ icon, label, tint, onPress, selected = false, showArrow = false }: FeatureTileProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -38,12 +40,14 @@ export function FeatureTile({ emoji, label, tint, onPress, selected = false, sho
         pressed && { transform: [{ scale: 0.98 }] },
       ]}
     >
-      <EmojiChip emoji={emoji} tint={tint} />
+      <IconChip icon={icon} tint={tint} />
       <Text variant="label" weight="bold">
         {label}
       </Text>
       {showArrow ? (
-        <RNText style={{ position: 'absolute', top: 14, right: 16, fontSize: 18, color: theme.color.text.muted }}>↗</RNText>
+        <View style={{ position: 'absolute', top: 14, right: 16 }}>
+          <ArrowUpRight size={18} color={theme.color.text.muted} strokeWidth={2.25} />
+        </View>
       ) : null}
       {selected ? <SelectedBadge /> : null}
     </Pressable>
@@ -65,7 +69,7 @@ export function SelectedBadge() {
         backgroundColor: theme.color.surface.brand,
       }}
     >
-      <RNText style={{ color: theme.color.text.inverse, fontSize: 13, fontWeight: '800' }}>✓</RNText>
+      <Check size={15} color={theme.color.text.inverse} strokeWidth={3} />
     </View>
   );
 }

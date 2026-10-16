@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, Text as RNText, View } from 'react-native';
+import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronDown } from 'lucide-react-native';
+import { Check, ChevronDown } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
 
 import { theme } from '../theme';
 import { Text } from './primitives';
@@ -9,7 +10,7 @@ import { Text } from './primitives';
 export interface SelectOption<T extends string> {
   value: T;
   label: string;
-  emoji?: string;
+  icon?: LucideIcon;
 }
 
 export interface SelectFieldProps<T extends string> {
@@ -46,7 +47,7 @@ export function SelectField<T extends string>({ label, value, options, onChange 
           backgroundColor: pressed ? theme.color.surface.sunken : theme.color.surface.base,
         })}
       >
-        {current?.emoji ? <RNText style={{ fontSize: 20 }}>{current.emoji}</RNText> : null}
+        {current?.icon ? <current.icon size={20} color={theme.color.surface.brandDeep} strokeWidth={2} /> : null}
         <Text variant="label" weight="medium" style={{ flex: 1 }}>
           {current?.label}
         </Text>
@@ -102,13 +103,11 @@ export function SelectField<T extends string>({ label, value, options, onChange 
                     backgroundColor: selected || pressed ? theme.color.surface.brandSoft : theme.color.surface.base,
                   })}
                 >
-                  {option.emoji ? <RNText style={{ fontSize: 22 }}>{option.emoji}</RNText> : null}
+                  {option.icon ? <option.icon size={22} color={theme.color.surface.brandDeep} strokeWidth={2} /> : null}
                   <Text variant="label" weight={selected ? 'bold' : 'medium'} style={{ flex: 1 }}>
                     {option.label}
                   </Text>
-                  {selected ? (
-                    <RNText style={{ fontSize: 18, fontWeight: '800', color: theme.color.surface.brand }}>✓</RNText>
-                  ) : null}
+                  {selected ? <Check size={20} color={theme.color.surface.brand} strokeWidth={3} /> : null}
                 </Pressable>
               );
             })}

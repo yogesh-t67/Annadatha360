@@ -1,18 +1,20 @@
 import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { CloudRain, Landmark, Sprout, TrendingUp } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
 
 import { theme, Tint } from '../../theme';
 import { Card, Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
-import { EmojiChip } from '../../components/EmojiChip';
+import { IconChip } from '../../components/IconChip';
 import { Notice } from '../../components/Notice';
 
-const alertTypes: { key: string; emoji: string; tint: Tint }[] = [
-  { key: 'weather', emoji: '🌧️', tint: 'sky' },
-  { key: 'crop', emoji: '🌱', tint: 'leaf' },
-  { key: 'market', emoji: '💰', tint: 'sun' },
-  { key: 'schemes', emoji: '🏛️', tint: 'clay' },
+const alertTypes: { key: string; icon: LucideIcon; tint: Tint }[] = [
+  { key: 'weather', icon: CloudRain, tint: 'sky' },
+  { key: 'crop', icon: Sprout, tint: 'leaf' },
+  { key: 'market', icon: TrendingUp, tint: 'sun' },
+  { key: 'schemes', icon: Landmark, tint: 'clay' },
 ];
 
 export function AlertsScreen() {
@@ -24,7 +26,7 @@ export function AlertsScreen() {
       {alertTypes.map((a) => (
         <Card key={a.key}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-            <EmojiChip emoji={a.emoji} tint={a.tint} />
+            <IconChip icon={a.icon} tint={a.tint} />
             <View style={{ flex: 1 }}>
               <Text variant="h2">{t(`alerts.${a.key}`)}</Text>
               <Text variant="body" color={theme.color.text.muted}>

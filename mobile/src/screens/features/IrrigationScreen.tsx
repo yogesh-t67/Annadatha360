@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { ArrowRight } from 'lucide-react-native';
 
 import { theme } from '../../theme';
 import { Card, Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
-import { EmojiChip } from '../../components/EmojiChip';
+import { IconChip } from '../../components/IconChip';
 import { FeatureTile, TileGrid } from '../../components/FeatureTile';
 import { Notice } from '../../components/Notice';
-import { cropEmoji, soilStates } from '../../data/farm';
+import { cropIcon, soilStates } from '../../data/farm';
 import { useFarmStore } from '../../store/farmStore';
 
 export function IrrigationScreen() {
@@ -23,7 +24,7 @@ export function IrrigationScreen() {
 
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-          <EmojiChip emoji={cropEmoji(crop)} tint="leaf" size={54} />
+          <IconChip icon={cropIcon(crop)} tint="leaf" size={54} />
           <View style={{ flex: 1 }}>
             <Text variant="h2">{t(`crops.${crop}`)}</Text>
             <Text variant="body" color={theme.color.text.muted}>
@@ -38,7 +39,7 @@ export function IrrigationScreen() {
         {soilStates.map((s) => (
           <FeatureTile
             key={s.key}
-            emoji={s.emoji}
+            icon={s.icon}
             tint={s.tint}
             label={t(`irrigation.soil.${s.key}`)}
             selected={soil === s.key}
@@ -48,7 +49,10 @@ export function IrrigationScreen() {
       </TileGrid>
 
       <Card tone="soft">
-        <Text variant="h2">{`👉 ${t('irrigation.nextStep')}`}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
+          <ArrowRight size={18} color={theme.color.text.primary} strokeWidth={2.25} />
+          <Text variant="h2">{t('irrigation.nextStep')}</Text>
+        </View>
         <Text variant="body" color={theme.color.text.secondary}>
           {soil === 'wet' ? t('irrigation.wetAdvice') : t('irrigation.defaultAdvice')}
         </Text>

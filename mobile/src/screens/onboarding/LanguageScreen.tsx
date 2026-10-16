@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, Text as RNText, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { ArrowRight, Check } from 'lucide-react-native';
 
 import { theme } from '../../theme';
 import { Button, Text } from '../../components/primitives';
@@ -56,12 +57,12 @@ export function LanguageScreen() {
             <Text variant="h2" color={selected ? theme.color.text.inverse : theme.color.text.primary} style={{ flex: 1 }}>
               {t(`languageName.${code}`)}
             </Text>
-            {selected ? <RNText style={{ fontSize: 22, color: theme.color.text.inverse, fontWeight: '800' }}>✓</RNText> : null}
+            {selected ? <Check size={24} color={theme.color.text.inverse} strokeWidth={3} /> : null}
           </Pressable>
         );
       })}
 
-      <Button label={t('common.continue')} trailing="→" onPress={() => navigation.navigate('FarmerProfile')} />
+      <Button label={t('common.continue')} trailingIcon={ArrowRight} onPress={() => navigation.navigate('FarmerProfile')} />
     </ScreenContainer>
   );
 }

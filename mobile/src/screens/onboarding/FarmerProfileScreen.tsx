@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArrowRight, UserRound } from 'lucide-react-native';
 
 import { Button, TextField } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
@@ -17,7 +18,7 @@ export function FarmerProfileScreen() {
   return (
     <ScreenContainer showBack>
       <StepProgress step={1} />
-      <ScreenTitle emoji="👤">{t('farmerProfile.title')}</ScreenTitle>
+      <ScreenTitle icon={UserRound}>{t('farmerProfile.title')}</ScreenTitle>
       <TextField
         label={t('farmerProfile.name')}
         value={name}
@@ -32,7 +33,7 @@ export function FarmerProfileScreen() {
         keyboardType="phone-pad"
         maxLength={15}
       />
-      <Button label={t('common.next')} trailing="→" onPress={() => navigation.navigate('VerifyPhone')} />
+      <Button label={t('common.next')} trailingIcon={ArrowRight} onPress={() => navigation.navigate('VerifyPhone')} />
     </ScreenContainer>
   );
 }

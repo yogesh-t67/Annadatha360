@@ -1,8 +1,10 @@
 import React from 'react';
-import { Text as RNText, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Home, Mic, Sprout, Wrench } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
 
 import { resolveFontFamily, theme } from '../theme';
 import { HomeScreen } from '../screens/main/HomeScreen';
@@ -87,7 +89,7 @@ function ServicesStackNavigator() {
   );
 }
 
-function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+function TabIcon({ icon: Icon, focused }: { icon: LucideIcon; focused: boolean }) {
   return (
     <View
       style={{
@@ -99,16 +101,16 @@ function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
         backgroundColor: focused ? theme.color.surface.brandMid : 'transparent',
       }}
     >
-      <RNText style={{ fontSize: 19 }}>{emoji}</RNText>
+      <Icon size={20} color={focused ? theme.color.surface.brandDeep : theme.color.text.muted} strokeWidth={2.25} />
     </View>
   );
 }
 
-const tabs: { name: keyof MainTabParamList; component: React.ComponentType; emoji: string; label: string }[] = [
-  { name: 'HomeTab', component: HomeStackNavigator, emoji: '🏠', label: 'nav.home' },
-  { name: 'AskTab', component: AskStackNavigator, emoji: '🎙️', label: 'nav.ask' },
-  { name: 'FarmTab', component: FarmStackNavigator, emoji: '🌱', label: 'nav.farm' },
-  { name: 'ServicesTab', component: ServicesStackNavigator, emoji: '🧰', label: 'nav.services' },
+const tabs: { name: keyof MainTabParamList; component: React.ComponentType; icon: LucideIcon; label: string }[] = [
+  { name: 'HomeTab', component: HomeStackNavigator, icon: Home, label: 'nav.home' },
+  { name: 'AskTab', component: AskStackNavigator, icon: Mic, label: 'nav.ask' },
+  { name: 'FarmTab', component: FarmStackNavigator, icon: Sprout, label: 'nav.farm' },
+  { name: 'ServicesTab', component: ServicesStackNavigator, icon: Wrench, label: 'nav.services' },
 ];
 
 export function MainTabs() {
@@ -139,7 +141,7 @@ export function MainTabs() {
           component={tab.component}
           options={{
             title: t(tab.label),
-            tabBarIcon: ({ focused }) => <TabIcon emoji={tab.emoji} focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIcon icon={tab.icon} focused={focused} />,
           }}
         />
       ))}

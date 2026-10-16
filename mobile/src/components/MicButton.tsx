@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Pressable, Text as RNText, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Pressable, View } from 'react-native';
+import { Mic } from 'lucide-react-native';
 
 import { theme } from '../theme';
 
@@ -77,7 +78,7 @@ export function MicButton({ onPress, accessibilityLabel }: { onPress: () => void
           transform: [{ scale: pressed ? 0.96 : 1 }],
         })}
       >
-        <RNText style={{ fontSize: 54 }}>🎙️</RNText>
+        <Mic size={54} color={theme.color.text.inverse} strokeWidth={1.75} />
       </Pressable>
     </View>
   );

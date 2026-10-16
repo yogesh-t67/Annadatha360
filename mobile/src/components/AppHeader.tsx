@@ -1,7 +1,7 @@
 import React from 'react';
-import { Pressable, Text as RNText, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Globe, Sprout } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import { theme } from '../theme';
@@ -59,7 +59,7 @@ export function AppHeader({ showBack = false }: { showBack?: boolean }) {
             borderColor: theme.color.border.brand,
           }}
         >
-          <RNText style={{ fontSize: 22 }}>🌱</RNText>
+          <Sprout size={22} color={theme.color.surface.brandDeep} strokeWidth={2} />
         </View>
       )}
 
@@ -88,7 +88,7 @@ export function AppHeader({ showBack = false }: { showBack?: boolean }) {
           backgroundColor: pressed ? theme.color.surface.brandSoft : theme.color.surface.base,
         })}
       >
-        <RNText style={{ fontSize: 15 }}>🌐</RNText>
+        <Globe size={15} color={theme.color.surface.brandDeep} strokeWidth={2.25} />
         <Text variant="caption" weight="bold" color={theme.color.surface.brandDeep}>
           {t(`languageName.${other}`)}
         </Text>

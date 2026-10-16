@@ -3,13 +3,15 @@ import { ActivityIndicator, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 
+import { Minus, Smartphone, TrendingDown, TrendingUp, TriangleAlert } from 'lucide-react-native';
+
 import { theme } from '../../theme';
 import { Button, Card, Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
-import { EmojiChip } from '../../components/EmojiChip';
+import { IconChip } from '../../components/IconChip';
 import { SelectField } from '../../components/SelectField';
 import { Notice } from '../../components/Notice';
-import { CropKey, cropEmoji, crops, marketDistricts } from '../../data/farm';
+import { CropKey, cropIcon, crops, marketDistricts } from '../../data/farm';
 import { useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { getMarketPrices } from '../../api/endpoints';
@@ -25,7 +27,7 @@ const trendColor = {
   flat: theme.color.text.muted,
 } as const;
 
-const trendArrow = { up: '▲', down: '▼', flat: '→' } as const;
+const trendIcon = { up: TrendingUp, down: TrendingDown, flat: Minus } as const;
 
 export function MarketPricesScreen() {
   const { t } = useTranslation();
@@ -75,7 +77,7 @@ export function MarketPricesScreen() {
       <SelectField
         label={t('market.crop')}
         value={crop}
-        options={crops.map((c) => ({ value: c.key, label: t(`crops.${c.key}`), emoji: c.emoji }))}
+        options={crops.map((c) => ({ value: c.code, label: t(`crops.${c.code}`), icon: cropIcon(c.code) }))}
         onChange={setCrop}
       />
       <SelectField
@@ -90,7 +92,7 @@ export function MarketPricesScreen() {
           <Text variant="body">{t('voice.signInNeeded')}</Text>
           <Button
             label={t('voice.verifyNow')}
-            emoji="📱"
+            icon={Smartphone}
             compact
             onPress={() => navigation.navigate('VerifyPhone', { returnTo: 'back' })}
           />
@@ -100,11 +102,11 @@ export function MarketPricesScreen() {
           <ActivityIndicator color={theme.color.surface.brand} />
         </Card>
       ) : errorKey ? (
-        <Notice emoji="⚠️" message={t(errorKey)} />
+        <Notice icon={TriangleAlert} message={t(errorKey)} />
       ) : !prices || prices.length === 0 ? (
         <Card style={{ gap: theme.spacing.sm }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-            <EmojiChip emoji={cropEmoji(crop)} tint="sun" size={54} />
+            <IconChip icon={cropIcon(crop)} tint="sun" size={54} />
             <Text variant="h2" style={{ flex: 1 }}>
               {`${t(`crops.${crop}`)} · ${t(`districts.${market}`)}`}
             </Text>
@@ -123,7 +125,7 @@ export function MarketPricesScreen() {
           {prices.map((p, i) => (
             <Card key={`${p.market}-${p.variety}-${i}`} style={{ gap: theme.spacing.xs }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-                <EmojiChip emoji={cropEmoji(crop)} tint="sun" size={44} />
+                <IconChip icon={cropIcon(crop)} tint="sun" size={44} />
                 <View style={{ flex: 1 }}>
                   <Text variant="bodyStrong">{`${p.market}, ${p.district}`}</Text>
                   <Text variant="caption" color={theme.color.text.muted}>
@@ -136,11 +138,21 @@ export function MarketPricesScreen() {
                 <Text variant="caption" color={theme.color.text.muted}>
                   {t('market.perQuintal')}
                 </Text>
-                {p.trend ? (
-                  <Text variant="bodyStrong" color={trendColor[p.trend]} style={{ marginLeft: 'auto' }}>
-                    {`${trendArrow[p.trend]} ${p.change_pct != null ? Math.abs(p.change_pct).toFixed(1) + '%' : ''}`}
-                  </Text>
-                ) : null}
+                {p.trend
+                  ? (() => {
+                      const TrendIcon = trendIcon[p.trend];
+                      return (
+                        <View
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 'auto' }}
+                        >
+                          <TrendIcon size={16} color={trendColor[p.trend]} strokeWidth={2.5} />
+                          <Text variant="bodyStrong" color={trendColor[p.trend]}>
+                            {p.change_pct != null ? `${Math.abs(p.change_pct).toFixed(1)}%` : ''}
+                          </Text>
+                        </View>
+                      );
+                    })()
+                  : null}
               </View>
             </Card>
           ))}

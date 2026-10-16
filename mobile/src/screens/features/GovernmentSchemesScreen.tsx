@@ -3,10 +3,13 @@ import { ActivityIndicator, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 
+import { Banknote, CreditCard, Droplet, FileText, Shield, Smartphone, Sprout, Tag, TriangleAlert } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
+
 import { theme, Tint } from '../../theme';
 import { Button, Card, Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
-import { EmojiChip } from '../../components/EmojiChip';
+import { IconChip } from '../../components/IconChip';
 import { Notice } from '../../components/Notice';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { getSchemes } from '../../api/endpoints';
@@ -14,14 +17,14 @@ import { errorMessageKey } from '../../api/errorMessage';
 import { hasSession } from '../../api/tokens';
 import type { SchemeSummary } from '../../api/types';
 
-const CATEGORY_STYLE: Record<SchemeSummary['category'], { emoji: string; tint: Tint }> = {
-  income_support: { emoji: '💵', tint: 'leaf' },
-  insurance: { emoji: '🛡️', tint: 'sky' },
-  credit: { emoji: '💳', tint: 'sun' },
-  subsidy: { emoji: '🏷️', tint: 'leaf' },
-  soil: { emoji: '🌱', tint: 'leaf' },
-  irrigation: { emoji: '💧', tint: 'sky' },
-  other: { emoji: '📄', tint: 'stone' },
+const CATEGORY_STYLE: Record<SchemeSummary['category'], { icon: LucideIcon; tint: Tint }> = {
+  income_support: { icon: Banknote, tint: 'leaf' },
+  insurance: { icon: Shield, tint: 'sky' },
+  credit: { icon: CreditCard, tint: 'sun' },
+  subsidy: { icon: Tag, tint: 'leaf' },
+  soil: { icon: Sprout, tint: 'leaf' },
+  irrigation: { icon: Droplet, tint: 'sky' },
+  other: { icon: FileText, tint: 'stone' },
 };
 
 export function GovernmentSchemesScreen() {
@@ -61,7 +64,7 @@ export function GovernmentSchemesScreen() {
           <Text variant="body">{t('voice.signInNeeded')}</Text>
           <Button
             label={t('voice.verifyNow')}
-            emoji="📱"
+            icon={Smartphone}
             compact
             onPress={() => navigation.navigate('VerifyPhone', { returnTo: 'back' })}
           />
@@ -71,16 +74,16 @@ export function GovernmentSchemesScreen() {
           <ActivityIndicator color={theme.color.surface.brand} />
         </Card>
       ) : errorKey ? (
-        <Notice emoji="⚠️" message={t(errorKey)} />
+        <Notice icon={TriangleAlert} message={t(errorKey)} />
       ) : !schemes || schemes.length === 0 ? (
-        <Notice emoji="📄" message={t('schemes.none')} />
+        <Notice icon={FileText} message={t('schemes.none')} />
       ) : (
         schemes.map((s) => {
           const style = CATEGORY_STYLE[s.category];
           return (
             <Card key={s.slug} style={{ gap: theme.spacing.sm }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm }}>
-                <EmojiChip emoji={style.emoji} tint={style.tint} />
+                <IconChip icon={style.icon} tint={style.tint} />
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text variant="h2">{s.name}</Text>
                   <Text variant="body" color={theme.color.text.muted}>

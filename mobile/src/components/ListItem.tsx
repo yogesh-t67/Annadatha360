@@ -1,12 +1,23 @@
 import React from 'react';
 import { Pressable } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
 
 import { theme, Tint } from '../theme';
 import { Text } from './primitives';
-import { EmojiChip } from './EmojiChip';
+import { IconChip } from './IconChip';
 
-export function ListItem({ emoji, tint, label, onPress }: { emoji: string; tint: Tint; label: string; onPress: () => void }) {
+export function ListItem({
+  icon,
+  tint,
+  label,
+  onPress,
+}: {
+  icon: LucideIcon;
+  tint: Tint;
+  label: string;
+  onPress: () => void;
+}) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -27,7 +38,7 @@ export function ListItem({ emoji, tint, label, onPress }: { emoji: string; tint:
         ...theme.elevation.level1,
       })}
     >
-      <EmojiChip emoji={emoji} tint={tint} size={46} />
+      <IconChip icon={icon} tint={tint} size={46} />
       <Text variant="label" weight="bold" style={{ flex: 1 }}>
         {label}
       </Text>

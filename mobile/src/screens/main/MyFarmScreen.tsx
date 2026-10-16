@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Text as RNText, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
+import { Camera, Check, CircleCheck, MapPin } from 'lucide-react-native';
 
 import { theme } from '../../theme';
 import { Button, Card, Text, TextField } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { SelectField } from '../../components/SelectField';
-import { cropEmoji, crops, stages } from '../../data/farm';
+import { cropIcon, crops, stages } from '../../data/farm';
 import { FarmProfile, useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 
@@ -33,6 +34,8 @@ export function MyFarmScreen() {
     setJustSaved(false);
   }
 
+  const SavedCropIcon = cropIcon(saved.crop);
+
   return (
     <ScreenContainer>
       <Text variant="h1">{t('farm.title')}</Text>
@@ -49,15 +52,18 @@ export function MyFarmScreen() {
               backgroundColor: theme.color.surface.base,
             }}
           >
-            <RNText style={{ fontSize: 32 }}>{cropEmoji(saved.crop)}</RNText>
+            <SavedCropIcon size={30} color={theme.color.surface.brandDeep} strokeWidth={1.75} />
           </View>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, gap: 2 }}>
             <Text variant="h1" color={theme.color.text.inverse}>
               {t(`crops.${saved.crop}`)}
             </Text>
-            <Text variant="body" color={theme.color.text.inverseMuted}>
-              {`📍 ${t(`districts.${saved.district}`)} · ${t('home.acresValue', { acres: saved.acres })}`}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <MapPin size={14} color={theme.color.text.inverseMuted} strokeWidth={2.25} />
+              <Text variant="body" color={theme.color.text.inverseMuted}>
+                {`${t(`districts.${saved.district}`)} · ${t('home.acresValue', { acres: saved.acres })}`}
+              </Text>
+            </View>
           </View>
         </View>
       </Card>
@@ -65,7 +71,7 @@ export function MyFarmScreen() {
       <SelectField
         label={t('farm.crop')}
         value={draft.crop}
-        options={crops.map((c) => ({ value: c.key, label: t(`crops.${c.key}`), emoji: c.emoji }))}
+        options={crops.map((c) => ({ value: c.code, label: t(`crops.${c.code}`), icon: cropIcon(c.code) }))}
         onChange={(v) => change({ crop: v })}
       />
       <TextField
@@ -83,18 +89,24 @@ export function MyFarmScreen() {
 
       <Button
         label={t('farm.save')}
-        emoji="✅"
+        icon={Check}
         onPress={() => {
           saved.update(draft);
           setJustSaved(true);
         }}
       />
       {justSaved ? (
-        <Text variant="bodyStrong" color={theme.color.status.successText} align="center" accessibilityLiveRegion="polite">
-          {`✓ ${t('farm.saved')}`}
-        </Text>
+        <View
+          accessibilityLiveRegion="polite"
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+        >
+          <CircleCheck size={18} color={theme.color.status.successText} strokeWidth={2.25} />
+          <Text variant="bodyStrong" color={theme.color.status.successText}>
+            {t('farm.saved')}
+          </Text>
+        </View>
       ) : null}
-      <Button label={t('farm.diagnosis')} variant="secondary" emoji="📷" onPress={() => open('Diagnosis')} />
+      <Button label={t('farm.diagnosis')} variant="secondary" icon={Camera} onPress={() => open('Diagnosis')} />
     </ScreenContainer>
   );
 }

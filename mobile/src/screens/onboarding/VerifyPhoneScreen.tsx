@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RouteProp, useRoute } from '@react-navigation/native';
+import { ArrowRight, Smartphone, TriangleAlert } from 'lucide-react-native';
 
 import { theme } from '../../theme';
 import { Button, Text, TextField } from '../../components/primitives';
@@ -80,7 +81,7 @@ export function VerifyPhoneScreen() {
   return (
     <ScreenContainer showBack>
       {returnBack ? null : <StepProgress step={1} />}
-      <ScreenTitle emoji="📱">{t('verifyPhone.title')}</ScreenTitle>
+      <ScreenTitle icon={Smartphone}>{t('verifyPhone.title')}</ScreenTitle>
       <Text variant="body" color={theme.color.text.muted}>
         {t('verifyPhone.subtitle')}
       </Text>
@@ -112,7 +113,7 @@ export function VerifyPhoneScreen() {
             maxLength={6}
             editable={!busy}
           />
-          <Button label={t('verifyPhone.verify')} trailing="→" loading={busy} disabled={code.length !== 6} onPress={verify} />
+          <Button label={t('verifyPhone.verify')} trailingIcon={ArrowRight} loading={busy} disabled={code.length !== 6} onPress={verify} />
           <Button
             label={cooldown > 0 ? t('verifyPhone.resendIn', { seconds: cooldown }) : t('verifyPhone.resend')}
             variant="secondary"
@@ -122,10 +123,10 @@ export function VerifyPhoneScreen() {
           />
         </>
       ) : (
-        <Button label={t('verifyPhone.sendCode')} trailing="→" loading={busy} disabled={!phone.trim()} onPress={sendCode} />
+        <Button label={t('verifyPhone.sendCode')} trailingIcon={ArrowRight} loading={busy} disabled={!phone.trim()} onPress={sendCode} />
       )}
 
-      {errorKey ? <Notice emoji="⚠️" message={t(errorKey)} /> : null}
+      {errorKey ? <Notice icon={TriangleAlert} message={t(errorKey)} /> : null}
 
       <Button label={t('verifyPhone.skip')} variant="soft" compact disabled={busy} onPress={proceed} />
     </ScreenContainer>
