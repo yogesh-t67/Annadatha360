@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    advisory,
     assistant,
     auth,
     crops,
@@ -28,3 +29,4 @@ api_router.include_router(shop.router)
 api_router.include_router(schemes.router)
 api_router.include_router(services.router)
 api_router.include_router(farm.router)
+api_router.include_router(advisory.router)

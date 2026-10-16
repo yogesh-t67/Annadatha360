@@ -13,6 +13,7 @@ dev fallback. Owner = who has to act.
 | **Razorpay account** (KYC) | Agri Mart payments | ⛔ Not started | `PAYMENT_PROVIDER=fake` + dev-complete endpoint | Business — needs PAN, bank account, GST |
 | **Product catalogue** | Agri Mart | ⛔ No real data | `sample_data/products.sample.json` | Business — products, prices, images, stock |
 | **Service providers** | Labour & Farm Services | ⛔ No real data | `sample_data/providers.sample.json` | Business — onboard and verify providers |
+| **Advisory content** | Crop Advisory, Home | ⛔ No real data | `sample_data/advisories.sample.json` | Agronomist / university sources; Telugu translation |
 | **Scheme content** | Government Schemes | ⛔ No real data | `sample_data/schemes.sample.json` | Someone to research official portals; Telugu translation |
 
 ## DLT registration → MSG91

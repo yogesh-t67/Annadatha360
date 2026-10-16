@@ -1,3 +1,4 @@
+from app.models.advisory import Advisory
 from app.models.ai import AiUsage, ChatMessage, ChatThread
 from app.models.auth import OtpChallenge, RefreshToken
 from app.models.crop import Crop
@@ -11,6 +12,7 @@ from app.models.services import LabourRequirement, ServiceBooking, ServiceOfferi
 from app.models.shop import CartItem, Order, OrderItem, Product, ProductCategory
 
 __all__ = [
+    "Advisory",
     "AiUsage",
     "CartItem",
     "ChatMessage",

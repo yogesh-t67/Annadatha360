@@ -13,7 +13,9 @@ import httpx
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import MarketPrice
+from app.models import Farmer, MarketPrice
+from app.schemas.market import MarketPriceOut, PreviousPrice
+from app.services.serializers import crop_ref
 
 log = logging.getLogger("annadata.market")
 
@@ -45,6 +47,8 @@ COMMODITY_TO_CROP = {
 }
 
 LOOKBACK_DAYS = 14  # mandis report irregularly; show each market's latest report within this window
+# Changes smaller than this (in %) count as "flat" — mandi prices wobble daily.
+FLAT_THRESHOLD_PCT = 1.0
 
 
 def crop_for_commodity(commodity: str) -> str | None:
@@ -196,3 +200,46 @@ def latest_with_trend(
         if latest.arrival_date >= cutoff:
             result.append((latest, rows[1] if len(rows) > 1 else None))
     return result
+
+
+def price_rows(
+    db: Session,
+    farmer: Farmer,
+    crop_codes: list[str],
+    state: str | None = None,
+    district: str | None = None,
+    limit: int = 100,
+) -> list[MarketPriceOut]:
+    """Latest price per market with trend, the farmer's own district first."""
+    pairs = latest_with_trend(db, crop_codes, state=state, district=district)
+    home = (farmer.district or "").lower()
+    pairs.sort(key=lambda p: (p[0].district.lower() != home, -p[0].arrival_date.toordinal(), p[0].market))
+
+    lang = farmer.preferred_language
+    out = []
+    for latest, prev in pairs[:limit]:
+        change = change_pct = trend = None
+        if prev is not None:
+            change = latest.modal_price - prev.modal_price
+            change_pct = round(float(change / prev.modal_price * 100), 2)
+            trend = "flat" if abs(change_pct) < FLAT_THRESHOLD_PCT else ("up" if change > 0 else "down")
+        out.append(
+            MarketPriceOut(
+                crop=crop_ref(db, latest.crop_code, lang),
+                commodity=latest.commodity,
+                variety=latest.variety,
+                grade=latest.grade,
+                market=latest.market,
+                district=latest.district,
+                state=latest.state,
+                arrival_date=latest.arrival_date,
+                min_price=latest.min_price,
+                max_price=latest.max_price,
+                modal_price=latest.modal_price,
+                previous=PreviousPrice(arrival_date=prev.arrival_date, modal_price=prev.modal_price) if prev else None,
+                change=change,
+                change_pct=change_pct,
+                trend=trend,
+            )
+        )
+    return out
