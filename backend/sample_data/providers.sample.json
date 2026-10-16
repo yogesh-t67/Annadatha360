@@ -1,0 +1,49 @@
+[
+  {
+    "code": "SAMPLE-LABOUR-GUNTUR-1",
+    "kind": "labour",
+    "name": "Sample labour group (Guntur)",
+    "phone": "9000000101",
+    "description": {"en": "DEV SAMPLE DATA. Not a real provider."},
+    "state": "AP",
+    "district": "Guntur",
+    "mandal": "Tenali",
+    "rating": 4.3,
+    "rating_count": 12,
+    "verified": true,
+    "offerings": [
+      {"service_type": "labour_transplanting", "rate_paise": 50000, "daily_capacity": 15},
+      {"service_type": "labour_harvesting", "rate_paise": 60000, "daily_capacity": 15}
+    ]
+  },
+  {
+    "code": "SAMPLE-TRACTOR-GUNTUR-1",
+    "kind": "farm_service",
+    "name": "Sample tractor services (Guntur)",
+    "phone": "9000000102",
+    "description": {"en": "DEV SAMPLE DATA. Not a real provider."},
+    "state": "AP",
+    "district": "Guntur",
+    "rating": 4.6,
+    "rating_count": 30,
+    "verified": true,
+    "offerings": [
+      {"service_type": "tractor_ploughing", "rate_paise": 150000, "daily_capacity": 8},
+      {"service_type": "tractor_rental", "rate_paise": 80000, "daily_capacity": 10}
+    ]
+  },
+  {
+    "code": "SAMPLE-DRONE-WARANGAL-1",
+    "kind": "farm_service",
+    "name": "Sample drone spraying (Warangal)",
+    "phone": "9000000103",
+    "description": {"en": "DEV SAMPLE DATA. Not a real provider."},
+    "state": "TG",
+    "district": "Warangal",
+    "verified": false,
+    "offerings": [
+      {"service_type": "drone_spraying", "rate_paise": 50000, "daily_capacity": 25},
+      {"service_type": "soil_testing", "rate_paise": 30000, "daily_capacity": 20}
+    ]
+  }
+]
