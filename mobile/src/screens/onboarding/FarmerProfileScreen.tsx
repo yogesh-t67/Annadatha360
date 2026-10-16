@@ -32,7 +32,7 @@ export function FarmerProfileScreen() {
         keyboardType="phone-pad"
         maxLength={15}
       />
-      <Button label={t('common.next')} trailing="→" onPress={() => navigation.navigate('FarmLocation')} />
+      <Button label={t('common.next')} trailing="→" onPress={() => navigation.navigate('VerifyPhone')} />
     </ScreenContainer>
   );
 }

@@ -4,6 +4,8 @@ export type RootStackParamList = {
   Welcome: undefined;
   Language: undefined;
   FarmerProfile: undefined;
+  /** returnTo 'back': opened from inside the app (e.g. Voice) rather than during onboarding. */
+  VerifyPhone: { returnTo?: 'back' } | undefined;
   FarmLocation: undefined;
   CropSelection: undefined;
   Main: NavigatorScreenParams<MainTabParamList> | undefined;

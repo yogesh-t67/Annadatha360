@@ -34,7 +34,16 @@
           "microphonePermission": false
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-secure-store",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Annadata 360 uses the microphone so you can ask farming questions by speaking.",
+          "speechRecognitionPermission": "Annadata 360 turns your spoken question into text to answer it.",
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+        }
+      ]
     ]
   }
 }
