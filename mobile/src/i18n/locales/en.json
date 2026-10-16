@@ -80,6 +80,8 @@
     "askTitle": "What would you like to ask?",
     "tapMic": "Tap the microphone",
     "exploreServices": "Explore Services",
+    "todayWeather": "Today",
+    "latestAdvisory": "Latest advisory",
     "tiles": {
       "cropProblem": "Crop Problem",
       "weather": "Weather",
@@ -135,8 +137,30 @@
     "title": "Farm Weather",
     "illustrative": "Illustrative conditions, NOT live",
     "threeDay": "3-day sample",
+    "sevenDay": "7-day forecast",
+    "today": "Today",
     "day": "Day {{n}}",
-    "irrigationAdvice": "Irrigation Advice"
+    "irrigationAdvice": "Irrigation Advice",
+    "locationNeeded": "Set your farm location in Profile to see your weather forecast.",
+    "alertDate": "{{date}}",
+    "condition": {
+      "clear": "Clear sky",
+      "partly_cloudy": "Partly cloudy",
+      "overcast": "Overcast",
+      "fog": "Fog",
+      "drizzle": "Light drizzle",
+      "rain": "Rain",
+      "heavy_rain": "Heavy rain",
+      "snow": "Snow",
+      "thunderstorm": "Thunderstorm",
+      "unknown": "—"
+    },
+    "alertType": {
+      "heavy_rain": "Heavy rain expected",
+      "heat": "Extreme heat expected",
+      "strong_wind": "Strong wind expected",
+      "thunderstorm": "Thunderstorm expected"
+    }
   },
   "irrigation": {
     "title": "Irrigation Assistant",
@@ -156,14 +180,22 @@
     "crop": "Crop",
     "market": "Market",
     "unavailable": "Live price unavailable",
-    "apiNote": "A verified mandi API must provide price, unit, date and market."
+    "apiNote": "A verified mandi API must provide price, unit, date and market.",
+    "noReports": "No price reports for this market in the last 14 days. Try another market.",
+    "asOf": "Prices as of {{date}}",
+    "perQuintal": "/ quintal"
   },
   "schemes": {
     "title": "Government Schemes",
     "pmKisan": "Income support for eligible farmers",
     "pmfby": "Crop insurance",
     "kcc": "Agricultural credit",
-    "askEligibility": "Ask about eligibility"
+    "askEligibility": "Ask about eligibility",
+    "none": "No schemes found right now.",
+    "verifiedOn": "Checked on {{date}}",
+    "mayQualify": "You may qualify",
+    "mayNotQualify": "You may not qualify",
+    "contentNotice": "Scheme details shown here are sample content for testing, not verified government information yet."
   },
   "expert": {
     "title": "Expert Help",

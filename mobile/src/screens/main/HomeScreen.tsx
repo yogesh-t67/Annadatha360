@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { Text as RNText, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { theme } from '../../theme';
 import { Button, Card, Text } from '../../components/primitives';
@@ -11,11 +12,40 @@ import { MicButton } from '../../components/MicButton';
 import { cropEmoji } from '../../data/farm';
 import { useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
+import { getHome } from '../../api/endpoints';
+import { hasSession } from '../../api/tokens';
+import type { HomeOut } from '../../api/types';
+
+const HOME_CONDITION_EMOJI: Record<string, string> = {
+  clear: '☀️',
+  partly_cloudy: '🌤️',
+  overcast: '☁️',
+  fog: '🌫️',
+  drizzle: '🌦️',
+  rain: '🌧️',
+  heavy_rain: '🌧️',
+  snow: '❄️',
+  thunderstorm: '⛈️',
+  unknown: '🌡️',
+};
 
 export function HomeScreen() {
   const { t } = useTranslation();
   const { open, tab } = useAppNavigation();
   const { name, village, district, region, crop, stage, acres } = useFarmStore();
+  const [home, setHome] = useState<HomeOut | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      hasSession().then((signedIn) => {
+        if (signedIn) getHome().then((h) => active && setHome(h)).catch(() => undefined);
+      });
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
 
   const trimmedName = name.trim();
   const location = [village.trim(), t(`districts.${district}`)].filter(Boolean).join(', ');
@@ -26,6 +56,32 @@ export function HomeScreen() {
         <Text variant="h1">{`${trimmedName ? t('home.helloName', { name: trimmedName }) : t('home.hello')}! 🙏`}</Text>
         <Pill>{`📍 ${location} · ${t(`states.${region}`)}`}</Pill>
       </View>
+
+      {home?.weather?.today || home?.latest_advisory ? (
+        <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+          {home.weather?.today ? (
+            <Card style={{ flex: 1, alignItems: 'center', gap: 2 }} onPress={() => open('Weather')}>
+              <RNText style={{ fontSize: 28 }}>{HOME_CONDITION_EMOJI[home.weather.today.condition] ?? '🌡️'}</RNText>
+              <Text variant="h2">
+                {home.weather.today.temp_max_c != null ? `${Math.round(home.weather.today.temp_max_c)}°C` : '—'}
+              </Text>
+              <Text variant="caption" color={theme.color.text.muted}>
+                {t('home.todayWeather')}
+              </Text>
+            </Card>
+          ) : null}
+          {home.latest_advisory ? (
+            <Card style={{ flex: 2, gap: 2, justifyContent: 'center' }}>
+              <Text variant="caption" weight="semibold" color={theme.color.text.muted}>
+                {t('home.latestAdvisory')}
+              </Text>
+              <Text variant="bodyStrong" numberOfLines={2}>
+                {home.latest_advisory.title}
+              </Text>
+            </Card>
+          ) : null}
+        </View>
+      ) : null}
 
       <Card tone="brand" style={{ gap: theme.spacing.sm }}>
         <Text variant="micro" weight="bold" color={theme.color.text.inverseMuted} style={{ letterSpacing: 1.2 }}>

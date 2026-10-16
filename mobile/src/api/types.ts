@@ -91,3 +91,115 @@ export interface AskOut {
   message: ChatMessage;
   reply: ChatMessage;
 }
+
+// ---- Weather (docs/api/weather.md) ----
+
+export type WeatherCondition =
+  | 'clear'
+  | 'partly_cloudy'
+  | 'overcast'
+  | 'fog'
+  | 'drizzle'
+  | 'rain'
+  | 'heavy_rain'
+  | 'snow'
+  | 'thunderstorm'
+  | 'unknown';
+
+export interface WeatherAlert {
+  type: 'heavy_rain' | 'heat' | 'strong_wind' | 'thunderstorm';
+  severity: 'advisory' | 'watch' | 'warning';
+  date: string;
+  value: number | null;
+  unit: string | null;
+}
+
+export interface DayForecast {
+  date: string;
+  condition: WeatherCondition;
+  weather_code: number;
+  temp_max_c: number | null;
+  temp_min_c: number | null;
+  precipitation_mm: number | null;
+  precipitation_probability: number | null;
+  wind_max_kmh: number | null;
+  humidity_mean: number | null;
+  good_for_spraying: boolean;
+}
+
+export interface ForecastOut {
+  latitude: number;
+  longitude: number;
+  days: DayForecast[];
+  alerts: WeatherAlert[];
+}
+
+// ---- Market prices (docs/api/market-prices.md) ----
+
+export interface MarketPrice {
+  crop: CropRef;
+  commodity: string;
+  variety: string;
+  grade: string;
+  market: string;
+  district: string;
+  state: 'AP' | 'TG';
+  arrival_date: string;
+  unit: string;
+  currency: string;
+  min_price: number | null;
+  max_price: number | null;
+  modal_price: number;
+  previous: { arrival_date: string; modal_price: number } | null;
+  change: number | null;
+  change_pct: number | null;
+  trend: 'up' | 'down' | 'flat' | null;
+}
+
+export interface MarketPricesOut {
+  as_of: string | null;
+  prices: MarketPrice[];
+}
+
+// ---- Government schemes (docs/api/schemes.md) ----
+
+export interface SchemeSummary {
+  id: number;
+  slug: string;
+  authority: 'central' | 'state';
+  state: 'AP' | 'TG' | null;
+  category: 'income_support' | 'insurance' | 'credit' | 'subsidy' | 'soil' | 'irrigation' | 'other';
+  name: string;
+  summary: string;
+  possibly_eligible: boolean | null;
+  last_verified_on: string;
+}
+
+export interface SchemeDetail extends SchemeSummary {
+  benefits: string | null;
+  eligibility: string[];
+  documents: string[];
+  steps: string[];
+  application_url: string | null;
+  source_url: string;
+}
+
+// ---- Home (docs/api/advisory.md) ----
+
+export interface AdvisorySummary {
+  slug: string;
+  crop: CropRef | null;
+  growth_stage: GrowthStage | null;
+  category: 'nutrition' | 'pest_disease' | 'irrigation' | 'weed' | 'harvest' | 'weather' | 'general';
+  title: string;
+  last_verified_on: string;
+  relevance: 'your_field' | 'your_crop' | 'general';
+}
+
+export interface HomeOut {
+  farmer: Farmer;
+  weather: { today: DayForecast; alerts: WeatherAlert[] } | null;
+  latest_advisory: AdvisorySummary | null;
+  primary_crop_price: MarketPrice | null;
+  fields_count: number;
+}

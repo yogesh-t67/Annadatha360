@@ -1,26 +1,73 @@
-import React, { useState } from 'react';
-import { View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { theme } from '../../theme';
-import { Card, Text } from '../../components/primitives';
+import { Button, Card, Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { EmojiChip } from '../../components/EmojiChip';
 import { SelectField } from '../../components/SelectField';
 import { Notice } from '../../components/Notice';
 import { CropKey, cropEmoji, crops, marketDistricts } from '../../data/farm';
 import { useFarmStore } from '../../store/farmStore';
+import { useAppNavigation } from '../../navigation/useAppNavigation';
+import { getMarketPrices } from '../../api/endpoints';
+import { errorMessageKey } from '../../api/errorMessage';
+import { hasSession } from '../../api/tokens';
+import type { MarketPrice } from '../../api/types';
 
 type MarketKey = (typeof marketDistricts)[number];
 
+const trendColor = {
+  up: theme.color.status.successText,
+  down: theme.color.status.dangerText,
+  flat: theme.color.text.muted,
+} as const;
+
+const trendArrow = { up: '▲', down: '▼', flat: '→' } as const;
+
 export function MarketPricesScreen() {
   const { t } = useTranslation();
+  const { navigation } = useAppNavigation();
   const farmCrop = useFarmStore((s) => s.crop);
   const farmDistrict = useFarmStore((s) => s.district);
   const [crop, setCrop] = useState<CropKey>(farmCrop);
   const [market, setMarket] = useState<MarketKey>(
     (marketDistricts as readonly string[]).includes(farmDistrict) ? (farmDistrict as MarketKey) : 'guntur',
   );
+  const [prices, setPrices] = useState<MarketPrice[] | null>(null);
+  const [asOf, setAsOf] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [errorKey, setErrorKey] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      hasSession().then(setSignedIn);
+    }, []),
+  );
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErrorKey(null);
+    try {
+      const district = market.charAt(0).toUpperCase() + market.slice(1);
+      const res = await getMarketPrices({ crop, district });
+      setPrices(res.prices);
+      setAsOf(res.as_of);
+    } catch (e) {
+      setErrorKey(errorMessageKey(e));
+      setPrices(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [crop, market]);
+
+  useEffect(() => {
+    if (signedIn) load();
+    else if (signedIn === false) setLoading(false);
+  }, [signedIn, load]);
 
   return (
     <ScreenContainer showBack>
@@ -38,25 +85,67 @@ export function MarketPricesScreen() {
         onChange={setMarket}
       />
 
-      <Card style={{ gap: theme.spacing.sm }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-          <EmojiChip emoji={cropEmoji(crop)} tint="sun" size={54} />
-          <Text variant="h2" style={{ flex: 1 }}>
-            {`${t(`crops.${crop}`)} · ${t(`districts.${market}`)}`}
+      {signedIn === false ? (
+        <Card tone="soft" style={{ gap: theme.spacing.sm }}>
+          <Text variant="body">{t('voice.signInNeeded')}</Text>
+          <Button
+            label={t('voice.verifyNow')}
+            emoji="📱"
+            compact
+            onPress={() => navigation.navigate('VerifyPhone', { returnTo: 'back' })}
+          />
+        </Card>
+      ) : loading ? (
+        <Card style={{ alignItems: 'center', paddingVertical: theme.spacing.lg }}>
+          <ActivityIndicator color={theme.color.surface.brand} />
+        </Card>
+      ) : errorKey ? (
+        <Notice emoji="⚠️" message={t(errorKey)} />
+      ) : !prices || prices.length === 0 ? (
+        <Card style={{ gap: theme.spacing.sm }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+            <EmojiChip emoji={cropEmoji(crop)} tint="sun" size={54} />
+            <Text variant="h2" style={{ flex: 1 }}>
+              {`${t(`crops.${crop}`)} · ${t(`districts.${market}`)}`}
+            </Text>
+          </View>
+          <Text variant="body" color={theme.color.text.muted}>
+            {t('market.noReports')}
           </Text>
+        </Card>
+      ) : (
+        <View style={{ gap: theme.spacing.sm }}>
+          {asOf ? (
+            <Text variant="caption" color={theme.color.text.muted}>
+              {t('market.asOf', { date: asOf })}
+            </Text>
+          ) : null}
+          {prices.map((p, i) => (
+            <Card key={`${p.market}-${p.variety}-${i}`} style={{ gap: theme.spacing.xs }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+                <EmojiChip emoji={cropEmoji(crop)} tint="sun" size={44} />
+                <View style={{ flex: 1 }}>
+                  <Text variant="bodyStrong">{`${p.market}, ${p.district}`}</Text>
+                  <Text variant="caption" color={theme.color.text.muted}>
+                    {`${p.commodity} · ${p.variety}`}
+                  </Text>
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: theme.spacing.xs }}>
+                <Text variant="h2">{`₹${p.modal_price.toLocaleString('en-IN')}`}</Text>
+                <Text variant="caption" color={theme.color.text.muted}>
+                  {t('market.perQuintal')}
+                </Text>
+                {p.trend ? (
+                  <Text variant="bodyStrong" color={trendColor[p.trend]} style={{ marginLeft: 'auto' }}>
+                    {`${trendArrow[p.trend]} ${p.change_pct != null ? Math.abs(p.change_pct).toFixed(1) + '%' : ''}`}
+                  </Text>
+                ) : null}
+              </View>
+            </Card>
+          ))}
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
-          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: theme.color.status.warningDot }} />
-          <Text variant="h2" style={{ flex: 1 }}>
-            {t('market.unavailable')}
-          </Text>
-        </View>
-        <Text variant="body" color={theme.color.text.muted}>
-          {t('market.apiNote')}
-        </Text>
-      </Card>
-
-      <Notice />
+      )}
     </ScreenContainer>
   );
 }
