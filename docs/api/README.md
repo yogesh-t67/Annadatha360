@@ -11,7 +11,8 @@ changes to anything already in use get a heads-up before they land.
 | Crops (reference list) | [crops.md](crops.md) | ✅ P0 built |
 | Weather (forecast + alerts) | [weather.md](weather.md) | ✅ P1 built |
 | Market prices (mandi, with trend) | [market-prices.md](market-prices.md) | ✅ P1 built |
-| AI assistant, Crop diagnosis | — | P1, in progress |
+| AI assistant (chat) | [assistant.md](assistant.md) | ✅ P1 built |
+| Crop diagnosis | — | P1, in progress |
 | Agri Mart, Cart/Checkout, Schemes, Labour, Farm services, Farm management | — | P2, not started |
 
 Open decisions that affect the contract: [open-decisions.md](open-decisions.md).

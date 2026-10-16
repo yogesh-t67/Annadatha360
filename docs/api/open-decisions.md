@@ -1,6 +1,20 @@
-# Open decisions
+# Decisions
 
-Things the backend needs a team decision on before building. Proposals, not commitments.
+## Decided (2026-10-16)
+
+| Topic | Decision |
+|---|---|
+| SMS / OTP | **MSG91**, behind a provider-agnostic adapter. Dev mode logs OTPs. DLT registration is an external dependency (`docs/development/external-dependencies.md`). |
+| AI: crop diagnosis + chat | **Claude** (Anthropic) for both, grounded in the farmer's crop, stage and location. |
+| AI budget | **$50/month** placeholder, enforced by a configurable guard (`AI_MONTHLY_BUDGET_USD`). Raise before launch. |
+| Telugu voice | Deferred. Evaluate Bhashini / Sarvam AI later. |
+| Weather | **Open-Meteo** (`weather.md`). Needs a commercial plan before launch. |
+| Market prices | **Agmarknet via data.gov.in** (`market-prices.md`). |
+
+The original proposals are kept below for context.
+
+---
+
 
 ## 1. SMS provider for OTP
 
