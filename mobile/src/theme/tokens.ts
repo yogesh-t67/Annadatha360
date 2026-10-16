@@ -83,10 +83,13 @@ export const lineHeight = {
   caption: 20,
   body: 24,
   label: 24,
-  h2: 28,
-  h1: 36,
-  display: 40,
-  hero: 64,
+  // h2/h1/display/hero use Baloo Tammudu 2 (see theme/index.ts), a rounded display font with
+  // noticeably taller vertical metrics than Inter/NotoSansTelugu -- needs a more generous
+  // line-height ratio (~1.5-1.6x) or glyph tops get clipped on Android, in every language.
+  h2: 32,
+  h1: 40,
+  display: 46,
+  hero: 78,
 } as const;
 
 /** Font family names must match the exact export names from @expo-google-fonts packages. */
