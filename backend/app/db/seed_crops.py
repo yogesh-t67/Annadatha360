@@ -1,4 +1,4 @@
-"""Initial crop catalog for AP/Telangana. Telugu names need native-speaker review before launch.
+"""Initial crop catalog for AP/Telangana. Telugu names verified by a native speaker on 2026-10-16.
 
 Add languages by adding keys (e.g. "hi") — the column is a JSON LocalizedText, no schema change needed.
 

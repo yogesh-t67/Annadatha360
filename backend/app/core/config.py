@@ -1,10 +1,12 @@
+import os
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # ANNADATA_ENV_FILE="" disables the .env file (the test suite does this so local keys don't leak into tests).
+    model_config = SettingsConfigDict(env_file=os.getenv("ANNADATA_ENV_FILE", ".env") or None, extra="ignore")
 
     app_env: str = "development"
     database_url: str = "postgresql+psycopg://annadata:annadata@localhost:5432/annadata"
@@ -22,6 +24,9 @@ class Settings(BaseSettings):
     otp_max_attempts: int = 5
     otp_resend_cooldown_seconds: int = 30
     otp_max_sends_per_hour: int = 5
+    # Closed-beta testers: these numbers log in with OTP_TEST_CODE and no SMS is sent. Refused in production.
+    otp_test_numbers: list[str] = []
+    otp_test_code: str = ""
 
     # --- Weather (Open-Meteo) ---
     open_meteo_base_url: str = "https://api.open-meteo.com"
@@ -33,6 +38,7 @@ class Settings(BaseSettings):
     market_states: list[str] = ["Andhra Pradesh", "Telangana"]
 
     # --- AI (Claude) ---
+    ai_provider: str = "anthropic"  # "anthropic" | "fake" (canned replies, no key; refused in production)
     anthropic_api_key: str = ""
     ai_model: str = "claude-opus-5-5"
     ai_chat_effort: str = "low"
@@ -49,6 +55,8 @@ class Settings(BaseSettings):
     razorpay_key_secret: str = ""
     razorpay_webhook_secret: str = ""
     order_payment_window_minutes: int = 30  # unpaid orders are cancelled and stock released after this
+    cod_enabled: bool = False  # cash on delivery
+    cod_max_order_rupees: int = 5000  # COD orders above this must pay online
 
     cors_origins: list[str] = ["*"]
 
@@ -60,6 +68,11 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     settings = Settings()
-    if settings.is_production and (settings.jwt_secret == "change-me" or len(settings.jwt_secret) < 32):
-        raise RuntimeError("JWT_SECRET must be set to at least 32 characters in production")
+    if settings.is_production:
+        if settings.jwt_secret == "change-me" or len(settings.jwt_secret) < 32:
+            raise RuntimeError("JWT_SECRET must be set to at least 32 characters in production")
+        if settings.otp_test_numbers:
+            raise RuntimeError("OTP_TEST_NUMBERS must be empty in production")
+        if settings.ai_provider == "fake":
+            raise RuntimeError("AI_PROVIDER=fake is not allowed in production")
     return settings

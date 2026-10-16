@@ -1,0 +1,35 @@
+[
+  {
+    "slug": "sample-paddy-vegetative",
+    "crop_code": "paddy",
+    "growth_stage": "vegetative",
+    "category": "nutrition",
+    "title": {"en": "Sample: paddy at vegetative stage"},
+    "body": {"en": "DEV SAMPLE DATA — not agronomic advice.\n\nShows how a crop + stage advisory renders."},
+    "source_url": "https://example.org",
+    "last_verified_on": "2026-10-16",
+    "published": true
+  },
+  {
+    "slug": "sample-paddy-general",
+    "crop_code": "paddy",
+    "growth_stage": null,
+    "category": "pest_disease",
+    "title": {"en": "Sample: paddy, any stage"},
+    "body": {"en": "DEV SAMPLE DATA — not agronomic advice."},
+    "source_url": "https://example.org",
+    "last_verified_on": "2026-10-10",
+    "published": true
+  },
+  {
+    "slug": "sample-general-monsoon",
+    "crop_code": null,
+    "growth_stage": null,
+    "category": "weather",
+    "title": {"en": "Sample: general seasonal tip"},
+    "body": {"en": "DEV SAMPLE DATA — not agronomic advice."},
+    "source_url": "https://example.org",
+    "last_verified_on": "2026-10-01",
+    "published": true
+  }
+]

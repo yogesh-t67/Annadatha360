@@ -7,7 +7,13 @@ def test_profile_update_and_localised_crop(login, client):
             "name": "Ramesh",
             "preferred_language": "te",
             "primary_crop_code": "paddy",
-            "location": {"state": "AP", "district": "Guntur", "mandal": "Tenali", "latitude": 16.24, "longitude": 80.64},
+            "location": {
+                "state": "AP",
+                "district": "Guntur",
+                "mandal": "Tenali",
+                "latitude": 16.24,
+                "longitude": 80.64,
+            },
         },
     )
     assert res.status_code == 200, res.text
@@ -36,7 +42,13 @@ def test_fields_crud(login, client):
     res = client.post(
         "/api/v1/fields",
         headers=headers,
-        json={"name": "East plot", "crop_code": "cotton", "acreage": 2.5, "growth_stage": "sowing", "planted_on": "2026-07-01"},
+        json={
+            "name": "East plot",
+            "crop_code": "cotton",
+            "acreage": 2.5,
+            "growth_stage": "sowing",
+            "planted_on": "2026-07-01",
+        },
     )
     assert res.status_code == 201, res.text
     field = res.json()

@@ -6,7 +6,8 @@ required everywhere except the payment webhook (server-to-server).
 **Payments: Razorpay.** One integration gives UPI (the farmer picks PhonePe, Google Pay, Paytm, BHIM or any UPI
 app on their phone), plus cards, netbanking and wallets. Razorpay's React Native SDK (`react-native-razorpay`)
 needs a native module, so it requires an Expo **development build** / prebuild, not Expo Go.
-Cash on delivery isn't supported yet.
+**Cash on delivery** is supported when the server enables it (`COD_ENABLED`), for orders up to
+`COD_MAX_ORDER_RUPEES` (default ₹5000) — see "Cash on delivery" below.
 
 **Money:** every amount is in **rupees** as a JSON number (e.g. `420.0`), except `payment.amount_paise`, which is
 the integer paise value Razorpay wants. Prices include GST. Delivery is free for now (no delivery charge
@@ -107,6 +108,7 @@ is released.
 }
 ```
 `village` and `mandal` are optional. `state` is `AP` or `TG`. `pincode` is 6 digits.
+Add `"payment_method": "cod"` for cash on delivery (default `"online"`).
 
 **201** — Order:
 ```json
@@ -158,10 +160,29 @@ Order history for the Profile screen, newest first. `404 order_not_found` for ot
 | `status` | Meaning |
 |---|---|
 | `pending_payment` | Waiting for payment; stock reserved until `pay_by` |
+| `confirmed` | Cash-on-delivery order placed; stock reserved; awaiting dispatch (no expiry) |
 | `paid` | Paid; awaiting dispatch |
-| `shipped`, `delivered` | Set by operations (no API yet) |
+| `shipped`, `delivered` | Set by ops staff ([admin.md](admin.md)) |
 | `cancelled` | Cancelled by farmer or expired unpaid |
-| `refund_pending` | Paid after expiry and the stock was gone; will be refunded (manual for now) |
+| `refund_pending` | Will be refunded: paid after expiry with stock gone, or cancelled by ops after payment |
+| `refunded` | Refund done |
+
+## Cash on delivery
+
+`POST /orders` with `"payment_method": "cod"`:
+
+- **201** — Order with `status: "confirmed"`, `payment_method: "cod"`, `payment: null`, `pay_by: null`. No
+  Razorpay step: show "Order placed — pay ₹X on delivery". Stock is reserved and the cart is emptied.
+- The farmer can `POST /orders/{id}/cancel` until it ships (stock is released).
+- Ops moves it `shipped` → `delivered`; `paid_at` is set at delivery (cash collected).
+- Every Order now has `payment_method`: `"online"` or `"cod"`.
+
+| Status | code | When |
+|---|---|---|
+| 422 | `cod_not_available` | COD switched off on this server |
+| 422 | `cod_limit_exceeded` | Total over the limit — `details: { "max_order": 5000 }`; offer online payment |
+
+COD works even on servers without Razorpay keys; online orders there fail with `503 payment_not_configured`.
 
 ## Dev mode (no real money)
 

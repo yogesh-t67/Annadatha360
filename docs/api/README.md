@@ -13,10 +13,12 @@ changes to anything already in use get a heads-up before they land.
 | Market prices (mandi, with trend) | [market-prices.md](market-prices.md) | ✅ P1 built |
 | AI assistant (chat) | [assistant.md](assistant.md) | ✅ P1 built |
 | Crop diagnosis (photo) | [diagnosis.md](diagnosis.md) | ✅ P1 built |
+| Crop advisories (stage-based) + **Home dashboard** (`GET /home`) | [advisory.md](advisory.md) | ✅ built (no real advice yet) |
 | Agri Mart (catalogue, cart, orders, Razorpay) | [agri-mart.md](agri-mart.md) | ✅ P2 built |
 | Government schemes | [schemes.md](schemes.md) | ✅ P2 built (no real content yet) |
 | Labour & Farm services (providers, bookings, requirements) | [services.md](services.md) | ✅ P2 built |
 | Farm management (crop plans, tasks, harvests) | [farm-management.md](farm-management.md) | ✅ P2 built |
+| Admin / ops (staff only, not for the app) | [admin.md](admin.md) | ✅ built |
 
 Open decisions that affect the contract: [open-decisions.md](open-decisions.md).
 
@@ -57,5 +59,5 @@ Supported language codes: `en`, `te`, `hi`, `ta`, `kn`, `mr`, `gu`.
 
 Content the server owns (crop names now; scheme text and advisory copy later) is returned **already resolved**
 to the farmer's `preferred_language`, falling back to English when a translation is missing. Today crop names
-exist in `en` and `te` only (pending native-speaker review — see `docs/development/localization-review.md`).
+exist in `en` and `te` only (Telugu verified; other languages fall back to English).
 Public endpoints take `?lang=` instead.

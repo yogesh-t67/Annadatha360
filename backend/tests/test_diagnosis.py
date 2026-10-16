@@ -45,9 +45,13 @@ def claude():
 @pytest.fixture
 def farmer(login, client):
     headers, _ = login()
-    client.patch("/api/v1/farmers/me", headers=headers, json={"preferred_language": "te", "primary_crop_code": "cotton"})
+    client.patch(
+        "/api/v1/farmers/me", headers=headers, json={"preferred_language": "te", "primary_crop_code": "cotton"}
+    )
     fid = client.post(
-        "/api/v1/fields", headers=headers, json={"name": "Wet plot", "crop_code": "paddy", "acreage": 1, "growth_stage": "flowering"}
+        "/api/v1/fields",
+        headers=headers,
+        json={"name": "Wet plot", "crop_code": "paddy", "acreage": 1, "growth_stage": "flowering"},
     ).json()["id"]
     return headers, fid
 
@@ -71,7 +75,11 @@ def test_diagnosis_request_and_response(client, claude, farmer, db_session):
     assert req["output_config"]["format"]["type"] == "json_schema" and schema["additionalProperties"] is False
     assert set(schema["required"]) == set(RESULT)
     image_block, text_block = req["messages"][0]["content"]
-    assert image_block["source"] == {"type": "base64", "media_type": "image/jpeg", "data": base64.standard_b64encode(JPEG).decode()}
+    assert image_block["source"] == {
+        "type": "base64",
+        "media_type": "image/jpeg",
+        "data": base64.standard_b64encode(JPEG).decode(),
+    }
     assert "Expected crop (code): paddy" in text_block["text"]
     assert "ఆకులు ఎండిపోతున్నాయి" in text_block["text"]
     assert "stage: flowering" in req["system"][1]["text"]
@@ -143,7 +151,9 @@ def test_history_and_privacy(client, claude, farmer, login):
     first = _post(client, headers, field_id=str(fid)).json()["id"]
     _post(client, headers)
     assert [d["id"] for d in client.get("/api/v1/diagnoses", headers=headers).json()] == [first + 1, first]
-    assert [d["id"] for d in client.get("/api/v1/diagnoses", headers=headers, params={"field_id": fid}).json()] == [first]
+    assert [d["id"] for d in client.get("/api/v1/diagnoses", headers=headers, params={"field_id": fid}).json()] == [
+        first
+    ]
     assert client.get(f"/api/v1/diagnoses/{first}", headers=headers).json()["result"]["summary"] == RESULT["summary"]
 
     other, _ = login("9555555555")

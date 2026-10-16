@@ -14,27 +14,42 @@ from app.services.payments import FakeGateway, RazorpayGateway, get_payment_gate
 from app.services.shop import expire_unpaid_orders
 
 ADDRESS = {
-    "name": "Ramesh", "phone": "9876543210", "line1": "H.No 4-12, Main road", "village": "Kolakaluru",
-    "mandal": "Tenali", "district": "Guntur", "state": "AP", "pincode": "522301",
+    "name": "Ramesh",
+    "phone": "9876543210",
+    "line1": "H.No 4-12, Main road",
+    "village": "Kolakaluru",
+    "mandal": "Tenali",
+    "district": "Guntur",
+    "state": "AP",
+    "pincode": "522301",
 }
 
 
 def _product(sku, category="fertilizers", price=50000, mrp=50000, stock=10, **kw):
     return {
-        "sku": sku, "category_code": category, "name": {"en": f"Product {sku}", "te": f"ఉత్పత్తి {sku}"},
-        "pack_size": "1 unit", "price_paise": price, "mrp_paise": mrp, "stock": stock, **kw,
+        "sku": sku,
+        "category_code": category,
+        "name": {"en": f"Product {sku}", "te": f"ఉత్పత్తి {sku}"},
+        "pack_size": "1 unit",
+        "price_paise": price,
+        "mrp_paise": mrp,
+        "stock": stock,
+        **kw,
     }
 
 
 @pytest.fixture
 def catalogue(db_session):
     with db_session() as db:
-        load(db, [
-            _product("UREA", price=26650, mrp=26650, stock=5),
-            _product("NEEM", category="pesticides", price=42000, mrp=52000, stock=3, brand="GreenLeaf"),
-            _product("SEED", category="seeds", price=85000, mrp=95000, crop_codes=["paddy"]),
-            _product("OLD", active=False),
-        ])
+        load(
+            db,
+            [
+                _product("UREA", price=26650, mrp=26650, stock=5),
+                _product("NEEM", category="pesticides", price=42000, mrp=52000, stock=3, brand="GreenLeaf"),
+                _product("SEED", category="seeds", price=85000, mrp=95000, crop_codes=["paddy"]),
+                _product("OLD", active=False),
+            ],
+        )
         return {p.sku: p.id for p in db.query(Product).all()}
 
 
@@ -58,7 +73,7 @@ def _stock(db_session, pid):
 
 
 def test_catalogue_filters_and_localisation(client, shopper, catalogue):
-    names = lambda res: sorted(p["sku"] for p in res.json())  # noqa: E731
+    names = lambda res: sorted(p["sku"] for p in res.json())
     assert names(client.get("/api/v1/shop/products", headers=shopper)) == ["NEEM", "SEED", "UREA"]  # inactive hidden
     assert names(client.get("/api/v1/shop/products", headers=shopper, params={"category": "seeds"})) == ["SEED"]
     assert names(client.get("/api/v1/shop/products", headers=shopper, params={"crop": "cotton"})) == ["NEEM", "UREA"]
@@ -67,7 +82,12 @@ def test_catalogue_filters_and_localisation(client, shopper, catalogue):
     assert [(p["sku"], p["discount_pct"]) for p in deals] == [("NEEM", 19), ("SEED", 11)]
 
     neem = client.get(f"/api/v1/shop/products/{catalogue['NEEM']}", headers=shopper).json()
-    assert (neem["name"], neem["price"], neem["mrp"], neem["category"]["name"]) == ("ఉత్పత్తి NEEM", 420.0, 520.0, "పురుగుమందులు")
+    assert (neem["name"], neem["price"], neem["mrp"], neem["category"]["name"]) == (
+        "ఉత్పత్తి NEEM",
+        420.0,
+        520.0,
+        "పురుగుమందులు",
+    )
     assert client.get(f"/api/v1/shop/products/{catalogue['OLD']}", headers=shopper).status_code == 404
     cats = client.get("/api/v1/shop/categories", headers=shopper).json()
     assert [c["code"] for c in cats] == ["seeds", "fertilizers", "pesticides", "equipment"]
@@ -82,7 +102,9 @@ def test_cart(client, shopper, catalogue):
 
     res = client.put(f"/api/v1/cart/items/{catalogue['NEEM']}", headers=shopper, json={"quantity": 4})
     assert res.status_code == 409 and res.json()["error"]["details"] == {"available": 3}
-    assert client.put(f"/api/v1/cart/items/{catalogue['OLD']}", headers=shopper, json={"quantity": 1}).status_code == 404
+    assert (
+        client.put(f"/api/v1/cart/items/{catalogue['OLD']}", headers=shopper, json={"quantity": 1}).status_code == 404
+    )
     cart = client.delete(f"/api/v1/cart/items/{catalogue['UREA']}", headers=shopper).json()
     assert [i["product"]["sku"] for i in cart["items"]] == ["NEEM"]
 
@@ -100,14 +122,19 @@ def test_checkout_reserves_stock_and_payment_verifies(client, shopper, catalogue
 
     oid, rzp = order["id"], order["payment"]["provider_order_id"]
     bad = {"razorpay_order_id": rzp, "razorpay_payment_id": "pay_1", "razorpay_signature": "nope"}
-    assert client.post(f"/api/v1/orders/{oid}/payment/verify", headers=shopper, json=bad).json()["error"]["code"] == "payment_verification_failed"
+    assert (
+        client.post(f"/api/v1/orders/{oid}/payment/verify", headers=shopper, json=bad).json()["error"]["code"]
+        == "payment_verification_failed"
+    )
 
     good = {**bad, "razorpay_signature": gateway.sign(rzp, "pay_1")}
     paid = client.post(f"/api/v1/orders/{oid}/payment/verify", headers=shopper, json=good).json()
     assert paid["status"] == "paid" and paid["payment"] is None and paid["paid_at"]
     # Idempotent, and paid orders can't be cancelled.
     assert client.post(f"/api/v1/orders/{oid}/payment/verify", headers=shopper, json=good).json()["status"] == "paid"
-    assert client.post(f"/api/v1/orders/{oid}/cancel", headers=shopper).json()["error"]["code"] == "order_not_cancellable"
+    assert (
+        client.post(f"/api/v1/orders/{oid}/cancel", headers=shopper).json()["error"]["code"] == "order_not_cancellable"
+    )
     assert _stock(db_session, catalogue["NEEM"]) == 1
 
 
@@ -117,7 +144,11 @@ def test_signature_from_another_order_is_rejected(client, shopper, catalogue, ga
     client.put(f"/api/v1/cart/items/{catalogue['UREA']}", headers=shopper, json={"quantity": 1})
     b = client.post("/api/v1/orders", headers=shopper, json={"address": ADDRESS}).json()
     rzp_a = a["payment"]["provider_order_id"]
-    body = {"razorpay_order_id": rzp_a, "razorpay_payment_id": "pay_1", "razorpay_signature": gateway.sign(rzp_a, "pay_1")}
+    body = {
+        "razorpay_order_id": rzp_a,
+        "razorpay_payment_id": "pay_1",
+        "razorpay_signature": gateway.sign(rzp_a, "pay_1"),
+    }
     res = client.post(f"/api/v1/orders/{b['id']}/payment/verify", headers=shopper, json=body)
     assert res.json()["error"]["code"] == "payment_verification_failed"
 
@@ -146,7 +177,9 @@ def test_stock_race_never_oversells(client, catalogue, gateway, login, db_sessio
         client.put(f"/api/v1/cart/items/{catalogue['NEEM']}", headers=h, json={"quantity": 2})
     assert client.post("/api/v1/orders", headers=a, json={"address": ADDRESS}).status_code == 201
     res = client.post("/api/v1/orders", headers=b, json={"address": ADDRESS})
-    assert res.status_code == 409 and res.json()["error"]["details"] == [{"product_id": catalogue["NEEM"], "available": 1}]
+    assert res.status_code == 409 and res.json()["error"]["details"] == [
+        {"product_id": catalogue["NEEM"], "available": 1}
+    ]
     assert _stock(db_session, catalogue["NEEM"]) == 1
     assert len(client.get("/api/v1/cart", headers=b).json()["items"]) == 1  # B's cart kept so they can adjust
 
@@ -155,6 +188,7 @@ def test_gateway_failure_leaves_no_order(client, shopper, catalogue, db_session)
     class Down(FakeGateway):
         def create_order(self, amount_paise, receipt):
             from app.core.errors import AppError
+
             raise AppError(503, "payment_unavailable", "down")
 
     app.dependency_overrides[get_payment_gateway] = lambda: Down()
@@ -168,7 +202,10 @@ def test_gateway_failure_leaves_no_order(client, shopper, catalogue, db_session)
 
 
 def test_order_validation(client, shopper, catalogue, gateway, login):
-    assert client.post("/api/v1/orders", headers=shopper, json={"address": ADDRESS}).json()["error"]["code"] == "cart_empty"
+    assert (
+        client.post("/api/v1/orders", headers=shopper, json={"address": ADDRESS}).json()["error"]["code"]
+        == "cart_empty"
+    )
     res = client.post("/api/v1/orders", headers=shopper, json={"address": {**ADDRESS, "pincode": "012345"}})
     assert res.json()["error"]["code"] == "validation_error"
     other, _ = login("9666666666")
@@ -188,7 +225,10 @@ def test_webhook_marks_paid_and_checks_amount(client, shopper, catalogue, gatewa
     client.put(f"/api/v1/cart/items/{catalogue['UREA']}", headers=shopper, json={"quantity": 1})
     order = client.post("/api/v1/orders", headers=shopper, json={"address": ADDRESS}).json()
     rzp = order["payment"]["provider_order_id"]
-    event = lambda amount: {"event": "payment.captured", "payload": {"payment": {"entity": {"id": "pay_9", "order_id": rzp, "amount": amount}}}}  # noqa: E731
+    event = lambda amount: {
+        "event": "payment.captured",
+        "payload": {"payment": {"entity": {"id": "pay_9", "order_id": rzp, "amount": amount}}},
+    }
 
     assert _webhook(client, gateway, event(26650), signature="forged").status_code == 400
     assert _webhook(client, gateway, event(100)).status_code == 200  # wrong amount: ignored
@@ -206,7 +246,11 @@ def test_payment_after_expiry_retakes_stock_or_flags_refund(client, shopper, cat
         db.get(Product, catalogue["NEEM"]).stock = 1
         db.commit()
     rzp = order["payment"]["provider_order_id"]
-    body = {"razorpay_order_id": rzp, "razorpay_payment_id": "pay_late", "razorpay_signature": gateway.sign(rzp, "pay_late")}
+    body = {
+        "razorpay_order_id": rzp,
+        "razorpay_payment_id": "pay_late",
+        "razorpay_signature": gateway.sign(rzp, "pay_late"),
+    }
     res = client.post(f"/api/v1/orders/{order['id']}/payment/verify", headers=shopper, json=body)
     assert res.json()["status"] == "refund_pending"
 

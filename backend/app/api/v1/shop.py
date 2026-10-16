@@ -61,12 +61,13 @@ def _product_out(db, p: Product, lang: str) -> ProductOut:
     )
 
 
-def _order_out(o: Order, lang: str) -> OrderOut:
+def order_out(o: Order, lang: str) -> OrderOut:
     pending = o.status == shop.PENDING
     gateway_key = get_settings().razorpay_key_id if o.payment_provider == "razorpay" else FakeGateway.KEY_ID
     return OrderOut(
         id=o.id,
         status=o.status,
+        payment_method="cod" if o.payment_provider == "cod" else "online",
         items=[
             OrderLineOut(
                 product_id=i.product_id,
@@ -83,7 +84,10 @@ def _order_out(o: Order, lang: str) -> OrderOut:
         savings=_rupees(o.mrp_total_paise - o.total_paise),
         delivery_address=o.delivery_address,
         payment=PaymentInfo(
-            provider=o.payment_provider, key_id=gateway_key, provider_order_id=o.provider_order_id, amount_paise=o.total_paise
+            provider=o.payment_provider,
+            key_id=gateway_key,
+            provider_order_id=o.provider_order_id,
+            amount_paise=o.total_paise,
         )
         if pending
         else None,
@@ -133,7 +137,8 @@ def products(
     if q:
         needle = q.strip().lower()
         rows = [
-            p for p in rows
+            p
+            for p in rows
             if any(needle in v.lower() for v in (p.name or {}).values()) or needle in (p.brand or "").lower()
         ]
     lang = farmer.preferred_language
@@ -200,24 +205,24 @@ def remove_cart_item(product_id: int, farmer: CurrentFarmer, db: DbSession):
 
 @router.post("/orders", response_model=OrderOut, status_code=201)
 def place_order(body: PlaceOrderIn, farmer: CurrentFarmer, db: DbSession, gateway: Gateway):
-    order = shop.place_order(db, farmer, body.address.model_dump(), gateway)
-    return _order_out(order, farmer.preferred_language)
+    order = shop.place_order(db, farmer, body.address.model_dump(), gateway, body.payment_method)
+    return order_out(order, farmer.preferred_language)
 
 
 @router.get("/orders", response_model=list[OrderOut])
 def list_orders(farmer: CurrentFarmer, db: DbSession):
     orders = db.scalars(select(Order).where(Order.farmer_id == farmer.id).order_by(Order.id.desc()))
-    return [_order_out(o, farmer.preferred_language) for o in orders]
+    return [order_out(o, farmer.preferred_language) for o in orders]
 
 
 @router.get("/orders/{order_id}", response_model=OrderOut)
 def get_order(order_id: int, farmer: CurrentFarmer, db: DbSession):
-    return _order_out(_owned_order(db, farmer, order_id), farmer.preferred_language)
+    return order_out(_owned_order(db, farmer, order_id), farmer.preferred_language)
 
 
 @router.post("/orders/{order_id}/cancel", response_model=OrderOut)
 def cancel_order(order_id: int, farmer: CurrentFarmer, db: DbSession):
-    return _order_out(shop.cancel_order(db, _owned_order(db, farmer, order_id)), farmer.preferred_language)
+    return order_out(shop.cancel_order(db, _owned_order(db, farmer, order_id)), farmer.preferred_language)
 
 
 @router.post("/orders/{order_id}/payment/verify", response_model=OrderOut)
@@ -228,7 +233,7 @@ def verify_payment(order_id: int, body: VerifyPaymentIn, farmer: CurrentFarmer, 
         order.provider_order_id, body.razorpay_payment_id, body.razorpay_signature
     ):
         raise AppError(400, "payment_verification_failed", "Payment could not be verified")
-    return _order_out(shop.mark_paid(db, order, body.razorpay_payment_id), farmer.preferred_language)
+    return order_out(shop.mark_paid(db, order, body.razorpay_payment_id), farmer.preferred_language)
 
 
 @router.post("/orders/{order_id}/payment/dev-complete", response_model=OrderOut, include_in_schema=False)
@@ -236,7 +241,7 @@ def dev_complete_payment(order_id: int, farmer: CurrentFarmer, db: DbSession):
     """Dev only (PAYMENT_PROVIDER=fake): pretend the farmer paid, so the app can test the full flow."""
     if get_settings().payment_provider != "fake":
         raise not_found("route")
-    return _order_out(shop.mark_paid(db, _owned_order(db, farmer, order_id), "pay_fake_dev"), farmer.preferred_language)
+    return order_out(shop.mark_paid(db, _owned_order(db, farmer, order_id), "pay_fake_dev"), farmer.preferred_language)
 
 
 @router.post("/payments/razorpay/webhook", include_in_schema=False)

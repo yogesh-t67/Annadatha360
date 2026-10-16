@@ -39,6 +39,13 @@ def _rec(**kw):
         ("Black Gram (Urd Beans)(Whole)", "black_gram"),
         ("Castor Seed", "castor"),
         ("Bhindi(Ladies Finger)", None),
+        # Real names seen in the live AP/TG feed (2026-10-16):
+        ("Paddy(Common)", "paddy"),
+        ("Red gram/Arhar/Tur(whole)", "red_gram"),
+        ("Red gram split/Arhar dal/Tur dal", None),  # processed dal, not the crop
+        ("Chili Red", "chilli"),
+        ("Ground Nut Seed", "groundnut"),
+        ("Rice", None),  # milled rice is not paddy
     ],
 )
 def test_commodity_mapping(commodity, crop):
@@ -70,7 +77,9 @@ def _client(pages_by_state):
 def test_sync_paginates_upserts_and_dedupes(db_session, monkeypatch):
     monkeypatch.setattr(DataGovInClient, "PAGE_SIZE", 2)
     ap = {0: [_rec(), _rec(market="Tenali")], 2: [_rec(market="Tenali"), _rec(state="Andhra Pradesh", modal_price="x")]}
-    client, calls = _client({"Andhra Pradesh": ap, "Telangana": {0: [_rec(state="Telangana", district="Warangal", market="Enumamula")]}})
+    client, calls = _client(
+        {"Andhra Pradesh": ap, "Telangana": {0: [_rec(state="Telangana", district="Warangal", market="Enumamula")]}}
+    )
     with db_session() as db:
         stats = sync(db, client, ["Andhra Pradesh", "Telangana"])
         assert stats["Andhra Pradesh"] == {"fetched": 4, "usable": 2, "inserted": 2, "updated": 0}
@@ -87,9 +96,17 @@ def test_sync_paginates_upserts_and_dedupes(db_session, monkeypatch):
 
 def _price(db, days_ago, modal, **kw):
     row = dict(
-        crop_code="paddy", commodity="Paddy(Dhan)(Common)", variety="Common", grade="FAQ",
-        state="AP", district="Guntur", market="Guntur", arrival_date=TODAY - timedelta(days=days_ago),
-        min_price=None, max_price=None, modal_price=Decimal(modal),
+        crop_code="paddy",
+        commodity="Paddy(Dhan)(Common)",
+        variety="Common",
+        grade="FAQ",
+        state="AP",
+        district="Guntur",
+        market="Guntur",
+        arrival_date=TODAY - timedelta(days=days_ago),
+        min_price=None,
+        max_price=None,
+        modal_price=Decimal(modal),
     )
     row.update(kw)
     db.add(MarketPrice(**row))
@@ -113,7 +130,8 @@ def seeded(db_session):
 def test_prices_default_to_primary_crop_with_trend(login, client, seeded):
     headers, _ = login()
     client.patch(
-        "/api/v1/farmers/me", headers=headers,
+        "/api/v1/farmers/me",
+        headers=headers,
         json={"primary_crop_code": "paddy", "location": {"state": "TG", "district": "Warangal"}},
     )
     res = client.get("/api/v1/market/prices", headers=headers)
@@ -158,3 +176,28 @@ def test_no_data_is_empty_not_error(login, client):
     headers, _ = login()
     body = client.get("/api/v1/market/prices", headers=headers, params={"crop": "mango"}).json()
     assert body == {"as_of": None, "prices": []}
+
+
+def test_fetch_retries_transient_failures():
+    attempts, slept = [], []
+
+    def handler(request: httpx.Request):
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise httpx.ReadTimeout("slow", request=request)
+        if len(attempts) == 2:
+            return httpx.Response(502)
+        return httpx.Response(200, json={"records": [_rec()]})
+
+    client = DataGovInClient("k", http=httpx.Client(transport=httpx.MockTransport(handler)), sleep=slept.append)
+    assert len(client.fetch_state("Andhra Pradesh")) == 1
+    assert slept == [2.0, 10.0]
+
+
+def test_fetch_gives_up_after_retries():
+    def handler(request: httpx.Request):
+        raise httpx.ReadTimeout("slow", request=request)
+
+    client = DataGovInClient("k", http=httpx.Client(transport=httpx.MockTransport(handler)), sleep=lambda _: None)
+    with pytest.raises(RuntimeError, match="after 3 attempts"):
+        client.fetch_state("Andhra Pradesh")

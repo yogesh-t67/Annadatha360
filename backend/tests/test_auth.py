@@ -6,9 +6,7 @@ from app.models import OtpChallenge
 from app.schemas.common import normalize_indian_mobile
 
 
-@pytest.mark.parametrize(
-    "raw", ["9876543210", "+91 98765 43210", "919876543210", "09876543210", "98765-43210"]
-)
+@pytest.mark.parametrize("raw", ["9876543210", "+91 98765 43210", "919876543210", "09876543210", "98765-43210"])
 def test_phone_normalisation(raw):
     assert normalize_indian_mobile(raw) == "+919876543210"
 

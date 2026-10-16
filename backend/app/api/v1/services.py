@@ -43,7 +43,13 @@ def _provider_out(p: ServiceProvider, lang: str, service_type: str | None = None
         rating_count=p.rating_count,
         verified=p.verified,
         offerings=[
-            OfferingOut(id=o.id, service_type=o.service_type, rate=o.rate_paise / 100, unit=o.unit, daily_capacity=o.daily_capacity)
+            OfferingOut(
+                id=o.id,
+                service_type=o.service_type,
+                rate=o.rate_paise / 100,
+                unit=o.unit,
+                daily_capacity=o.daily_capacity,
+            )
             for o in offerings
         ],
     )
@@ -82,7 +88,7 @@ def providers(
     farmer: CurrentFarmer,
     db: DbSession,
     kind: Literal["labour", "farm_service"] | None = None,
-    type: str | None = None,  # noqa: A002 - query param name in the public contract
+    type: str | None = None,
     district: Annotated[str | None, Query(max_length=80)] = None,
 ):
     if type is not None and type not in SERVICE_TYPES:
@@ -131,7 +137,7 @@ def availability(
 # ---------- Bookings ----------
 
 
-def _booking_out(b: ServiceBooking, lang: str) -> BookingOut:
+def booking_out(b: ServiceBooking, lang: str) -> BookingOut:
     o = b.offering
     return BookingOut(
         id=b.id,
@@ -169,7 +175,9 @@ def create_booking(body: BookingIn, farmer: CurrentFarmer, db: DbSession):
     remaining = o.daily_capacity - _booked(db, o.id, body.date)
     if body.quantity > remaining:
         db.rollback()
-        raise AppError(409, "slot_unavailable", "Not enough availability on that date", {"remaining": max(0, remaining)})
+        raise AppError(
+            409, "slot_unavailable", "Not enough availability on that date", {"remaining": max(0, remaining)}
+        )
     booking = ServiceBooking(
         farmer_id=farmer.id,
         offering_id=o.id,
@@ -183,20 +191,22 @@ def create_booking(body: BookingIn, farmer: CurrentFarmer, db: DbSession):
     db.add(booking)
     db.commit()
     db.refresh(booking)
-    return _booking_out(booking, farmer.preferred_language)
+    return booking_out(booking, farmer.preferred_language)
 
 
 @router.get("/services/bookings", response_model=list[BookingOut])
 def list_bookings(farmer: CurrentFarmer, db: DbSession):
     rows = db.scalars(
-        select(ServiceBooking).where(ServiceBooking.farmer_id == farmer.id).order_by(ServiceBooking.date.desc(), ServiceBooking.id.desc())
+        select(ServiceBooking)
+        .where(ServiceBooking.farmer_id == farmer.id)
+        .order_by(ServiceBooking.date.desc(), ServiceBooking.id.desc())
     )
-    return [_booking_out(b, farmer.preferred_language) for b in rows]
+    return [booking_out(b, farmer.preferred_language) for b in rows]
 
 
 @router.get("/services/bookings/{booking_id}", response_model=BookingOut)
 def get_booking(booking_id: int, farmer: CurrentFarmer, db: DbSession):
-    return _booking_out(_owned_booking(db, farmer, booking_id), farmer.preferred_language)
+    return booking_out(_owned_booking(db, farmer, booking_id), farmer.preferred_language)
 
 
 @router.post("/services/bookings/{booking_id}/cancel", response_model=BookingOut)
@@ -207,7 +217,7 @@ def cancel_booking(booking_id: int, farmer: CurrentFarmer, db: DbSession):
     b.status = "cancelled"
     db.commit()
     db.refresh(b)
-    return _booking_out(b, farmer.preferred_language)
+    return booking_out(b, farmer.preferred_language)
 
 
 # ---------- Labour requirements ----------

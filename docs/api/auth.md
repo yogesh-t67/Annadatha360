@@ -17,6 +17,10 @@ and rotate on every use — **always save the new refresh token** from `/auth/re
 
 **Dev note:** locally the server doesn't send SMS; the OTP is printed in the backend log (`DEV OTP for +91…: 123456`).
 
+**Closed-beta test numbers:** on non-production servers, numbers listed in `OTP_TEST_NUMBERS` log in with the
+fixed code in `OTP_TEST_CODE` (must be 6 digits) and no SMS is sent. Same API, same rate limits — the app needs
+no changes. Production servers refuse to start with test numbers configured.
+
 ---
 
 ## POST /auth/otp/request

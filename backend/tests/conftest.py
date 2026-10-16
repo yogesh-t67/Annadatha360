@@ -1,21 +1,22 @@
 import os
 
+os.environ["ANNADATA_ENV_FILE"] = ""  # never read a developer's backend/.env during tests
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault("JWT_SECRET", "test-secret-that-is-at-least-32-bytes-long")
 
-import pytest  # noqa: E402
-from fastapi.testclient import TestClient  # noqa: E402
-from sqlalchemy import create_engine  # noqa: E402
-from sqlalchemy.orm import sessionmaker  # noqa: E402
-from sqlalchemy.pool import StaticPool  # noqa: E402
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
-from app.db.base import Base  # noqa: E402
-from app.db.seed_crops import CROPS  # noqa: E402
-from app.db.seed_shop import CATEGORIES  # noqa: E402
-from app.db.session import get_db  # noqa: E402
-from app.main import app  # noqa: E402
-from app.models import Crop, ProductCategory  # noqa: E402
-from app.services.sms import get_sms_sender  # noqa: E402
+from app.db.base import Base
+from app.db.seed_crops import CROPS
+from app.db.seed_shop import CATEGORIES
+from app.db.session import get_db
+from app.main import app
+from app.models import Crop, ProductCategory
+from app.services.sms import get_sms_sender
 
 
 class FakeSms:
