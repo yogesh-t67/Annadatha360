@@ -60,6 +60,7 @@ class Address(BaseModel):
 
 class PlaceOrderIn(BaseModel):
     address: Address
+    payment_method: Literal["online", "cod"] = "online"
 
 
 class OrderLineOut(BaseModel):
@@ -81,12 +82,15 @@ class PaymentInfo(BaseModel):
     currency: Literal["INR"] = "INR"
 
 
-OrderStatus = Literal["pending_payment", "paid", "shipped", "delivered", "cancelled", "refund_pending", "refunded"]
+OrderStatus = Literal[
+    "pending_payment", "confirmed", "paid", "shipped", "delivered", "cancelled", "refund_pending", "refunded"
+]
 
 
 class OrderOut(BaseModel):
     id: int
     status: OrderStatus
+    payment_method: Literal["online", "cod"]
     items: list[OrderLineOut]
     total: float
     mrp_total: float

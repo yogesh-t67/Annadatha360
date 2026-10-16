@@ -80,6 +80,11 @@ filter declines a request, the server automatically retries on Anthropic's recom
 | 503 | `ai_budget_exceeded` | App-wide monthly AI budget used up | "Assistant paused, back next month" |
 | 503 | `ai_not_configured` | Server has no AI key (dev setups) | — |
 
+**Fake AI mode (dev/staging):** with `AI_PROVIDER=fake` the server returns canned replies in the farmer's
+language, clearly labelled as test output (`[Test reply — AI not connected yet]` / `[పరీక్ష సమాధానం …]`), with
+exactly the real response shape. Diagnosis returns a sample result the same way. Use it to build the screens
+without an API key. Limits still apply; cost is zero. Not allowed in production.
+
 ## Cost controls (backend)
 
 Every Claude call is logged with tokens and cost in `ai_usage`. Before each call the server checks this

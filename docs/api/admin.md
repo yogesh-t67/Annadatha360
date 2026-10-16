@@ -30,6 +30,7 @@ Non-staff get `403 forbidden`.
 
 | From | Allowed to |
 |---|---|
+| `confirmed` (cash on delivery) | `shipped`, `cancelled` (stock is released) |
 | `paid` | `shipped`, `refund_pending` (stock is released) |
 | `shipped` | `delivered` |
 | `refund_pending` | `refunded` — do the refund in the Razorpay dashboard first, then record it here |

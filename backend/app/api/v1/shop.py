@@ -67,6 +67,7 @@ def order_out(o: Order, lang: str) -> OrderOut:
     return OrderOut(
         id=o.id,
         status=o.status,
+        payment_method="cod" if o.payment_provider == "cod" else "online",
         items=[
             OrderLineOut(
                 product_id=i.product_id,
@@ -204,7 +205,7 @@ def remove_cart_item(product_id: int, farmer: CurrentFarmer, db: DbSession):
 
 @router.post("/orders", response_model=OrderOut, status_code=201)
 def place_order(body: PlaceOrderIn, farmer: CurrentFarmer, db: DbSession, gateway: Gateway):
-    order = shop.place_order(db, farmer, body.address.model_dump(), gateway)
+    order = shop.place_order(db, farmer, body.address.model_dump(), gateway, body.payment_method)
     return order_out(order, farmer.preferred_language)
 
 

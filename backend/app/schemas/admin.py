@@ -22,7 +22,7 @@ class AdminBookingOut(BookingOut):
 
 
 class OrderStatusIn(BaseModel):
-    status: Literal["shipped", "delivered", "refund_pending", "refunded"]
+    status: Literal["shipped", "delivered", "refund_pending", "refunded", "cancelled"]
     note: str | None = Field(default=None, max_length=500)
 
 

@@ -14,12 +14,27 @@ from app.core.security import (
     utcnow,
 )
 from app.models import Farmer, OtpChallenge, RefreshToken
+from app.schemas.common import normalize_indian_mobile
 from app.services.sms import SmsSender
 
 
 def _as_utc(value: datetime) -> datetime:
     # SQLite drops tzinfo; Postgres keeps it. Normalise before comparing.
     return value if value.tzinfo else value.replace(tzinfo=UTC)
+
+
+def is_test_number(phone: str) -> bool:
+    """Closed-beta allowlist (OTP_TEST_NUMBERS). Needs OTP_TEST_CODE too; never active in production."""
+    settings = get_settings()
+    if settings.is_production or not settings.otp_test_code or not settings.otp_test_numbers:
+        return False
+    allowed = set()
+    for raw in settings.otp_test_numbers:
+        try:
+            allowed.add(normalize_indian_mobile(raw))
+        except ValueError:
+            continue
+    return phone in allowed
 
 
 def request_otp(db: Session, phone: str, sms: SmsSender) -> OtpChallenge:
@@ -42,7 +57,8 @@ def request_otp(db: Session, phone: str, sms: SmsSender) -> OtpChallenge:
     if sent_last_hour >= settings.otp_max_sends_per_hour:
         raise AppError(429, "otp_rate_limited", "Too many OTP requests. Try again later.")
 
-    code = generate_otp()
+    test_number = is_test_number(phone)
+    code = settings.otp_test_code if test_number else generate_otp()
     challenge = OtpChallenge(
         phone=phone,
         code_hash=hash_secret(code),
@@ -52,6 +68,8 @@ def request_otp(db: Session, phone: str, sms: SmsSender) -> OtpChallenge:
     )
     db.add(challenge)
     db.commit()
+    if test_number:
+        return challenge  # closed-beta tester: fixed code, no SMS
     try:
         sms.send_otp(phone, code)
     except Exception:

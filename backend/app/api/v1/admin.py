@@ -30,6 +30,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 # Allowed status changes by staff. Payment-driven changes (pending → paid) happen in the payment flow.
 ORDER_TRANSITIONS = {
+    "confirmed": {"shipped", "cancelled"},  # cash on delivery
     "paid": {"shipped", "refund_pending"},
     "shipped": {"delivered"},
     "refund_pending": {"refunded"},
@@ -89,8 +90,10 @@ def set_order_status(order_id: int, body: OrderStatusIn, staff: AnyStaff, db: Db
         raise not_found("order")
     if body.status not in ORDER_TRANSITIONS.get(order.status, set()):
         raise AppError(409, "invalid_transition", f"Can't move an order from {order.status} to {body.status}")
-    if order.status == "paid" and body.status == "refund_pending":
+    if body.status in ("refund_pending", "cancelled"):
         release_stock(db, order)  # goods won't ship; make them sellable again
+    if body.status == "delivered" and order.payment_provider == "cod":
+        order.paid_at = utcnow()  # cash collected on delivery
     _audit(db, staff, "order.status", "order", order.id, old=order.status, new=body.status, note=body.note)
     order.status = body.status
     db.commit()

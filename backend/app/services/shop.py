@@ -14,6 +14,7 @@ log = logging.getLogger("annadata.shop")
 
 MAX_QTY_PER_ITEM = 100
 PENDING = "pending_payment"
+COD_CONFIRMED = "confirmed"  # cash-on-delivery order: stock reserved, awaiting dispatch, paid on delivery
 
 
 def reserve_stock(db: Session, product_id: int, qty: int) -> bool:
@@ -55,10 +56,26 @@ def set_cart_quantity(db: Session, farmer: Farmer, product_id: int, quantity: in
     db.commit()
 
 
-def place_order(db: Session, farmer: Farmer, address: dict, gateway: PaymentGateway) -> Order:
+def place_order(
+    db: Session, farmer: Farmer, address: dict, gateway: PaymentGateway, payment_method: str = "online"
+) -> Order:
     items = cart_items(db, farmer.id)
     if not items:
         raise AppError(422, "cart_empty", "Your cart is empty")
+
+    cod = payment_method == "cod"
+    if cod:
+        settings = get_settings()
+        if not settings.cod_enabled:
+            raise AppError(422, "cod_not_available", "Cash on delivery is not available")
+        total = sum(i.product.price_paise * i.quantity for i in items)
+        if total > settings.cod_max_order_rupees * 100:
+            raise AppError(
+                422,
+                "cod_limit_exceeded",
+                f"Cash on delivery is only for orders up to ₹{settings.cod_max_order_rupees}",
+                {"max_order": settings.cod_max_order_rupees},
+            )
 
     short = []
     for item in items:
@@ -70,11 +87,11 @@ def place_order(db: Session, farmer: Farmer, address: dict, gateway: PaymentGate
 
     order = Order(
         farmer_id=farmer.id,
-        status=PENDING,
+        status=COD_CONFIRMED if cod else PENDING,
         total_paise=sum(i.product.price_paise * i.quantity for i in items),
         mrp_total_paise=sum(i.product.mrp_paise * i.quantity for i in items),
         delivery_address=address,
-        payment_provider=gateway.name,
+        payment_provider="cod" if cod else gateway.name,
         items=[
             OrderItem(
                 product_id=i.product_id,
@@ -89,11 +106,12 @@ def place_order(db: Session, farmer: Farmer, address: dict, gateway: PaymentGate
     )
     db.add(order)
     db.flush()
-    try:
-        order.provider_order_id = gateway.create_order(order.total_paise, receipt=f"annadata-{order.id}")
-    except Exception:
-        db.rollback()  # no gateway order → no order, and stock goes back
-        raise
+    if not cod:
+        try:
+            order.provider_order_id = gateway.create_order(order.total_paise, receipt=f"annadata-{order.id}")
+        except Exception:
+            db.rollback()  # no gateway order → no order, and stock goes back
+            raise
     for item in items:
         db.delete(item)
     db.commit()
@@ -120,8 +138,9 @@ def mark_paid(db: Session, order: Order, payment_id: str) -> Order:
 
 
 def cancel_order(db: Session, order: Order) -> Order:
-    if order.status != PENDING:
-        raise AppError(409, "order_not_cancellable", "Only unpaid orders can be cancelled here")
+    """Farmer cancel: unpaid online orders, or COD orders that haven't shipped."""
+    if order.status not in (PENDING, COD_CONFIRMED):
+        raise AppError(409, "order_not_cancellable", "This order can't be cancelled here")
     order.status = "cancelled"
     release_stock(db, order)
     db.commit()

@@ -86,6 +86,10 @@ def _client_for(api_key: str) -> anthropic.Anthropic:
 
 def get_ai_client() -> anthropic.Anthropic:
     settings = get_settings()
+    if settings.ai_provider == "fake" and not settings.is_production:
+        from app.services.ai.fake import FakeClaudeClient
+
+        return FakeClaudeClient()
     if not settings.anthropic_api_key:
         raise AppError(503, "ai_not_configured", "AI is not configured on this server")
     return _client_for(settings.anthropic_api_key)

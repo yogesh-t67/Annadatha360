@@ -95,6 +95,22 @@ def get_payment_gateway() -> PaymentGateway:
         return FakeGateway()
     if s.payment_provider == "razorpay":
         if not (s.razorpay_key_id and s.razorpay_key_secret):
-            raise AppError(503, "payment_not_configured", "Payments are not configured on this server")
+            return UnconfiguredGateway()
         return RazorpayGateway(s.razorpay_key_id, s.razorpay_key_secret, s.razorpay_webhook_secret)
     raise RuntimeError(f"Unknown PAYMENT_PROVIDER: {s.payment_provider}")
+
+
+class UnconfiguredGateway:
+    """Razorpay selected but keys missing. Fails only when online payment is actually used,
+    so cash-on-delivery keeps working."""
+
+    name = "razorpay"
+    key_id = ""
+
+    def _fail(self, *_, **__):
+        raise AppError(503, "payment_not_configured", "Online payment is not configured on this server")
+
+    create_order = verify_payment = _fail
+
+    def verify_webhook(self, body: bytes, signature: str) -> bool:
+        return False
