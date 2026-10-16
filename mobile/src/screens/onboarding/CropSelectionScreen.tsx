@@ -11,9 +11,11 @@ import { SelectField } from '../../components/SelectField';
 import { crops, stages } from '../../data/farm';
 import { useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
+import { hasSession } from '../../api/tokens';
+import { syncProfile } from '../../api/syncProfile';
 
 export function CropSelectionScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { enterApp } = useAppNavigation();
   const crop = useFarmStore((s) => s.crop);
   const acres = useFarmStore((s) => s.acres);
@@ -79,6 +81,10 @@ export function CropSelectionScreen() {
         onPress={() => {
           completeOnboarding();
           enterApp();
+          // Best effort: send the profile to the backend if the phone was verified. Never blocks the app.
+          hasSession()
+            .then((signedIn) => (signedIn ? syncProfile(useFarmStore.getState(), i18n.language) : undefined))
+            .catch((e) => console.warn('Profile sync failed', e));
         }}
       />
     </ScreenContainer>

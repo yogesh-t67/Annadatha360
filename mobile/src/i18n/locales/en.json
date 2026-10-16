@@ -104,7 +104,17 @@
     "listen": "Listen",
     "listenText": "Tell us the crop age, symptoms and location. Avoid applying chemicals until the problem is identified.",
     "viewDiagnosis": "View crop diagnosis",
-    "micUnavailable": "Voice input isn't available in the app yet. Type your question instead."
+    "micUnavailable": "Voice input needs the full app build. Type your question instead.",
+    "listening": "Listening… speak now",
+    "tapToStop": "Tap to stop",
+    "thinking": "Getting your answer…",
+    "answerTitle": "Answer",
+    "stopSpeaking": "Stop",
+    "signInNeeded": "Verify your phone number to ask the AI.",
+    "verifyNow": "Verify phone",
+    "micDenied": "Microphone permission is off. Allow it in Settings to speak your question.",
+    "noSpeech": "Didn't hear anything. Tap the mic and try again.",
+    "languageNotSupported": "This phone doesn't support voice input in this language. Type your question instead."
   },
   "diagnosis": {
     "title": "Crop Diagnosis",
@@ -205,5 +215,30 @@
     "editProfile": "Edit Profile",
     "manageFarm": "Manage Farm",
     "version": "Annadata 360 v{{version}}"
+  },
+  "verifyPhone": {
+    "title": "Verify your phone",
+    "subtitle": "We'll send a 6-digit code by SMS. This keeps your farm details safe.",
+    "phone": "Mobile number",
+    "sendCode": "Send code",
+    "code": "6-digit code",
+    "sentTo": "Code sent to {{phone}}",
+    "verify": "Verify",
+    "resendIn": "Resend in {{seconds}}s",
+    "resend": "Resend code",
+    "skip": "Skip for now"
+  },
+  "errors": {
+    "network": "No internet connection. Check it and try again.",
+    "timeout": "This is taking too long. Please try again.",
+    "aiBusy": "The assistant is busy. Try again in a minute.",
+    "aiDailyLimit": "You've reached today's question limit. Ask again tomorrow.",
+    "aiUnavailable": "The assistant isn't available right now.",
+    "aiDeclined": "I can't help with that question. Try asking it differently.",
+    "invalidPhone": "Enter a valid 10-digit mobile number.",
+    "otpInvalid": "Wrong code. Please check and try again.",
+    "otpExpired": "This code has expired. Send a new one.",
+    "otpTooMany": "Too many attempts. Please wait and try again.",
+    "generic": "Something went wrong. Please try again."
   }
 }
