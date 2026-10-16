@@ -34,6 +34,8 @@ FALLBACK_BETA = "server-side-fallback-2026-07-01"
 
 
 def _price(model: str) -> tuple[Decimal, Decimal, Decimal]:
+    if model.startswith("gemini-"):
+        return (Decimal(0), Decimal(0), Decimal(0))  # free tier, testing only
     price = PRICES.get(model)
     if price is None:
         log.warning("No price for model %s; using the most expensive known price", model)
@@ -84,12 +86,28 @@ def _client_for(api_key: str) -> anthropic.Anthropic:
     return anthropic.Anthropic(api_key=api_key, timeout=90.0, max_retries=2)
 
 
+@lru_cache(maxsize=2)
+def _gemini_for(api_key: str, model: str, base_url: str):
+    from app.services.ai.gemini import GeminiClient
+
+    return GeminiClient(api_key, model, base_url)
+
+
+def active_model() -> str:
+    s = get_settings()
+    return s.gemini_model if s.ai_provider == "gemini" else s.ai_model
+
+
 def get_ai_client() -> anthropic.Anthropic:
     settings = get_settings()
     if settings.ai_provider == "fake" and not settings.is_production:
         from app.services.ai.fake import FakeClaudeClient
 
         return FakeClaudeClient()
+    if settings.ai_provider == "gemini" and not settings.is_production:
+        if not settings.gemini_api_key:
+            raise AppError(503, "ai_not_configured", "GEMINI_API_KEY is not set")
+        return _gemini_for(settings.gemini_api_key, settings.gemini_model, settings.gemini_base_url)
     if not settings.anthropic_api_key:
         raise AppError(503, "ai_not_configured", "AI is not configured on this server")
     return _client_for(settings.anthropic_api_key)
@@ -102,7 +120,7 @@ def call_claude(client, db: Session, *, farmer_id: int, feature: str, **params):
     response the API returned (including refusals), since those can be billed.
     """
     check_budget(db, farmer_id)
-    model = params.pop("model", None) or get_settings().ai_model
+    model = params.pop("model", None) or active_model()
     try:
         response = client.beta.messages.create(
             model=model,

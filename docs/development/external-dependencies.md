@@ -7,7 +7,8 @@ dev fallback. Owner = who has to act.
 |---|---|---|---|---|
 | **DLT registration** (TRAI) | Sending OTP SMS in India | ⛔ Not started | OTP printed to server log (`SMS_PROVIDER=console`) | Business — needs PAN/GST |
 | **MSG91 account** | OTP SMS delivery | ⛔ Not started (blocked on DLT) | Same as above | Business |
-| **Anthropic API key** | AI assistant, crop diagnosis | ⛔ Not provided | AI endpoints return `503 ai_not_configured` | Team |
+| **Anthropic API key** | AI assistant, crop diagnosis | ⛔ Not provided | `AI_PROVIDER=fake` (canned) or `AI_PROVIDER=gemini` (free, testing only) | Team |
+| **Gemini API key** (optional, testing) | Real AI answers before the Anthropic key | ✅ Have one (2026-10-16); chat + diagnosis verified live on `gemini-3.6-flash` | — | Anyone with a Google account (free at aistudio.google.com/apikey; new keys start `AQ.`) |
 | **Open-Meteo commercial plan** | Weather, at launch | Not needed until launch | Free non-commercial API (no key) | Team |
 | **data.gov.in API key** | Mandi prices | ✅ Have it (2026-10-16); live import verified | — | Set `DATA_GOV_IN_API_KEY` on each server |
 | **Razorpay account** (KYC) | Agri Mart payments | ⛔ Not started | `PAYMENT_PROVIDER=fake` + dev-complete endpoint | Business — needs PAN, bank account, GST |

@@ -52,7 +52,9 @@ def test_test_numbers_ignored_in_production(client, sms, testers, monkeypatch):
     assert "+919000000077" in sms.sent  # real SMS path, fixed code not used
 
 
-@pytest.mark.parametrize("env", [{"OTP_TEST_NUMBERS": '["9000000077"]'}, {"AI_PROVIDER": "fake"}])
+@pytest.mark.parametrize(
+    "env", [{"OTP_TEST_NUMBERS": '["9000000077"]'}, {"AI_PROVIDER": "fake"}, {"AI_PROVIDER": "gemini"}]
+)
 def test_production_refuses_test_settings(monkeypatch, env):
     get_settings.cache_clear()
     try:
