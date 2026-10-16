@@ -33,13 +33,13 @@ class Settings(BaseSettings):
     market_states: list[str] = ["Andhra Pradesh", "Telangana"]
 
     # --- AI (Claude) ---
-    # The SDK reads ANTHROPIC_API_KEY from the environment.
+    anthropic_api_key: str = ""
     ai_model: str = "claude-opus-5-5"
     ai_chat_effort: str = "low"
     ai_diagnosis_effort: str = "medium"
     ai_monthly_budget_usd: float = 50.0  # dev-sandbox placeholder; raise before launch
     # Headroom kept for the call about to be made, so the last call of the month can't overshoot much.
-    ai_call_reserve_usd: float = 0.10
+    ai_call_reserve_usd: float = 0.20
     ai_farmer_daily_request_limit: int = 30
     ai_chat_history_messages: int = 20
 
