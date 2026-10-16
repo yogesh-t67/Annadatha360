@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+*.pyc
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Mobile (Expo/React Native)
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/expo-env.d.ts
+mobile/*.tsbuildinfo
+mobile/ios/
+mobile/android/
+
+# Backend (Python/FastAPI)
+backend/.venv/
+backend/*.egg-info/
+backend/.pytest_cache/
+backend/.mypy_cache/
+
+# Local databases
+*.sqlite3
+*.db
+
+# Logs
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Keys / certs
+*.jks
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision

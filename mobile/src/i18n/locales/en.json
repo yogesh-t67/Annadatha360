@@ -1,0 +1,132 @@
+{
+  "common": {
+    "continue": "Continue",
+    "back": "Back",
+    "getStarted": "Get Started",
+    "cancel": "Cancel",
+    "retry": "Try again"
+  },
+  "languages": {
+    "en": "English",
+    "te": "Telugu",
+    "hi": "Hindi",
+    "ta": "Tamil",
+    "kn": "Kannada",
+    "mr": "Marathi",
+    "gu": "Gujarati"
+  },
+  "onboarding": {
+    "brand": "Annadata 360",
+    "tagline": "Your 360° Farming Partner",
+    "subtitle": "Weather, market prices, crop advisory, and government schemes — all in one app."
+  },
+  "languageSelect": {
+    "title": "Choose your language",
+    "subtitle": "You can change this anytime from Profile."
+  },
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "services": "Services",
+    "advisories": "Advisories",
+    "profile": "Profile"
+  },
+  "home": {
+    "greeting": "Smart Farming, Brighter Tomorrows",
+    "greetingSubtitle": "Your farm, our support",
+    "searchPlaceholder": "Search crops, schemes, services…",
+    "weatherAlertTitle": "Weather Alert",
+    "weatherAlertBody": "Light to moderate rain expected in the next 24 hours. Plan field activities accordingly.",
+    "exploreTitle": "Explore services",
+    "latestAdvisoryTitle": "Latest Advisory",
+    "latestAdvisoryBody": "Time your next irrigation for early morning to reduce water loss and improve yield in paddy.",
+    "tiles": {
+      "weather": "Weather",
+      "marketPrices": "Market Prices",
+      "agriMart": "Agri Mart",
+      "aiAssistant": "AI Assistant",
+      "cropAdvisory": "Crop Advisory",
+      "farmServices": "Farm Services",
+      "farmManagement": "Farm Management",
+      "governmentSchemes": "Govt Schemes"
+    }
+  },
+  "weather": {
+    "title": "Weather",
+    "demoDataNote": "Demo data",
+    "conditionLabel": "Partly cloudy with light rain",
+    "humidity": "Humidity",
+    "wind": "Wind",
+    "alertTitle": "Weather Alert",
+    "alertBody": "Light to moderate rain expected in the next 24 hours. Plan field activities accordingly.",
+    "forecastTitle": "7 Day Forecast",
+    "today": "Today"
+  },
+  "marketPrices": {
+    "title": "Market Prices",
+    "demoDataNote": "Illustrative rates",
+    "searchPlaceholder": "Search crop or market…",
+    "perQuintal": "/ Quintal",
+    "categories": {
+      "all": "All Crops",
+      "cereals": "Cereals",
+      "pulses": "Pulses",
+      "oilseeds": "Oilseeds"
+    },
+    "crops": {
+      "paddy": "Paddy (Rice)",
+      "maize": "Maize",
+      "redChilli": "Red Chilli",
+      "cotton": "Cotton",
+      "groundnut": "Groundnut",
+      "blackGram": "Black Gram"
+    }
+  },
+  "placeholders": {
+    "agriMart": {
+      "title": "Agri Mart",
+      "body": "Seeds, fertilizers, pesticides, and equipment for purchase will appear here once the store catalog is connected."
+    },
+    "cart": {
+      "title": "Cart & Checkout",
+      "body": "Items you add from Agri Mart will appear here, ready for UPI or card checkout."
+    },
+    "labourServices": {
+      "title": "Labour Services",
+      "body": "Find and book farm labour, or post a labour requirement, once this service is connected."
+    },
+    "farmServices": {
+      "title": "Farm Services",
+      "body": "Tractor rental, drone spraying, soil testing, and transport bookings will appear here once services are connected."
+    },
+    "governmentSchemes": {
+      "title": "Government Schemes",
+      "body": "Central and state farmer schemes, with eligibility and application steps, will appear here once scheme data is connected."
+    },
+    "cropAdvisory": {
+      "title": "Crop Advisory",
+      "body": "Take a photo of your crop to diagnose issues and get treatment guidance once diagnosis is connected."
+    },
+    "farmManagement": {
+      "title": "Farm Management",
+      "body": "Track your fields, crop plans, and harvest records here once farm records are connected."
+    },
+    "profile": {
+      "title": "Profile",
+      "body": "Your orders, bookings, advisory history, and settings will appear here once your account is connected."
+    }
+  },
+  "aiAssistant": {
+    "title": "AI Assistant",
+    "greeting": "Hello! I am your Annadata 360 Assistant. Ask me about crops, weather, market prices, government schemes, or any farming query.",
+    "inputPlaceholder": "Type your question…",
+    "micHint": "Tap to speak",
+    "suggestions": [
+      "What is the best time to sow rice?",
+      "Current market price of maize?",
+      "How to control leaf blight?",
+      "Tell me about PM-KISAN scheme",
+      "How to improve soil health?"
+    ]
+  }
+}
