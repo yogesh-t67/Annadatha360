@@ -27,6 +27,14 @@ uvicorn app.main:app --reload
 
 In development (`SMS_PROVIDER=console`) OTPs are printed to the server log instead of being sent by SMS.
 
+## Scheduled jobs
+
+| Job | Command | When |
+|---|---|---|
+| Mandi price import (AP + TG) | `python -m app.jobs.sync_market_prices` | Daily, evening IST. Needs `DATA_GOV_IN_API_KEY`. |
+
+No scheduler is wired up yet; run it from cron (or the host's scheduler) in the API's environment.
+
 ## Tests
 
 ```sh
@@ -54,7 +62,8 @@ app/
   db/                SQLAlchemy base + session, seed data
   models/            ORM models
   schemas/           Pydantic request/response models (the API contract)
-  services/          business logic (auth/OTP, SMS, serialisers)
+  services/          business logic and third-party adapters (OTP/SMS, weather, market prices)
+  jobs/              scheduled jobs, run with python -m
   api/v1/            routers, mounted under /api/v1
 alembic/             migrations
 tests/
