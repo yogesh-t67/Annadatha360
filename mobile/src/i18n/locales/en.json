@@ -82,38 +82,117 @@
       "blackGram": "Black Gram"
     }
   },
-  "placeholders": {
-    "agriMart": {
-      "title": "Agri Mart",
-      "body": "Seeds, fertilizers, pesticides, and equipment for purchase will appear here once the store catalog is connected."
+  "agriMart": {
+    "title": "Agri Mart",
+    "searchPlaceholder": "Search products…",
+    "catalogPendingNote": "Full catalog connects once the store API is live — showing today's deals below.",
+    "categories": {
+      "seeds": "Seeds",
+      "fertilizers": "Fertilizers",
+      "pesticides": "Pesticides",
+      "equipment": "Farm Equipment",
+      "irrigation": "Irrigation",
+      "tools": "Tools"
     },
-    "cart": {
-      "title": "Cart & Checkout",
-      "body": "Items you add from Agri Mart will appear here, ready for UPI or card checkout."
+    "dealsTitle": "Best Deals",
+    "addToCart": "Add to Cart",
+    "products": {
+      "bayerNativo": "Bayer Nativo Fungicide 500g",
+      "iffcoDap": "IFFCO DAP Fertilizer 50kg"
+    }
+  },
+  "cart": {
+    "title": "Cart & Checkout",
+    "emptyTitle": "Your cart is empty",
+    "emptyBody": "Items you add from Agri Mart will appear here.",
+    "browseShop": "Browse Agri Mart",
+    "totalLabel": "Total Amount",
+    "checkout": "Proceed to Checkout",
+    "paymentMethods": "Payment Methods",
+    "checkoutPendingNote": "Payment integration connects once the backend is live."
+  },
+  "cropAdvisory": {
+    "title": "Crop Advisory",
+    "tabs": { "cropCare": "Crop Care", "stageGuide": "Stage Guide" },
+    "featured": {
+      "title": "Leaf Blight in Paddy — What to do?",
+      "body": "Fungal disease. Use recommended fungicides and maintain proper water management.",
+      "cta": "Take a Photo for Diagnosis"
     },
-    "labourServices": {
-      "title": "Labour Services",
-      "body": "Find and book farm labour, or post a labour requirement, once this service is connected."
+    "diagnosisPendingTitle": "Diagnosis not connected yet",
+    "diagnosisPendingBody": "Photo-based crop diagnosis needs a vision AI integration on the backend. This button will work once that's wired up.",
+    "otherAdvisoriesTitle": "Other Advisories",
+    "crops": { "rice": "Rice", "maize": "Maize", "chilli": "Chilli", "cotton": "Cotton" }
+  },
+  "labourServices": {
+    "title": "Labour Services",
+    "demoDataNote": "Demo data",
+    "findTab": "Find Labour",
+    "bookingsTab": "My Bookings",
+    "postRequirement": "Post Labour Requirement",
+    "perDay": "/ day",
+    "workers": {
+      "ramesh": { "name": "Ramesh Kumar", "skill": "Harvesting" },
+      "lakshmi": { "name": "Lakshmi Devi", "skill": "Transplanting" },
+      "suresh": { "name": "Suresh Reddy", "skill": "Sowing" },
+      "anitha": { "name": "Anitha Rani", "skill": "General Farm Work" }
     },
-    "farmServices": {
-      "title": "Farm Services",
-      "body": "Tractor rental, drone spraying, soil testing, and transport bookings will appear here once services are connected."
-    },
-    "governmentSchemes": {
-      "title": "Government Schemes",
-      "body": "Central and state farmer schemes, with eligibility and application steps, will appear here once scheme data is connected."
-    },
-    "cropAdvisory": {
-      "title": "Crop Advisory",
-      "body": "Take a photo of your crop to diagnose issues and get treatment guidance once diagnosis is connected."
-    },
-    "farmManagement": {
-      "title": "Farm Management",
-      "body": "Track your fields, crop plans, and harvest records here once farm records are connected."
-    },
-    "profile": {
-      "title": "Profile",
-      "body": "Your orders, bookings, advisory history, and settings will appear here once your account is connected."
+    "bookCta": "Book",
+    "noBookingsTitle": "No bookings yet",
+    "noBookingsBody": "Labour you book will show up here, with status and contact details."
+  },
+  "farmServices": {
+    "title": "Farm Services",
+    "demoDataNote": "Demo data",
+    "perHour": "/ hour",
+    "bookCta": "Book Now",
+    "services": {
+      "tractorRental": "Tractor Rental",
+      "harvesting": "Harvesting Equipment",
+      "droneSpraying": "Drone Spraying",
+      "soilTesting": "Soil Testing",
+      "customHiring": "Custom Hiring Services",
+      "transport": "Transport",
+      "labourSupport": "Labour Support",
+      "irrigationServices": "Irrigation Services"
+    }
+  },
+  "governmentSchemes": {
+    "title": "Government Schemes",
+    "centralTab": "Central Schemes",
+    "stateTab": "State Schemes",
+    "schemes": {
+      "pmKisan": { "name": "PM-KISAN", "description": "Income support for farmers" },
+      "pmfby": { "name": "PM Crop Insurance (PMFBY)", "description": "Crop insurance scheme" },
+      "kcc": { "name": "Kisan Credit Card (KCC)", "description": "Agricultural credit facilities" },
+      "soilHealthCard": { "name": "Soil Health Card", "description": "Soil testing and recommendations" },
+      "equipmentSubsidy": { "name": "Subsidy on Farm Equipment", "description": "Tractor, tools, and machinery" },
+      "stateAgriSchemes": { "name": "State Agriculture Schemes", "description": "Check state-specific schemes" }
+    }
+  },
+  "farmManagement": {
+    "title": "Farm Management",
+    "tabs": { "myFields": "My Fields", "activities": "Activities", "expenses": "Expenses" },
+    "fieldAcres": "{{acres}} Acres",
+    "actions": { "addField": "Add Field", "cropPlan": "Crop Plan", "irrigation": "Irrigation", "harvest": "Harvest" },
+    "addNewCrop": "Add New Crop",
+    "myCropsTitle": "My Crops",
+    "stages": { "growing": "Growing", "sowing": "Sowing", "planning": "Planning" },
+    "crops": { "paddy": "Paddy", "maize": "Maize", "cotton": "Cotton" }
+  },
+  "profile": {
+    "title": "My Profile",
+    "mockName": "Ramu Naik",
+    "mockLocation": "Hyderabad, Telangana",
+    "menu": {
+      "myFields": "My Fields",
+      "myOrders": "My Orders",
+      "savedProducts": "Saved Products",
+      "notifications": "Notifications",
+      "advisoryHistory": "My Advisory History",
+      "settings": "Settings",
+      "helpSupport": "Help & Support",
+      "logout": "Logout"
     }
   },
   "aiAssistant": {

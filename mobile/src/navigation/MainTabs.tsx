@@ -8,17 +8,15 @@ import { theme } from '../theme';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { AiAssistantScreen } from '../screens/home/AiAssistantScreen';
 import { WeatherScreen } from '../screens/home/WeatherScreen';
-import {
-  AgriMartScreen,
-  CartScreen,
-  CropAdvisoryScreen,
-  FarmManagementScreen,
-  FarmServicesScreen,
-  GovernmentSchemesScreen,
-  LabourServicesScreen,
-  MarketPricesScreen,
-  ProfileDashboardScreen,
-} from '../screens/placeholders';
+import { MarketPricesScreen } from '../screens/home/MarketPricesScreen';
+import { CropAdvisoryScreen } from '../screens/advisories/CropAdvisoryScreen';
+import { FarmManagementScreen } from '../screens/advisories/FarmManagementScreen';
+import { AgriMartScreen } from '../screens/shop/AgriMartScreen';
+import { CartScreen } from '../screens/shop/CartScreen';
+import { FarmServicesScreen } from '../screens/services/FarmServicesScreen';
+import { LabourServicesScreen } from '../screens/services/LabourServicesScreen';
+import { GovernmentSchemesScreen } from '../screens/services/GovernmentSchemesScreen';
+import { ProfileDashboardScreen } from '../screens/profile/ProfileDashboardScreen';
 import {
   AdvisoriesStackParamList,
   HomeStackParamList,

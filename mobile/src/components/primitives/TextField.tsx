@@ -5,7 +5,8 @@ import { theme } from '../../theme';
 import { Text } from './Text';
 
 export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
-  label: string;
+  /** Omit for a label-less field (e.g. a search bar); accessibilityLabel then falls back to placeholder. */
+  label?: string;
   error?: string;
   helperText?: string;
   icon?: React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
@@ -22,9 +23,11 @@ export function TextField({ label, error, helperText, icon: Icon, editable = tru
 
   return (
     <View style={{ gap: theme.spacing.xxs }}>
-      <Text variant="caption" weight="medium" color={theme.color.text.secondary}>
-        {label}
-      </Text>
+      {label ? (
+        <Text variant="caption" weight="medium" color={theme.color.text.secondary}>
+          {label}
+        </Text>
+      ) : null}
       <View
         style={{
           flexDirection: 'row',
@@ -49,7 +52,7 @@ export function TextField({ label, error, helperText, icon: Icon, editable = tru
             fontSize: theme.typography.body.fontSize,
             color: theme.color.text.primary,
           }}
-          accessibilityLabel={label}
+          accessibilityLabel={label ?? rest.placeholder}
           {...rest}
         />
       </View>
