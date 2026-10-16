@@ -91,6 +91,12 @@ recorded at zero cost. For testing only: Google may use free-tier prompts and ph
 use test data, never real farmers'. Answer quality and Telugu fluency will differ from Claude; judge the product
 on Claude before launch. Not allowed in production.
 
+Verified live on 2026-10-16 with `gemini-3.6-flash`: Telugu replies ~8–11 s, using the farmer's crop, village,
+growth stage and the weather forecast; follow-ups keep context; diagnosis returns the documented result shape
+(~7 s). Google's models can be temporarily overloaded (that day `gemini-3.8-flash` was) — the app then gets
+`503 ai_busy`; switch `GEMINI_MODEL` if it persists. Any pesticide names/doses in answers need agronomist review
+before real-farmer use.
+
 ## Cost controls (backend)
 
 Every Claude call is logged with tokens and cost in `ai_usage`. Before each call the server checks this

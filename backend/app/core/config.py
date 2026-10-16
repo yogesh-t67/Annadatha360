@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     # Gemini free tier: Google may use what you send to improve its products. Test data only — never real farmers'.
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-3.8-flash"
+    gemini_model: str = "gemini-3.6-flash"  # verified live 2026-10-16; 3.8-flash was overloaded at the time
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
     ai_model: str = "claude-opus-5-5"
     ai_chat_effort: str = "low"
