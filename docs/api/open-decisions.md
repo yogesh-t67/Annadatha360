@@ -45,8 +45,50 @@ in the farmer's language.
   evaluate Bhashini (Government of India, free) and Sarvam AI against real farmer recordings, since accents and
   background noise matter more than benchmark scores.
 
-## Questions for the team
+## Questions for the team (answered 2026-10-16 — see "Decided" above)
 
 1. OK to go with an LLM-first approach for both AI features? Which vendor/account?
 2. Monthly AI budget ceiling? This decides model size and per-farmer rate limits.
 3. Who owns the SMS gateway / DLT registration?
+
+---
+
+# Open: Telugu voice for the assistant (proposal, 2026-10-16)
+
+Voice was deferred from P1. Nothing is built for it; this is the proposal to decide on. The text chat API
+(`POST /assistant/messages`) already does the hard part, so voice is mostly *speech in → text* and
+*text → speech out* around it.
+
+## Option A — on the phone (recommended first step)
+
+- **Speech → text:** Android's built-in speech recogniser (Google), which supports Telugu (`te-IN`). From React
+  Native via a speech-recognition library; needs an Expo development build.
+- **Text → speech:** Android's built-in TTS via `expo-speech` (Telugu voice available on most phones with Google
+  TTS; some cheaper phones may need the voice data downloaded once).
+- **Backend:** no change. The app sends the recognised text to the existing endpoint and reads the reply aloud.
+- **Pros:** free, no new vendor, no audio uploaded over weak rural networks, works today.
+- **Cons:** quality depends on the phone; we can't tune it for farming vocabulary or dialect; no control over
+  voice quality.
+- **Owner:** almost entirely mobile.
+
+## Option B — on the server
+
+`POST /assistant/voice` (audio upload) → speech-to-text → existing chat → text-to-speech → reply text + audio.
+Candidate providers to evaluate for Telugu: **Bhashini** (Government of India language platform; free) and
+**Sarvam AI** (commercial, Indian-language speech models). Verify current Telugu support, pricing and terms for
+both before choosing.
+
+- **Pros:** consistent quality on every phone; can pick/tune the best Telugu model; reply audio can be cached.
+- **Cons:** new vendor + cost (outside the Claude budget), audio upload/download on slow networks, more latency.
+- **Owner:** backend (endpoint, provider adapter, audio storage) + mobile (recording, playback).
+
+## Recommendation
+
+Ship **A** first — it's free and needs no backend work. Meanwhile, collect 30–50 real farmer voice questions
+(with consent) and score A against Bhashini and Sarvam on them. Move to **B** only if A's accuracy on real
+farmers is poor. Accents, background noise and farming terms matter more than published benchmarks.
+
+## Decision needed
+
+1. OK to start with A?
+2. Who collects the sample recordings for the B evaluation?
