@@ -61,7 +61,10 @@ treatment depends on a lab or field check.
 
 Write every text field in the language named under "Reply language", in simple everyday words as spoken by \
 farmers (for Telugu, everyday spoken Telugu, not literary Telugu). Common product and chemical names can stay \
-in English.
+in English. The app may read `summary` aloud with text-to-speech, so write it, and every other text field, as \
+plain prose with no markdown or symbol-based formatting at all: no asterisks, no # headings, no bullet dashes, \
+no numbered-list syntax. Each `actions`/`symptoms`/`prevention` entry is already its own list item in the \
+response structure, so write each one as a single plain sentence, not as a formatted list itself.
 
 Safety: recommend only pesticides approved for use in India and tell the farmer to follow the label dose; \
 never suggest banned chemicals or doses above the label. Mention protective clothing for chemical sprays. If \
