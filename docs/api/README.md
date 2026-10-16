@@ -12,7 +12,7 @@ changes to anything already in use get a heads-up before they land.
 | Weather (forecast + alerts) | [weather.md](weather.md) | ✅ P1 built |
 | Market prices (mandi, with trend) | [market-prices.md](market-prices.md) | ✅ P1 built |
 | AI assistant (chat) | [assistant.md](assistant.md) | ✅ P1 built |
-| Crop diagnosis | — | P1, in progress |
+| Crop diagnosis (photo) | [diagnosis.md](diagnosis.md) | ✅ P1 built |
 | Agri Mart, Cart/Checkout, Schemes, Labour, Farm services, Farm management | — | P2, not started |
 
 Open decisions that affect the contract: [open-decisions.md](open-decisions.md).
@@ -54,4 +54,5 @@ Supported language codes: `en`, `te`, `hi`, `ta`, `kn`, `mr`, `gu`.
 
 Content the server owns (crop names now; scheme text and advisory copy later) is returned **already resolved**
 to the farmer's `preferred_language`, falling back to English when a translation is missing. Today crop names
-exist in `en` and `te` only. Public endpoints take `?lang=` instead.
+exist in `en` and `te` only (pending native-speaker review — see `docs/development/localization-review.md`).
+Public endpoints take `?lang=` instead.
