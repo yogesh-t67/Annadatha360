@@ -9,7 +9,7 @@ dev fallback. Owner = who has to act.
 | **MSG91 account** | OTP SMS delivery | ⛔ Not started (blocked on DLT) | Same as above | Business |
 | **Anthropic API key** | AI assistant, crop diagnosis | ⛔ Not provided | AI endpoints return `503 ai_not_configured` | Team |
 | **Open-Meteo commercial plan** | Weather, at launch | Not needed until launch | Free non-commercial API (no key) | Team |
-| **data.gov.in API key** | Mandi prices | ⛔ Not provided | No live sync; sample data in tests | Anyone (free signup) |
+| **data.gov.in API key** | Mandi prices | ✅ Have it (2026-10-16); live import verified | — | Set `DATA_GOV_IN_API_KEY` on each server |
 | **Razorpay account** (KYC) | Agri Mart payments | ⛔ Not started | `PAYMENT_PROVIDER=fake` + dev-complete endpoint | Business — needs PAN, bank account, GST |
 | **Product catalogue** | Agri Mart | ⛔ No real data | `sample_data/products.sample.json` | Business — products, prices, images, stock |
 | **Service providers** | Labour & Farm Services | ⛔ No real data | `sample_data/providers.sample.json` | Business — onboard and verify providers |
@@ -43,8 +43,9 @@ commercial subscription before public launch. When we have one: set `OPEN_METEO_
 
 Mandi prices come from the Agmarknet "Current Daily Price of Various Commodities from Various Markets (Mandi)"
 dataset. Register at data.gov.in for a free personal API key and set `DATA_GOV_IN_API_KEY`. The shared sample key
-in their docs is rate-limited to the point of being unusable. Field names in our importer need checking against a
-live response once we have a key (see `docs/api/market-prices.md`).
+in their docs is rate-limited to the point of being unusable. The importer was verified against the live feed on
+2026-10-16. Gotcha: the API stalls requests from generic library User-Agents (`python-httpx`, `python-requests`)
+until they time out, so the client sends `Annadata360-backend/…` — keep that if you change the HTTP code.
 
 ## Anthropic
 

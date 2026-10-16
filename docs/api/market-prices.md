@@ -14,9 +14,8 @@ Things to know about the data:
   the last 14 days**; check `arrival_date` and show it ("as of 14 Oct").
 - `commodity`, `variety`, `grade` and market/district names come from Agmarknet **in English only**. The
   localised name is in `crop.name`. Treat the others as proper nouns.
-- ⚠️ Field mapping is based on Agmarknet's published schema and hasn't yet been checked against a live
-  response (waiting on an API key — see `docs/development/external-dependencies.md`). The response shape below
-  won't change; only the import code might.
+- ✅ Verified against the live feed on 2026-10-16: ~300 AP and ~300 Telangana reports a day, all parsed.
+  Commodities outside our crop list (most vegetables, livestock) are stored but don't appear under a crop.
 
 ## GET /market/prices
 

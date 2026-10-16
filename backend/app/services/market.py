@@ -5,6 +5,7 @@ pulls the day's reports into our table, and the API reads from there.
 """
 
 import logging
+import time
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -29,16 +30,19 @@ COMMODITY_TO_CROP = {
     "maize": "maize",
     "jowar": "jowar",
     "arhar": "red_gram",
+    "red gram/arhar/tur(whole)": "red_gram",  # not "red gram split/arhar dal": that's processed dal
     "bengal gram": "bengal_gram",
     "black gram": "black_gram",
     "green gram": "green_gram",
     "groundnut": "groundnut",
+    "ground nut": "groundnut",
     "sunflower": "sunflower",
     "castor seed": "castor",
     "cotton": "cotton",
     "sugarcane": "sugarcane",
     "dry chillies": "chilli",
     "green chilli": "chilli",
+    "chili red": "chilli",
     "turmeric": "turmeric",
     "tomato": "tomato",
     "onion": "onion",
@@ -100,29 +104,46 @@ def parse_record(record: dict) -> dict | None:
 
 class DataGovInClient:
     RESOURCE_URL = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070"
-    PAGE_SIZE = 1000
+    PAGE_SIZE = 500
+    # The API has occasional slow/failed responses; retry each page a few times before giving up.
+    RETRY_DELAYS = (2.0, 10.0)
 
-    def __init__(self, api_key: str, http: httpx.Client | None = None):
+    # data.gov.in stalls requests from generic library User-Agents (python-httpx, python-requests) until they
+    # time out, so identify ourselves.
+    USER_AGENT = "Annadata360-backend/0.1 (+https://github.com/yogesh-t67/Annadatha360)"
+
+    def __init__(self, api_key: str, http: httpx.Client | None = None, sleep=time.sleep):
         self.api_key = api_key
-        self.http = http or httpx.Client(timeout=30.0)
+        self.http = http or httpx.Client(timeout=60.0, headers={"User-Agent": self.USER_AGENT})
+        self.sleep = sleep
+
+    def _get_page(self, state_name: str, offset: int) -> list[dict]:
+        params = {
+            "api-key": self.api_key,
+            "format": "json",
+            "limit": self.PAGE_SIZE,
+            "offset": offset,
+            "filters[state.keyword]": state_name,
+        }
+        for attempt, delay in enumerate((*self.RETRY_DELAYS, None), start=1):
+            try:
+                res = self.http.get(self.RESOURCE_URL, params=params)
+                res.raise_for_status()
+                return res.json().get("records") or []
+            except (httpx.HTTPError, ValueError) as exc:
+                if delay is None:
+                    raise RuntimeError(
+                        f"data.gov.in fetch failed for {state_name} at offset {offset} after {attempt} attempts: {exc}"
+                    ) from exc
+                log.warning("data.gov.in attempt %d failed (%s); retrying in %ss", attempt, exc, delay)
+                self.sleep(delay)
+        return []  # unreachable
 
     def fetch_state(self, state_name: str) -> list[dict]:
         records: list[dict] = []
         offset = 0
         while True:
-            params = {
-                "api-key": self.api_key,
-                "format": "json",
-                "limit": self.PAGE_SIZE,
-                "offset": offset,
-                "filters[state.keyword]": state_name,
-            }
-            try:
-                res = self.http.get(self.RESOURCE_URL, params=params)
-                res.raise_for_status()
-                page = res.json().get("records") or []
-            except (httpx.HTTPError, ValueError) as exc:
-                raise RuntimeError(f"data.gov.in fetch failed for {state_name} at offset {offset}: {exc}") from exc
+            page = self._get_page(state_name, offset)
             records.extend(page)
             if len(page) < self.PAGE_SIZE:
                 return records

@@ -39,6 +39,13 @@ def _rec(**kw):
         ("Black Gram (Urd Beans)(Whole)", "black_gram"),
         ("Castor Seed", "castor"),
         ("Bhindi(Ladies Finger)", None),
+        # Real names seen in the live AP/TG feed (2026-10-16):
+        ("Paddy(Common)", "paddy"),
+        ("Red gram/Arhar/Tur(whole)", "red_gram"),
+        ("Red gram split/Arhar dal/Tur dal", None),  # processed dal, not the crop
+        ("Chili Red", "chilli"),
+        ("Ground Nut Seed", "groundnut"),
+        ("Rice", None),  # milled rice is not paddy
     ],
 )
 def test_commodity_mapping(commodity, crop):
@@ -169,3 +176,28 @@ def test_no_data_is_empty_not_error(login, client):
     headers, _ = login()
     body = client.get("/api/v1/market/prices", headers=headers, params={"crop": "mango"}).json()
     assert body == {"as_of": None, "prices": []}
+
+
+def test_fetch_retries_transient_failures():
+    attempts, slept = [], []
+
+    def handler(request: httpx.Request):
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise httpx.ReadTimeout("slow", request=request)
+        if len(attempts) == 2:
+            return httpx.Response(502)
+        return httpx.Response(200, json={"records": [_rec()]})
+
+    client = DataGovInClient("k", http=httpx.Client(transport=httpx.MockTransport(handler)), sleep=slept.append)
+    assert len(client.fetch_state("Andhra Pradesh")) == 1
+    assert slept == [2.0, 10.0]
+
+
+def test_fetch_gives_up_after_retries():
+    def handler(request: httpx.Request):
+        raise httpx.ReadTimeout("slow", request=request)
+
+    client = DataGovInClient("k", http=httpx.Client(transport=httpx.MockTransport(handler)), sleep=lambda _: None)
+    with pytest.raises(RuntimeError, match="after 3 attempts"):
+        client.fetch_state("Andhra Pradesh")

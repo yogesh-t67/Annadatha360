@@ -1,10 +1,12 @@
+import os
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # ANNADATA_ENV_FILE="" disables the .env file (the test suite does this so local keys don't leak into tests).
+    model_config = SettingsConfigDict(env_file=os.getenv("ANNADATA_ENV_FILE", ".env") or None, extra="ignore")
 
     app_env: str = "development"
     database_url: str = "postgresql+psycopg://annadata:annadata@localhost:5432/annadata"

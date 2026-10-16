@@ -1,5 +1,6 @@
 import os
 
+os.environ["ANNADATA_ENV_FILE"] = ""  # never read a developer's backend/.env during tests
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault("JWT_SECRET", "test-secret-that-is-at-least-32-bytes-long")
 
