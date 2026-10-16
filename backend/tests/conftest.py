@@ -1,0 +1,73 @@
+import os
+
+os.environ.setdefault("DATABASE_URL", "sqlite://")
+os.environ.setdefault("JWT_SECRET", "test-secret-that-is-at-least-32-bytes-long")
+
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+from sqlalchemy.pool import StaticPool  # noqa: E402
+
+from app.db.base import Base  # noqa: E402
+from app.db.seed_crops import CROPS  # noqa: E402
+from app.db.session import get_db  # noqa: E402
+from app.main import app  # noqa: E402
+from app.models import Crop  # noqa: E402
+from app.services.sms import get_sms_sender  # noqa: E402
+
+
+class FakeSms:
+    def __init__(self):
+        self.sent: dict[str, str] = {}
+
+    def send_otp(self, phone: str, code: str) -> None:
+        self.sent[phone] = code
+
+
+@pytest.fixture
+def sms():
+    return FakeSms()
+
+
+@pytest.fixture
+def db_session():
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+    with Session() as s:
+        s.add_all(Crop(**c) for c in CROPS)
+        s.commit()
+    yield Session
+    engine.dispose()
+
+
+@pytest.fixture
+def client(db_session, sms):
+    def _get_db():
+        db = db_session()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    app.dependency_overrides[get_db] = _get_db
+    app.dependency_overrides[get_sms_sender] = lambda: sms
+    with TestClient(app, raise_server_exceptions=False) as c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def login(client, sms):
+    """Logs a farmer in via OTP and returns (auth headers, login response body)."""
+
+    def _login(phone: str = "9876543210"):
+        assert client.post("/api/v1/auth/otp/request", json={"phone": phone}).status_code == 200
+        normalized = "+91" + phone[-10:]
+        res = client.post("/api/v1/auth/otp/verify", json={"phone": phone, "code": sms.sent[normalized]})
+        assert res.status_code == 200, res.text
+        body = res.json()
+        return {"Authorization": f"Bearer {body['access_token']}"}, body
+
+    return _login
