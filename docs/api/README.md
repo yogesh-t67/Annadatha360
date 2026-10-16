@@ -9,7 +9,8 @@ changes to anything already in use get a heads-up before they land.
 | Farmer profile | [farmers.md](farmers.md) | ✅ P0 built |
 | Fields | [fields.md](fields.md) | ✅ P0 built |
 | Crops (reference list) | [crops.md](crops.md) | ✅ P0 built |
-| Weather, Market prices, AI assistant, Crop advisory | — | P1, not started |
+| Weather (forecast + alerts) | [weather.md](weather.md) | ✅ P1 built |
+| Market prices, AI assistant, Crop diagnosis | — | P1, in progress |
 | Agri Mart, Cart/Checkout, Schemes, Labour, Farm services, Farm management | — | P2, not started |
 
 Open decisions that affect the contract: [open-decisions.md](open-decisions.md).
