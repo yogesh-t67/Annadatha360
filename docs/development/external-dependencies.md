@@ -10,6 +10,10 @@ dev fallback. Owner = who has to act.
 | **Anthropic API key** | AI assistant, crop diagnosis | ⛔ Not provided | AI endpoints return `503 ai_not_configured` | Team |
 | **Open-Meteo commercial plan** | Weather, at launch | Not needed until launch | Free non-commercial API (no key) | Team |
 | **data.gov.in API key** | Mandi prices | ⛔ Not provided | No live sync; sample data in tests | Anyone (free signup) |
+| **Razorpay account** (KYC) | Agri Mart payments | ⛔ Not started | `PAYMENT_PROVIDER=fake` + dev-complete endpoint | Business — needs PAN, bank account, GST |
+| **Product catalogue** | Agri Mart | ⛔ No real data | `sample_data/products.sample.json` | Business — products, prices, images, stock |
+| **Service providers** | Labour & Farm Services | ⛔ No real data | `sample_data/providers.sample.json` | Business — onboard and verify providers |
+| **Scheme content** | Government Schemes | ⛔ No real data | `sample_data/schemes.sample.json` | Someone to research official portals; Telugu translation |
 
 ## DLT registration → MSG91
 
@@ -45,3 +49,28 @@ live response once we have a key (see `docs/api/market-prices.md`).
 
 Set `ANTHROPIC_API_KEY`. Spend is capped by `AI_MONTHLY_BUDGET_USD` (placeholder $50/month for the dev sandbox) —
 see `docs/api/assistant.md`. Raise it before launch.
+
+## Razorpay
+
+1. Create a Razorpay account and complete business KYC (PAN, bank account, GST, business proof). Test mode works
+   immediately; live mode needs KYC approval.
+2. Settings → Payment capture → **automatic**.
+3. Webhooks → add `https://<api-host>/api/v1/payments/razorpay/webhook`, events `payment.captured` + `order.paid`,
+   set a secret.
+4. Server env: `PAYMENT_PROVIDER=razorpay`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`.
+5. Test a full UPI payment in test mode before going live. The adapter is tested against mocks only so far.
+
+Selling pesticides and fertilisers may need state dealer licences — confirm with the business before launch.
+
+## Scheme content
+
+Load with `python -m app.jobs.load_schemes schemes.json` (format in that file's docstring and
+`sample_data/schemes.sample.json`). For each scheme:
+
+1. Copy the facts from the **official** portal (central: the scheme's .gov.in site; AP / Telangana: the state
+   agriculture department). Put that page in `source_url` and today's date in `last_verified_on`.
+2. Write `en`; add `te` (native-speaker reviewed).
+3. Set `max_land_acres` / `crop_codes` only if the official criteria say so — they drive the "may be
+   eligible" hint.
+4. Load with `"published": false`, have a second person check against the source, then publish.
+5. Re-check every scheme at least each season; amounts and names change with state budgets.

@@ -1,0 +1,54 @@
+[
+  {
+    "sku": "SAMPLE-SEED-PADDY-10KG",
+    "category_code": "seeds",
+    "name": {"en": "Paddy seed (sample) — 10 kg"},
+    "description": {"en": "DEV SAMPLE DATA. Not a real product."},
+    "brand": "Sample",
+    "pack_size": "10 kg bag",
+    "price_paise": 85000,
+    "mrp_paise": 95000,
+    "stock": 40,
+    "image_urls": [],
+    "crop_codes": ["paddy"]
+  },
+  {
+    "sku": "SAMPLE-FERT-UREA-45KG",
+    "category_code": "fertilizers",
+    "name": {"en": "Urea (sample) — 45 kg"},
+    "description": {"en": "DEV SAMPLE DATA. Not a real product."},
+    "brand": "Sample",
+    "pack_size": "45 kg bag",
+    "price_paise": 26650,
+    "mrp_paise": 26650,
+    "stock": 100,
+    "image_urls": [],
+    "crop_codes": []
+  },
+  {
+    "sku": "SAMPLE-PEST-NEEM-1L",
+    "category_code": "pesticides",
+    "name": {"en": "Neem oil 1500 ppm (sample) — 1 L"},
+    "description": {"en": "DEV SAMPLE DATA. Not a real product."},
+    "brand": "Sample",
+    "pack_size": "1 L",
+    "price_paise": 42000,
+    "mrp_paise": 52000,
+    "stock": 25,
+    "image_urls": [],
+    "crop_codes": []
+  },
+  {
+    "sku": "SAMPLE-EQUIP-SPRAYER-16L",
+    "category_code": "equipment",
+    "name": {"en": "Knapsack sprayer (sample) — 16 L"},
+    "description": {"en": "DEV SAMPLE DATA. Not a real product."},
+    "brand": "Sample",
+    "pack_size": "16 L",
+    "price_paise": 189900,
+    "mrp_paise": 249900,
+    "stock": 8,
+    "image_urls": [],
+    "crop_codes": []
+  }
+]
