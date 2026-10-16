@@ -85,6 +85,12 @@ language, clearly labelled as test output (`[Test reply — AI not connected yet
 exactly the real response shape. Diagnosis returns a sample result the same way. Use it to build the screens
 without an API key. Limits still apply; cost is zero. Not allowed in production.
 
+**Gemini test mode (dev/staging):** with `AI_PROVIDER=gemini` + `GEMINI_API_KEY` (free from Google AI Studio)
+the server answers with Google's free Gemini model instead of Claude — real AI answers, same response shapes,
+recorded at zero cost. For testing only: Google may use free-tier prompts and photos to improve its products, so
+use test data, never real farmers'. Answer quality and Telugu fluency will differ from Claude; judge the product
+on Claude before launch. Not allowed in production.
+
 ## Cost controls (backend)
 
 Every Claude call is logged with tokens and cost in `ai_usage`. Before each call the server checks this

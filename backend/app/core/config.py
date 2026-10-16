@@ -38,8 +38,14 @@ class Settings(BaseSettings):
     market_states: list[str] = ["Andhra Pradesh", "Telangana"]
 
     # --- AI (Claude) ---
-    ai_provider: str = "anthropic"  # "anthropic" | "fake" (canned replies, no key; refused in production)
+    # "anthropic" | "fake" (canned replies, no key) | "gemini" (free Google tier, TESTING ONLY).
+    # fake and gemini are refused in production.
+    ai_provider: str = "anthropic"
     anthropic_api_key: str = ""
+    # Gemini free tier: Google may use what you send to improve its products. Test data only — never real farmers'.
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.8-flash"
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
     ai_model: str = "claude-opus-5-5"
     ai_chat_effort: str = "low"
     ai_diagnosis_effort: str = "medium"
@@ -73,6 +79,6 @@ def get_settings() -> Settings:
             raise RuntimeError("JWT_SECRET must be set to at least 32 characters in production")
         if settings.otp_test_numbers:
             raise RuntimeError("OTP_TEST_NUMBERS must be empty in production")
-        if settings.ai_provider == "fake":
-            raise RuntimeError("AI_PROVIDER=fake is not allowed in production")
+        if settings.ai_provider in ("fake", "gemini"):
+            raise RuntimeError(f"AI_PROVIDER={settings.ai_provider} is for testing only, not production")
     return settings
