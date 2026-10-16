@@ -7,7 +7,7 @@
 | SMS / OTP | **MSG91**, behind a provider-agnostic adapter. Dev mode logs OTPs. DLT registration is an external dependency (`docs/development/external-dependencies.md`). |
 | AI: crop diagnosis + chat | **Claude** (Anthropic) for both, grounded in the farmer's crop, stage and location. |
 | AI budget | **$50/month** placeholder, enforced by a configurable guard (`AI_MONTHLY_BUDGET_USD`). Raise before launch. |
-| Telugu voice | Deferred. Evaluate Bhashini / Sarvam AI later. |
+| Telugu voice | **Phone's built-in speech** (Option A below); mobile-only, no backend change. |
 | Weather | **Open-Meteo** (`weather.md`). Needs a commercial plan before launch. |
 | Market prices | **Agmarknet via data.gov.in** (`market-prices.md`). |
 
@@ -88,7 +88,12 @@ Ship **A** first â€” it's free and needs no backend work. Meanwhile, collect 30â
 (with consent) and score A against Bhashini and Sarvam on them. Move to **B** only if A's accuracy on real
 farmers is poor. Accents, background noise and farming terms matter more than published benchmarks.
 
-## Decision needed
+## Decision (2026-10-16)
 
-1. OK to start with A?
-2. Who collects the sample recordings for the B evaluation?
+**Option A approved**: phone's built-in Telugu speech-to-text and text-to-speech, calling the existing text
+chat endpoint. No backend change. Mobile owns it. Revisit B only if real-farmer accuracy is poor.
+
+# Open: content ownership
+
+Who writes the real schemes, crop advice, product catalogue and service-provider data is **not decided yet**.
+Until then those sections ship empty in production; `backend/sample_data/` stays dev-only.
