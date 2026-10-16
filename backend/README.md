@@ -32,6 +32,10 @@ In development (`SMS_PROVIDER=console`) OTPs are printed to the server log inste
 | Job | Command | When |
 |---|---|---|
 | Mandi price import (AP + TG) | `python -m app.jobs.sync_market_prices` | Daily, evening IST. Needs `DATA_GOV_IN_API_KEY`. |
+| Cancel unpaid orders, release stock | `python -m app.jobs.expire_unpaid_orders` | Every 5 minutes |
+
+Catalogue loading (manual, no admin UI yet): `python -m app.jobs.load_products products.json`. For local dev,
+`sample_data/products.sample.json` has four clearly-labelled sample products.
 
 No scheduler is wired up yet; run it from cron (or the host's scheduler) in the API's environment.
 

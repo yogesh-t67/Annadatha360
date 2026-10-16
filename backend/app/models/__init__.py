@@ -5,5 +5,22 @@ from app.models.diagnosis import Diagnosis
 from app.models.farmer import Farmer
 from app.models.field import Field
 from app.models.market import MarketPrice
+from app.models.shop import CartItem, Order, OrderItem, Product, ProductCategory
 
-__all__ = ["AiUsage", "ChatMessage", "ChatThread", "Crop", "Diagnosis", "Farmer", "Field", "MarketPrice", "OtpChallenge", "RefreshToken"]
+__all__ = [
+    "AiUsage",
+    "CartItem",
+    "ChatMessage",
+    "ChatThread",
+    "Crop",
+    "Diagnosis",
+    "Farmer",
+    "Field",
+    "MarketPrice",
+    "Order",
+    "OrderItem",
+    "OtpChallenge",
+    "Product",
+    "ProductCategory",
+    "RefreshToken",
+]

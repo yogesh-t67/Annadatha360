@@ -43,6 +43,13 @@ class Settings(BaseSettings):
     ai_farmer_daily_request_limit: int = 30
     ai_chat_history_messages: int = 20
 
+    # --- Payments ---
+    payment_provider: str = "fake"  # "fake" (dev: no money moves) | "razorpay"
+    razorpay_key_id: str = ""
+    razorpay_key_secret: str = ""
+    razorpay_webhook_secret: str = ""
+    order_payment_window_minutes: int = 30  # unpaid orders are cancelled and stock released after this
+
     cors_origins: list[str] = ["*"]
 
     @property

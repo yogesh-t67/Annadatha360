@@ -13,7 +13,8 @@ changes to anything already in use get a heads-up before they land.
 | Market prices (mandi, with trend) | [market-prices.md](market-prices.md) | ✅ P1 built |
 | AI assistant (chat) | [assistant.md](assistant.md) | ✅ P1 built |
 | Crop diagnosis (photo) | [diagnosis.md](diagnosis.md) | ✅ P1 built |
-| Agri Mart, Cart/Checkout, Schemes, Labour, Farm services, Farm management | — | P2, not started |
+| Agri Mart (catalogue, cart, orders, Razorpay) | [agri-mart.md](agri-mart.md) | ✅ P2 built |
+| Schemes, Labour, Farm services, Farm management | — | P2, not started |
 
 Open decisions that affect the contract: [open-decisions.md](open-decisions.md).
 

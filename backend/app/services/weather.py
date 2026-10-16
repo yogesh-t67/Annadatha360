@@ -8,6 +8,7 @@ import logging
 import threading
 import time
 from datetime import date
+from functools import lru_cache
 from typing import Protocol
 
 import httpx
@@ -91,6 +92,7 @@ class OpenMeteoProvider:
             raise AppError(503, "weather_unavailable", "Weather data is unavailable right now") from exc
 
 
+@lru_cache  # one shared HTTP client (connection reuse); settings are fixed per process
 def get_weather_provider() -> WeatherProvider:
     s = get_settings()
     return OpenMeteoProvider(s.open_meteo_base_url, s.open_meteo_api_key)

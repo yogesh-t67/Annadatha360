@@ -3,6 +3,7 @@
 import logging
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from functools import lru_cache
 
 import anthropic
 from sqlalchemy import func, select
@@ -76,11 +77,16 @@ def check_budget(db: Session, farmer_id: int) -> None:
         raise AppError(429, "ai_daily_limit", "Daily AI limit reached. Try again tomorrow.")
 
 
+@lru_cache(maxsize=2)
+def _client_for(api_key: str) -> anthropic.Anthropic:
+    return anthropic.Anthropic(api_key=api_key, timeout=90.0, max_retries=2)
+
+
 def get_ai_client() -> anthropic.Anthropic:
     settings = get_settings()
     if not settings.anthropic_api_key:
         raise AppError(503, "ai_not_configured", "AI is not configured on this server")
-    return anthropic.Anthropic(api_key=settings.anthropic_api_key, timeout=90.0, max_retries=2)
+    return _client_for(settings.anthropic_api_key)
 
 
 def call_claude(client, db: Session, *, farmer_id: int, feature: str, **params):

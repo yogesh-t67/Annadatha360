@@ -10,6 +10,8 @@ dev fallback. Owner = who has to act.
 | **Anthropic API key** | AI assistant, crop diagnosis | ⛔ Not provided | AI endpoints return `503 ai_not_configured` | Team |
 | **Open-Meteo commercial plan** | Weather, at launch | Not needed until launch | Free non-commercial API (no key) | Team |
 | **data.gov.in API key** | Mandi prices | ⛔ Not provided | No live sync; sample data in tests | Anyone (free signup) |
+| **Razorpay account** (KYC) | Agri Mart payments | ⛔ Not started | `PAYMENT_PROVIDER=fake` + dev-complete endpoint | Business — needs PAN, bank account, GST |
+| **Product catalogue** | Agri Mart | ⛔ No real data | `sample_data/products.sample.json` | Business — products, prices, images, stock |
 
 ## DLT registration → MSG91
 
@@ -45,3 +47,15 @@ live response once we have a key (see `docs/api/market-prices.md`).
 
 Set `ANTHROPIC_API_KEY`. Spend is capped by `AI_MONTHLY_BUDGET_USD` (placeholder $50/month for the dev sandbox) —
 see `docs/api/assistant.md`. Raise it before launch.
+
+## Razorpay
+
+1. Create a Razorpay account and complete business KYC (PAN, bank account, GST, business proof). Test mode works
+   immediately; live mode needs KYC approval.
+2. Settings → Payment capture → **automatic**.
+3. Webhooks → add `https://<api-host>/api/v1/payments/razorpay/webhook`, events `payment.captured` + `order.paid`,
+   set a secret.
+4. Server env: `PAYMENT_PROVIDER=razorpay`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`.
+5. Test a full UPI payment in test mode before going live. The adapter is tested against mocks only so far.
+
+Selling pesticides and fertilisers may need state dealer licences — confirm with the business before launch.

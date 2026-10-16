@@ -11,9 +11,10 @@ from sqlalchemy.pool import StaticPool  # noqa: E402
 
 from app.db.base import Base  # noqa: E402
 from app.db.seed_crops import CROPS  # noqa: E402
+from app.db.seed_shop import CATEGORIES  # noqa: E402
 from app.db.session import get_db  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import Crop  # noqa: E402
+from app.models import Crop, ProductCategory  # noqa: E402
 from app.services.sms import get_sms_sender  # noqa: E402
 
 
@@ -44,6 +45,7 @@ def db_session():
     Session = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
     with Session() as s:
         s.add_all(Crop(**c) for c in CROPS)
+        s.add_all(ProductCategory(**c) for c in CATEGORIES)
         s.commit()
     yield Session
     Base.metadata.drop_all(engine)
