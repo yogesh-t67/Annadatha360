@@ -2,13 +2,18 @@
   "expo": {
     "name": "Annadata 360",
     "slug": "annadata-360",
+    "owner": "yogeshdu",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.annadata360.app"
+      "bundleIdentifier": "com.annadata360.app",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Annadata 360 turns your spoken question into text to answer it.",
+        "NSMicrophoneUsageDescription": "Annadata 360 uses the microphone so you can ask farming questions by speaking."
+      }
     },
     "android": {
       "package": "com.annadata360.app",
@@ -18,7 +23,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -41,9 +49,16 @@
         {
           "microphonePermission": "Annadata 360 uses the microphone so you can ask farming questions by speaking.",
           "speechRecognitionPermission": "Annadata 360 turns your spoken question into text to answer it.",
-          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "597abfd1-2bf7-4388-a40b-7c2392a648c5"
+      }
+    }
   }
 }
