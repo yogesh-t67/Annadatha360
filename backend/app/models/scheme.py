@@ -17,7 +17,8 @@ class Scheme(TimestampMixin, Base):
     slug: Mapped[str] = mapped_column(String(80), unique=True)  # stable id, e.g. "pm-kisan"
     authority: Mapped[str] = mapped_column(String(10))  # "central" | "state"
     state: Mapped[str | None] = mapped_column(String(2))  # "AP" | "TG" for state schemes, NULL for central
-    category: Mapped[str] = mapped_column(String(30))  # income_support | insurance | credit | subsidy | soil | irrigation | other
+    # income_support | insurance | credit | subsidy | soil | irrigation | other
+    category: Mapped[str] = mapped_column(String(30))
     name: Mapped[LocalizedText] = mapped_column(JSONType)
     summary: Mapped[LocalizedText] = mapped_column(JSONType)
     benefits: Mapped[LocalizedText] = mapped_column(JSONType, default=dict)

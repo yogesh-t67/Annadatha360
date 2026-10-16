@@ -1,0 +1,75 @@
+name: backend
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: annadata
+          POSTGRES_PASSWORD: annadata
+          POSTGRES_DB: annadata_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U annadata"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PG_URL: postgresql+psycopg://annadata:annadata@localhost:5432/annadata_ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13" # same as the Dockerfile
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Install
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Migrations apply, match the models, and roll back
+        env:
+          DATABASE_URL: ${{ env.PG_URL }}
+        run: |
+          alembic upgrade head
+          alembic check
+          alembic downgrade base
+
+      - name: Tests (SQLite)
+        run: pytest -q
+
+      - name: Tests (Postgres)
+        env:
+          TEST_DATABASE_URL: ${{ env.PG_URL }}
+        run: pytest -q

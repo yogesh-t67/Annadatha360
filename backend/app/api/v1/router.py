@@ -1,6 +1,19 @@
 from fastapi import APIRouter
 
-from app.api.v1 import assistant, auth, crops, diagnosis, farm, farmers, fields, market, schemes, services, shop, weather
+from app.api.v1 import (
+    assistant,
+    auth,
+    crops,
+    diagnosis,
+    farm,
+    farmers,
+    fields,
+    market,
+    schemes,
+    services,
+    shop,
+    weather,
+)
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth.router)

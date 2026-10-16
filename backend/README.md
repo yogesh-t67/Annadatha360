@@ -57,6 +57,16 @@ docker compose exec db psql -U annadata -c "CREATE DATABASE annadata_test"
 TEST_DATABASE_URL=postgresql+psycopg://annadata:annadata@127.0.0.1:5432/annadata_test pytest
 ```
 
+## Lint & format
+
+```sh
+ruff check .          # lint
+ruff format .         # format (CI runs `ruff format --check`)
+```
+
+CI (`.github/workflows/backend.yml`) runs lint, a migration round-trip with `alembic check` (models and
+migrations must match), and the test suite on SQLite and Postgres for every PR touching `backend/`.
+
 ## Layout
 
 ```

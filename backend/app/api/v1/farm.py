@@ -61,7 +61,9 @@ def _harvest_revenue_paise(h: HarvestRecord) -> int | None:
 
 
 def _task_out(t: PlanTask) -> TaskOut:
-    return TaskOut(id=t.id, category=t.category, title=t.title, due_date=t.due_date, done=t.done, cost=_rupees(t.cost_paise))
+    return TaskOut(
+        id=t.id, category=t.category, title=t.title, due_date=t.due_date, done=t.done, cost=_rupees(t.cost_paise)
+    )
 
 
 def _plan_out(db, p: CropPlan, lang: str) -> PlanOut:
@@ -78,7 +80,9 @@ def _plan_out(db, p: CropPlan, lang: str) -> PlanOut:
         year=p.year,
         sowing_date=p.sowing_date,
         expected_harvest_date=p.expected_harvest_date,
-        days_since_sowing=(date.today() - p.sowing_date).days if p.sowing_date and p.sowing_date <= date.today() else None,
+        days_since_sowing=(date.today() - p.sowing_date).days
+        if p.sowing_date and p.sowing_date <= date.today()
+        else None,
         status=p.status,
         notes=p.notes,
         tasks=[_task_out(t) for t in p.tasks],
@@ -240,7 +244,9 @@ def add_harvest(body: HarvestIn, farmer: CurrentFarmer, db: DbSession):
         raise AppError(422, "crop_required", "Pass crop_code: the field has no crop set")
     ensure_crop_exists(db, crop_code)
     data = body.model_dump(exclude={"crop_code", "price_per_unit"})
-    h = HarvestRecord(farmer_id=farmer.id, crop_code=crop_code, price_per_unit_paise=_paise(body.price_per_unit), **data)
+    h = HarvestRecord(
+        farmer_id=farmer.id, crop_code=crop_code, price_per_unit_paise=_paise(body.price_per_unit), **data
+    )
     db.add(h)
     db.commit()
     db.refresh(h)

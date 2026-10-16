@@ -83,7 +83,10 @@ def _order_out(o: Order, lang: str) -> OrderOut:
         savings=_rupees(o.mrp_total_paise - o.total_paise),
         delivery_address=o.delivery_address,
         payment=PaymentInfo(
-            provider=o.payment_provider, key_id=gateway_key, provider_order_id=o.provider_order_id, amount_paise=o.total_paise
+            provider=o.payment_provider,
+            key_id=gateway_key,
+            provider_order_id=o.provider_order_id,
+            amount_paise=o.total_paise,
         )
         if pending
         else None,
@@ -133,7 +136,8 @@ def products(
     if q:
         needle = q.strip().lower()
         rows = [
-            p for p in rows
+            p
+            for p in rows
             if any(needle in v.lower() for v in (p.name or {}).values()) or needle in (p.brand or "").lower()
         ]
     lang = farmer.preferred_language

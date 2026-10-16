@@ -10,9 +10,15 @@ SAMPLE = json.loads((Path(__file__).parent.parent / "sample_data" / "schemes.sam
 
 def _scheme(slug, **kw):
     base = {
-        "slug": slug, "authority": "central", "state": None, "category": "other",
-        "name": {"en": f"Scheme {slug}", "te": f"పథకం {slug}"}, "summary": {"en": "Summary"},
-        "source_url": "https://example.gov.in", "last_verified_on": "2026-10-01", "published": True,
+        "slug": slug,
+        "authority": "central",
+        "state": None,
+        "category": "other",
+        "name": {"en": f"Scheme {slug}", "te": f"పథకం {slug}"},
+        "summary": {"en": "Summary"},
+        "source_url": "https://example.gov.in",
+        "last_verified_on": "2026-10-01",
+        "published": True,
     }
     base.update(kw)
     return base
@@ -34,7 +40,10 @@ def test_state_filtering_defaults_to_farmer_state(login, client, schemes):
     assert set(_slugs(client.get("/api/v1/schemes", headers=headers))) == everything  # no state set → all, no drafts
 
     client.patch("/api/v1/farmers/me", headers=headers, json={"location": {"state": "TG"}})
-    assert set(_slugs(client.get("/api/v1/schemes", headers=headers))) == {"sample-central-income-support", "sample-tg-chilli-scheme"}
+    assert set(_slugs(client.get("/api/v1/schemes", headers=headers))) == {
+        "sample-central-income-support",
+        "sample-tg-chilli-scheme",
+    }
     res = client.get("/api/v1/schemes", headers=headers, params={"state": "AP", "authority": "state"})
     assert _slugs(res) == ["sample-ap-small-farmer-subsidy"]
     assert _slugs(client.get("/api/v1/schemes", headers=headers, params={"q": "chilli"})) == ["sample-tg-chilli-scheme"]
@@ -42,7 +51,7 @@ def test_state_filtering_defaults_to_farmer_state(login, client, schemes):
 
 def test_possibly_eligible_hint(login, client, schemes):
     headers, _ = login()
-    elig = lambda: {s["slug"]: s["possibly_eligible"] for s in client.get("/api/v1/schemes", headers=headers).json()}  # noqa: E731
+    elig = lambda: {s["slug"]: s["possibly_eligible"] for s in client.get("/api/v1/schemes", headers=headers).json()}
     first = elig()
     assert first["sample-central-income-support"] is True  # no limits
     assert first["sample-ap-small-farmer-subsidy"] is None  # land limit, but no fields yet
@@ -59,7 +68,10 @@ def test_possibly_eligible_hint(login, client, schemes):
 def test_detail_localised_and_drafts_hidden(login, client, schemes, db_session):
     headers, _ = login()
     with db_session() as db:
-        load(db, [_scheme("pm-x", eligibility=[{"en": "Small farmers", "te": "చిన్న రైతులు"}], steps=[{"en": "Apply online"}])])
+        load(
+            db,
+            [_scheme("pm-x", eligibility=[{"en": "Small farmers", "te": "చిన్న రైతులు"}], steps=[{"en": "Apply online"}])],
+        )
     client.patch("/api/v1/farmers/me", headers=headers, json={"preferred_language": "te"})
     s = client.get("/api/v1/schemes/pm-x", headers=headers).json()
     assert s["name"] == "పథకం pm-x" and s["summary"] == "Summary"  # te, English fallback

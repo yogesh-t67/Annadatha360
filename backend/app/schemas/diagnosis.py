@@ -26,7 +26,9 @@ class Action(BaseModel):
 
 
 class DiagnosisResult(BaseModel):
-    """What Claude returns (enforced via JSON schema), and what the app renders. Free text is in the farmer's language."""
+    """What Claude returns (enforced via JSON schema), and what the app renders.
+
+    Free-text fields are in the farmer's language."""
 
     model_config = ConfigDict(extra="forbid")
 

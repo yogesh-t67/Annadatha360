@@ -43,7 +43,13 @@ def _provider_out(p: ServiceProvider, lang: str, service_type: str | None = None
         rating_count=p.rating_count,
         verified=p.verified,
         offerings=[
-            OfferingOut(id=o.id, service_type=o.service_type, rate=o.rate_paise / 100, unit=o.unit, daily_capacity=o.daily_capacity)
+            OfferingOut(
+                id=o.id,
+                service_type=o.service_type,
+                rate=o.rate_paise / 100,
+                unit=o.unit,
+                daily_capacity=o.daily_capacity,
+            )
             for o in offerings
         ],
     )
@@ -82,7 +88,7 @@ def providers(
     farmer: CurrentFarmer,
     db: DbSession,
     kind: Literal["labour", "farm_service"] | None = None,
-    type: str | None = None,  # noqa: A002 - query param name in the public contract
+    type: str | None = None,
     district: Annotated[str | None, Query(max_length=80)] = None,
 ):
     if type is not None and type not in SERVICE_TYPES:
@@ -169,7 +175,9 @@ def create_booking(body: BookingIn, farmer: CurrentFarmer, db: DbSession):
     remaining = o.daily_capacity - _booked(db, o.id, body.date)
     if body.quantity > remaining:
         db.rollback()
-        raise AppError(409, "slot_unavailable", "Not enough availability on that date", {"remaining": max(0, remaining)})
+        raise AppError(
+            409, "slot_unavailable", "Not enough availability on that date", {"remaining": max(0, remaining)}
+        )
     booking = ServiceBooking(
         farmer_id=farmer.id,
         offering_id=o.id,
@@ -189,7 +197,9 @@ def create_booking(body: BookingIn, farmer: CurrentFarmer, db: DbSession):
 @router.get("/services/bookings", response_model=list[BookingOut])
 def list_bookings(farmer: CurrentFarmer, db: DbSession):
     rows = db.scalars(
-        select(ServiceBooking).where(ServiceBooking.farmer_id == farmer.id).order_by(ServiceBooking.date.desc(), ServiceBooking.id.desc())
+        select(ServiceBooking)
+        .where(ServiceBooking.farmer_id == farmer.id)
+        .order_by(ServiceBooking.date.desc(), ServiceBooking.id.desc())
     )
     return [_booking_out(b, farmer.preferred_language) for b in rows]
 

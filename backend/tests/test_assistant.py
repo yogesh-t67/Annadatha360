@@ -60,20 +60,37 @@ def farmer(login, client):
         "/api/v1/farmers/me",
         headers=headers,
         json={
-            "name": "Ramesh", "preferred_language": "te", "primary_crop_code": "paddy",
-            "location": {"state": "AP", "district": "Guntur", "mandal": "Tenali", "latitude": 16.24, "longitude": 80.64},
+            "name": "Ramesh",
+            "preferred_language": "te",
+            "primary_crop_code": "paddy",
+            "location": {
+                "state": "AP",
+                "district": "Guntur",
+                "mandal": "Tenali",
+                "latitude": 16.24,
+                "longitude": 80.64,
+            },
         },
     )
     fid = client.post(
-        "/api/v1/fields", headers=headers,
-        json={"name": "East plot", "crop_code": "paddy", "acreage": 2, "growth_stage": "vegetative", "planted_on": "2026-08-01"},
+        "/api/v1/fields",
+        headers=headers,
+        json={
+            "name": "East plot",
+            "crop_code": "paddy",
+            "acreage": 2,
+            "growth_stage": "vegetative",
+            "planted_on": "2026-08-01",
+        },
     ).json()["id"]
     return headers, fid
 
 
 def test_new_conversation_sends_grounded_request(client, claude, farmer):
     headers, fid = farmer
-    res = client.post("/api/v1/assistant/messages", headers=headers, json={"message": "ఎరువు ఎప్పుడు వేయాలి?", "field_id": fid})
+    res = client.post(
+        "/api/v1/assistant/messages", headers=headers, json={"message": "ఎరువు ఎప్పుడు వేయాలి?", "field_id": fid}
+    )
     assert res.status_code == 200, res.text
     body = res.json()
     assert body["reply"]["role"] == "assistant" and body["reply"]["content"].startswith("వరి")
@@ -142,7 +159,9 @@ def test_usage_is_recorded_with_cost(client, claude, farmer, db_session):
 
 
 def test_cost_uses_dearer_model_when_fallback_served():
-    usage = SimpleNamespace(input_tokens=1_000_000, output_tokens=0, cache_creation_input_tokens=0, cache_read_input_tokens=0)
+    usage = SimpleNamespace(
+        input_tokens=1_000_000, output_tokens=0, cache_creation_input_tokens=0, cache_read_input_tokens=0
+    )
     assert cost_usd(["claude-opus-5-5", "claude-opus-4-8"], usage) == Decimal("5")
     assert cost_usd(["claude-opus-5-5", "some-future-model"], usage) == Decimal("10")  # unknown → dearest known
 
@@ -195,8 +214,18 @@ def test_refusal_is_recorded_and_leaves_no_thread(client, claude, farmer, db_ses
 @pytest.mark.parametrize(
     "error,code",
     [
-        (anthropic.RateLimitError("slow down", response=httpx2.Response(429, request=httpx2.Request("POST", "https://x")), body=None), "ai_busy"),
-        (anthropic.InternalServerError("boom", response=httpx2.Response(529, request=httpx2.Request("POST", "https://x")), body=None), "ai_unavailable"),
+        (
+            anthropic.RateLimitError(
+                "slow down", response=httpx2.Response(429, request=httpx2.Request("POST", "https://x")), body=None
+            ),
+            "ai_busy",
+        ),
+        (
+            anthropic.InternalServerError(
+                "boom", response=httpx2.Response(529, request=httpx2.Request("POST", "https://x")), body=None
+            ),
+            "ai_unavailable",
+        ),
         (anthropic.APIConnectionError(request=httpx2.Request("POST", "https://x")), "ai_unavailable"),
     ],
 )

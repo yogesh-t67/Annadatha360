@@ -58,7 +58,9 @@ def month_start(now: datetime) -> datetime:
 
 def month_spend(db: Session, now: datetime | None = None) -> Decimal:
     now = now or utcnow()
-    total = db.scalar(select(func.coalesce(func.sum(AiUsage.cost_usd), 0)).where(AiUsage.created_at >= month_start(now)))
+    total = db.scalar(
+        select(func.coalesce(func.sum(AiUsage.cost_usd), 0)).where(AiUsage.created_at >= month_start(now))
+    )
     return Decimal(str(total))
 
 

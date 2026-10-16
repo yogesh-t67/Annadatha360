@@ -70,7 +70,9 @@ def _client(pages_by_state):
 def test_sync_paginates_upserts_and_dedupes(db_session, monkeypatch):
     monkeypatch.setattr(DataGovInClient, "PAGE_SIZE", 2)
     ap = {0: [_rec(), _rec(market="Tenali")], 2: [_rec(market="Tenali"), _rec(state="Andhra Pradesh", modal_price="x")]}
-    client, calls = _client({"Andhra Pradesh": ap, "Telangana": {0: [_rec(state="Telangana", district="Warangal", market="Enumamula")]}})
+    client, calls = _client(
+        {"Andhra Pradesh": ap, "Telangana": {0: [_rec(state="Telangana", district="Warangal", market="Enumamula")]}}
+    )
     with db_session() as db:
         stats = sync(db, client, ["Andhra Pradesh", "Telangana"])
         assert stats["Andhra Pradesh"] == {"fetched": 4, "usable": 2, "inserted": 2, "updated": 0}
@@ -87,9 +89,17 @@ def test_sync_paginates_upserts_and_dedupes(db_session, monkeypatch):
 
 def _price(db, days_ago, modal, **kw):
     row = dict(
-        crop_code="paddy", commodity="Paddy(Dhan)(Common)", variety="Common", grade="FAQ",
-        state="AP", district="Guntur", market="Guntur", arrival_date=TODAY - timedelta(days=days_ago),
-        min_price=None, max_price=None, modal_price=Decimal(modal),
+        crop_code="paddy",
+        commodity="Paddy(Dhan)(Common)",
+        variety="Common",
+        grade="FAQ",
+        state="AP",
+        district="Guntur",
+        market="Guntur",
+        arrival_date=TODAY - timedelta(days=days_ago),
+        min_price=None,
+        max_price=None,
+        modal_price=Decimal(modal),
     )
     row.update(kw)
     db.add(MarketPrice(**row))
@@ -113,7 +123,8 @@ def seeded(db_session):
 def test_prices_default_to_primary_crop_with_trend(login, client, seeded):
     headers, _ = login()
     client.patch(
-        "/api/v1/farmers/me", headers=headers,
+        "/api/v1/farmers/me",
+        headers=headers,
         json={"primary_crop_code": "paddy", "location": {"state": "TG", "district": "Warangal"}},
     )
     res = client.get("/api/v1/market/prices", headers=headers)
