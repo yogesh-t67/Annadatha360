@@ -81,7 +81,7 @@ class PaymentInfo(BaseModel):
     currency: Literal["INR"] = "INR"
 
 
-OrderStatus = Literal["pending_payment", "paid", "shipped", "delivered", "cancelled", "refund_pending"]
+OrderStatus = Literal["pending_payment", "paid", "shipped", "delivered", "cancelled", "refund_pending", "refunded"]
 
 
 class OrderOut(BaseModel):

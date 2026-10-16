@@ -159,9 +159,10 @@ Order history for the Profile screen, newest first. `404 order_not_found` for ot
 |---|---|
 | `pending_payment` | Waiting for payment; stock reserved until `pay_by` |
 | `paid` | Paid; awaiting dispatch |
-| `shipped`, `delivered` | Set by operations (no API yet) |
+| `shipped`, `delivered` | Set by ops staff ([admin.md](admin.md)) |
 | `cancelled` | Cancelled by farmer or expired unpaid |
-| `refund_pending` | Paid after expiry and the stock was gone; will be refunded (manual for now) |
+| `refund_pending` | Will be refunded: paid after expiry with stock gone, or cancelled by ops after payment |
+| `refunded` | Refund done |
 
 ## Dev mode (no real money)
 

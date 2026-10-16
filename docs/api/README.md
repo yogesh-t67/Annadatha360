@@ -18,6 +18,7 @@ changes to anything already in use get a heads-up before they land.
 | Government schemes | [schemes.md](schemes.md) | ✅ P2 built (no real content yet) |
 | Labour & Farm services (providers, bookings, requirements) | [services.md](services.md) | ✅ P2 built |
 | Farm management (crop plans, tasks, harvests) | [farm-management.md](farm-management.md) | ✅ P2 built |
+| Admin / ops (staff only, not for the app) | [admin.md](admin.md) | ✅ built |
 
 Open decisions that affect the contract: [open-decisions.md](open-decisions.md).
 

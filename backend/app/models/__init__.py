@@ -10,10 +10,12 @@ from app.models.market import MarketPrice
 from app.models.scheme import Scheme
 from app.models.services import LabourRequirement, ServiceBooking, ServiceOffering, ServiceProvider
 from app.models.shop import CartItem, Order, OrderItem, Product, ProductCategory
+from app.models.staff import AuditLog, Staff
 
 __all__ = [
     "Advisory",
     "AiUsage",
+    "AuditLog",
     "CartItem",
     "ChatMessage",
     "ChatThread",
@@ -36,4 +38,5 @@ __all__ = [
     "ServiceBooking",
     "ServiceOffering",
     "ServiceProvider",
+    "Staff",
 ]

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    admin,
     advisory,
     assistant,
     auth,
@@ -30,3 +31,4 @@ api_router.include_router(schemes.router)
 api_router.include_router(services.router)
 api_router.include_router(farm.router)
 api_router.include_router(advisory.router)
+api_router.include_router(admin.router)

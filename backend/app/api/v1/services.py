@@ -137,7 +137,7 @@ def availability(
 # ---------- Bookings ----------
 
 
-def _booking_out(b: ServiceBooking, lang: str) -> BookingOut:
+def booking_out(b: ServiceBooking, lang: str) -> BookingOut:
     o = b.offering
     return BookingOut(
         id=b.id,
@@ -191,7 +191,7 @@ def create_booking(body: BookingIn, farmer: CurrentFarmer, db: DbSession):
     db.add(booking)
     db.commit()
     db.refresh(booking)
-    return _booking_out(booking, farmer.preferred_language)
+    return booking_out(booking, farmer.preferred_language)
 
 
 @router.get("/services/bookings", response_model=list[BookingOut])
@@ -201,12 +201,12 @@ def list_bookings(farmer: CurrentFarmer, db: DbSession):
         .where(ServiceBooking.farmer_id == farmer.id)
         .order_by(ServiceBooking.date.desc(), ServiceBooking.id.desc())
     )
-    return [_booking_out(b, farmer.preferred_language) for b in rows]
+    return [booking_out(b, farmer.preferred_language) for b in rows]
 
 
 @router.get("/services/bookings/{booking_id}", response_model=BookingOut)
 def get_booking(booking_id: int, farmer: CurrentFarmer, db: DbSession):
-    return _booking_out(_owned_booking(db, farmer, booking_id), farmer.preferred_language)
+    return booking_out(_owned_booking(db, farmer, booking_id), farmer.preferred_language)
 
 
 @router.post("/services/bookings/{booking_id}/cancel", response_model=BookingOut)
@@ -217,7 +217,7 @@ def cancel_booking(booking_id: int, farmer: CurrentFarmer, db: DbSession):
     b.status = "cancelled"
     db.commit()
     db.refresh(b)
-    return _booking_out(b, farmer.preferred_language)
+    return booking_out(b, farmer.preferred_language)
 
 
 # ---------- Labour requirements ----------

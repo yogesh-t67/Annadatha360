@@ -115,7 +115,7 @@ For `requested` or `confirmed` bookings whose date hasn't passed. Frees the capa
 | `cancelled` | Cancelled by the farmer |
 | `rejected` | Provider couldn't take it |
 
-Only `cancelled` is set through the app today; the rest are set by ops (no API yet).
+Only `cancelled` is set through the app; the rest are set by ops staff ([admin.md](admin.md)).
 
 ## Labour requirements ("need workers" posts)
 
