@@ -25,5 +25,17 @@ services:
       db:
         condition: service_healthy
 
+  # Background jobs (order expiry, mandi price import, housekeeping). Run exactly one.
+  scheduler:
+    build: .
+    command: ["python", "-m", "app.jobs.scheduler"]
+    env_file: .env.example
+    environment:
+      DATABASE_URL: postgresql+psycopg://annadata:annadata@db:5432/annadata
+    depends_on:
+      api:
+        condition: service_started  # the api container runs migrations on start
+    restart: unless-stopped
+
 volumes:
   pgdata:

@@ -29,15 +29,27 @@ In development (`SMS_PROVIDER=console`) OTPs are printed to the server log inste
 
 ## Scheduled jobs
 
-| Job | Command | When |
+One scheduler process runs all background jobs: `python -m app.jobs.scheduler` (the `scheduler` service in
+docker-compose). **Run exactly one per environment.** Jobs are idempotent and a failing job doesn't stop the others.
+
+| Job | When | Also runnable alone |
 |---|---|---|
-| Mandi price import (AP + TG) | `python -m app.jobs.sync_market_prices` | Daily, evening IST. Needs `DATA_GOV_IN_API_KEY`. |
-| Cancel unpaid orders, release stock | `python -m app.jobs.expire_unpaid_orders` | Every 5 minutes |
+| Cancel unpaid orders, release stock | Every 5 minutes | `python -m app.jobs.expire_unpaid_orders` |
+| Mandi price import (AP + TG) | Daily 19:30 IST; skipped without `DATA_GOV_IN_API_KEY` | `python -m app.jobs.sync_market_prices` |
+| Prune old OTP codes and dead refresh tokens | Daily 03:00 IST | `python -m app.jobs.housekeeping` |
 
-Content loading (manual, no admin UI yet): `python -m app.jobs.load_products products.json` and
-`python -m app.jobs.load_schemes schemes.json` `python -m app.jobs.load_providers providers.json` and `python -m app.jobs.load_advisories advisories.json`. For local dev, `sample_data/` has clearly-labelled sample files.
+## Content and staff
 
-No scheduler is wired up yet; run it from cron (or the host's scheduler) in the API's environment.
+No admin UI yet. Load content with the commands below or `POST /api/v1/admin/content/{kind}`
+(see `docs/api/admin.md`). For local dev, `sample_data/` has clearly-labelled sample files.
+
+```sh
+python -m app.jobs.load_products products.json
+python -m app.jobs.load_schemes schemes.json
+python -m app.jobs.load_providers providers.json
+python -m app.jobs.load_advisories advisories.json
+python -m app.jobs.grant_staff 9876543210 admin    # ops | admin | revoke
+```
 
 ## Tests
 
