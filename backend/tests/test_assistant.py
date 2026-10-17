@@ -112,6 +112,28 @@ def test_new_conversation_sends_grounded_request(client, claude, farmer):
     assert "ALERT 2026-10-18: heavy rain (watch)" in context  # from the fake forecast
 
 
+def test_context_has_mandi_prices_and_schemes(client, claude, farmer, db_session):
+    from app.jobs.load_schemes import load
+    from tests.test_market import _price
+    from tests.test_schemes import SAMPLE
+
+    with db_session() as db:
+        _price(db, 0, "2600", market="Tenali APMC")  # farmer's district (Guntur)
+        _price(db, 0, "2500", market="Khammam APMC", district="Khammam", state="TG")
+        _price(db, 30, "9999", market="Old APMC", district="Kurnool")  # too old: left out
+        load(db, [dict(s, published=True) for s in SAMPLE])
+        db.commit()
+    headers, _ = farmer
+    client.post("/api/v1/assistant/messages", headers=headers, json={"message": "వరి ధర ఎంత?"})
+    context = claude.requests[0]["system"][1]["text"]
+    assert "In the farmer's district (Guntur):" in context
+    assert "Paddy Common at Tenali APMC: ₹2,600" in context
+    assert "Khammam (TG) ₹2,500" in context  # other districts too, for "price in Khammam?" questions
+    assert "9,999" not in context
+    assert "Government schemes in the app" in context
+    assert SAMPLE[0]["name"]["en"] in context
+
+
 def test_follow_up_includes_history(client, claude, farmer):
     headers, _ = farmer
     tid = client.post("/api/v1/assistant/messages", headers=headers, json={"message": "Q1"}).json()["thread"]["id"]
