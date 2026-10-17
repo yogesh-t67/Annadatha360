@@ -79,6 +79,31 @@ def test_errors(status, code):
     assert exc.value.code == code
 
 
+def test_falls_back_to_next_model_when_quota_runs_out():
+    asked = []
+
+    def handler(request):
+        model = json.loads(request.content)["model"]
+        asked.append(model)
+        return httpx.Response(429, text="quota") if model == "gemini-a" else _ok("from b")
+
+    g = GeminiClient("k", ["gemini-a", "gemini-b"], "https://gemini.test/v1beta/openai/", http=httpx.Client(transport=httpx.MockTransport(handler)))
+    res = g.beta.messages.create(max_tokens=10, messages=[{"role": "user", "content": "hi"}])
+    assert res.content[0].text == "from b" and res.model == "gemini-b"  # usage is logged against the model that answered
+    g.beta.messages.create(max_tokens=10, messages=[{"role": "user", "content": "again"}])
+    assert asked == ["gemini-a", "gemini-b", "gemini-b"]  # exhausted model skipped for a while
+
+
+def test_all_models_exhausted_is_busy():
+    from app.core.errors import AppError
+
+    g = GeminiClient("k", ["gemini-a", "gemini-b"], "https://gemini.test/v1beta/openai/",
+                     http=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(429, text="quota"))))  # fmt: skip
+    with pytest.raises(AppError) as exc:
+        g.beta.messages.create(max_tokens=10, messages=[])
+    assert exc.value.code == "ai_busy"
+
+
 def test_retries_once_on_high_demand(monkeypatch):
     monkeypatch.setattr(GeminiClient, "RETRY_DELAY_SECONDS", 0)
     calls = []

@@ -87,10 +87,10 @@ def _client_for(api_key: str) -> anthropic.Anthropic:
 
 
 @lru_cache(maxsize=2)
-def _gemini_for(api_key: str, model: str, base_url: str):
+def _gemini_for(api_key: str, models: tuple[str, ...], base_url: str):
     from app.services.ai.gemini import GeminiClient
 
-    return GeminiClient(api_key, model, base_url)
+    return GeminiClient(api_key, models, base_url)
 
 
 def active_model() -> str:
@@ -107,7 +107,8 @@ def get_ai_client() -> anthropic.Anthropic:
     if settings.ai_provider == "gemini" and not settings.is_production:
         if not settings.gemini_api_key:
             raise AppError(503, "ai_not_configured", "GEMINI_API_KEY is not set")
-        return _gemini_for(settings.gemini_api_key, settings.gemini_model, settings.gemini_base_url)
+        models = (settings.gemini_model, *settings.gemini_fallback_models)
+        return _gemini_for(settings.gemini_api_key, models, settings.gemini_base_url)
     if not settings.anthropic_api_key:
         raise AppError(503, "ai_not_configured", "AI is not configured on this server")
     return _client_for(settings.anthropic_api_key)

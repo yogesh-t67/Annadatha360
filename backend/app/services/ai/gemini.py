@@ -43,25 +43,41 @@ def _to_openai_content(content):
     return parts
 
 
+class _TryNextModel(Exception):
+    """This model is out of quota or overloaded right now; the next model in the chain may still work."""
+
+
 class GeminiClient:
-    """Implements the one SDK call the backend uses: client.beta.messages.create(...)."""
+    """Implements the one SDK call the backend uses: client.beta.messages.create(...).
+
+    Takes a chain of models: on the free tier each model has its own daily request quota, so when one runs out
+    (429) or stays overloaded (503 after a retry), the request goes to the next model. An exhausted model is
+    skipped for a while instead of being asked again on every request.
+    """
 
     USER_AGENT = "Annadata360-backend/0.1 (+https://github.com/yogesh-t67/Annadatha360)"
     RETRY_DELAY_SECONDS = 1.5
+    QUOTA_SKIP_SECONDS = 15 * 60  # daily quotas reset once a day; re-check every 15 min
+    OVERLOAD_SKIP_SECONDS = 60
 
-    def __init__(self, api_key: str, model: str, base_url: str, http: httpx.Client | None = None):
-        self.model = model
+    def __init__(self, api_key: str, model: str | list[str] | tuple[str, ...], base_url: str, http: httpx.Client | None = None):
+        self.models = [model] if isinstance(model, str) else list(dict.fromkeys(model))
+        self.model = self.models[0]
         self.url = base_url.rstrip("/") + "/chat/completions"
         # Gemini's own API, used for audio: the OpenAI-compatible endpoint only accepts WAV/MP3, while phones
         # record AAC/M4A, which the native endpoint takes as-is.
-        self.native_url = f"{base_url.rstrip('/').removesuffix('/openai')}/models/{model}:generateContent"
+        self.native_base = base_url.rstrip("/").removesuffix("/openai")
         self.api_key = api_key
         self.http = http or httpx.Client(timeout=90.0, headers={"User-Agent": self.USER_AGENT})
         self.beta = SimpleNamespace(messages=SimpleNamespace(create=self._create))
+        self._skip_until: dict[str, float] = {}
 
-    def _post(self, url: str, body: dict) -> dict:
+    def native_url(self, model: str) -> str:
+        return f"{self.native_base}/models/{model}:generateContent"
+
+    def _post(self, url: str, body: dict, *, native: bool) -> dict:
         # The two endpoints authenticate differently, and the native one rejects a Bearer API key.
-        auth = {"x-goog-api-key": self.api_key} if url == self.native_url else {"Authorization": f"Bearer {self.api_key}"}
+        auth = {"x-goog-api-key": self.api_key} if native else {"Authorization": f"Bearer {self.api_key}"}
         for attempt in range(2):
             try:
                 res = self.http.post(url, json=body, headers=auth)
@@ -73,17 +89,29 @@ class GeminiClient:
                 break
             time.sleep(self.RETRY_DELAY_SECONDS)
         if res.status_code == 429:
-            log.warning("Gemini rate limited (free tier): %s", res.text[:300])
-            raise AppError(503, "ai_busy", "The AI assistant is busy. Try again in a minute.")
+            log.warning("Gemini quota/rate limit: %s", res.text[:300])
+            raise _TryNextModel(self.QUOTA_SKIP_SECONDS)
         if res.status_code == 503:
             log.warning("Gemini overloaded: %s", res.text[:300])
-            raise AppError(503, "ai_busy", "The AI assistant is busy. Try again in a minute.")
+            raise _TryNextModel(self.OVERLOAD_SKIP_SECONDS)
         if res.status_code >= 400:
             log.error("Gemini API error %s: %s", res.status_code, res.text[:500])
             raise AppError(503, "ai_unavailable", "The AI assistant is unavailable right now")
         return res.json()
 
-    def _create_native(self, *, system_text, messages, max_tokens, output_config):
+    def _create(self, **params):
+        params.pop("model", None)  # callers pass the configured model; the chain decides which one answers
+        now = time.monotonic()
+        available = [m for m in self.models if self._skip_until.get(m, 0) <= now] or self.models[-1:]
+        for model in available:
+            try:
+                return self._create_with(model, **params)
+            except _TryNextModel as busy:
+                self._skip_until[model] = time.monotonic() + busy.args[0]
+                log.warning("Gemini model %s unavailable; trying the next one", model)
+        raise AppError(503, "ai_busy", "The AI assistant is busy. Try again in a minute.")
+
+    def _create_native(self, model, *, system_text, messages, max_tokens, output_config):
         def parts(content):
             if isinstance(content, str):
                 return [{"text": content}]
@@ -109,7 +137,7 @@ class GeminiClient:
             body["generationConfig"]["responseMimeType"] = "application/json"
             body["generationConfig"]["responseJsonSchema"] = _strip_additional_properties(fmt["schema"])
 
-        data = self._post(self.native_url, body)
+        data = self._post(self.native_url(model), body, native=True)
         candidate = (data.get("candidates") or [{}])[0]
         text = "".join(
             p.get("text", "") for p in (candidate.get("content") or {}).get("parts", []) if not p.get("thought")
@@ -119,7 +147,7 @@ class GeminiClient:
             content=[SimpleNamespace(type="text", text=text)],
             stop_reason="max_tokens" if candidate.get("finishReason") == "MAX_TOKENS" else "end_turn",
             stop_details=None,
-            model=self.model,
+            model=model,
             usage=SimpleNamespace(
                 input_tokens=usage.get("promptTokenCount", 0),
                 output_tokens=usage.get("candidatesTokenCount", 0) + usage.get("thoughtsTokenCount", 0),
@@ -129,7 +157,7 @@ class GeminiClient:
             _request_id=data.get("responseId"),
         )
 
-    def _create(self, *, system=None, messages, max_tokens, output_config=None, **_ignored):
+    def _create_with(self, model, *, system=None, messages, max_tokens, output_config=None, **_ignored):
         # Claude-only parameters (betas, fallbacks, cache_control, effort) are ignored here.
         system_text = "\n\n".join(b["text"] for b in system or [] if b.get("type") == "text")
         has_audio = any(
@@ -137,10 +165,10 @@ class GeminiClient:
         )
         if has_audio:
             return self._create_native(
-                system_text=system_text, messages=messages, max_tokens=max_tokens, output_config=output_config
+                model, system_text=system_text, messages=messages, max_tokens=max_tokens, output_config=output_config
             )
         body = {
-            "model": self.model,
+            "model": model,
             "max_tokens": max_tokens,
             "messages": ([{"role": "system", "content": system_text}] if system_text else [])
             + [{"role": m["role"], "content": _to_openai_content(m["content"])} for m in messages],
@@ -152,7 +180,7 @@ class GeminiClient:
                 "json_schema": {"name": "result", "schema": _strip_additional_properties(fmt["schema"])},
             }
 
-        data = self._post(self.url, body)
+        data = self._post(self.url, body, native=False)
         choice = (data.get("choices") or [{}])[0]
         text = (choice.get("message") or {}).get("content") or ""
         usage = data.get("usage") or {}
@@ -160,7 +188,7 @@ class GeminiClient:
             content=[SimpleNamespace(type="text", text=text)],
             stop_reason=_STOP_REASONS.get(choice.get("finish_reason"), "end_turn"),
             stop_details=None,
-            model=self.model,
+            model=model,
             usage=SimpleNamespace(
                 input_tokens=usage.get("prompt_tokens", 0),
                 output_tokens=usage.get("completion_tokens", 0),

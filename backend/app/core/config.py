@@ -49,6 +49,15 @@ class Settings(BaseSettings):
     # Gemini free tier: Google may use what you send to improve its products. Test data only — never real farmers'.
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"
+    # Tried in order when the model above is out of its free daily quota or overloaded (each model has its own).
+    gemini_fallback_models: list[str] = [
+        "gemini-3.7-flash",
+        "gemini-3.6-flash",
+        "gemini-3.5-flash",
+        "gemini-3-flash-preview",
+        "gemini-3.5-flash-lite",
+        "gemini-3.1-flash-lite",
+    ]
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
     ai_model: str = "claude-opus-5-5"
     ai_chat_effort: str = "low"
