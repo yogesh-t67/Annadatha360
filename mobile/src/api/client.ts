@@ -50,7 +50,12 @@ function sendForm(url: string, method: Method, headers: Record<string, string>, 
 
 async function send(path: string, { method = 'GET', body, auth = true, timeoutMs = DEFAULT_TIMEOUT_MS }: RequestOptions) {
   // The server follows the language the screen is showing (content, scheme text, AI replies).
-  const headers: Record<string, string> = { Accept: 'application/json', 'X-App-Language': i18n.language === 'te' ? 'te' : 'en' };
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    'X-App-Language': i18n.language === 'te' ? 'te' : 'en',
+    // Beta backend runs behind an ngrok tunnel; this skips ngrok's free-plan browser warning page.
+    'ngrok-skip-browser-warning': '1',
+  };
   const isForm = body instanceof FormData;
   if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
   if (auth) {
