@@ -10,7 +10,6 @@ import { Button, Card, Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { Pill } from '../../components/Blocks';
 import { FeatureTile, TileGrid } from '../../components/FeatureTile';
-import { MicButton } from '../../components/MicButton';
 import { CropImage } from '../../components/CropImage';
 import { CONDITION_ICON } from '../../data/weatherIcons';
 import { useFarmStore } from '../../store/farmStore';
@@ -18,7 +17,7 @@ import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { getHome } from '../../api/endpoints';
 import { hasSession } from '../../api/tokens';
 import type { HomeOut } from '../../api/types';
-import { speak, useIsSpeaking } from '../../voice/speech';
+import { speak, stopSpeaking, useIsSpeaking } from '../../voice/speech';
 import { FarmerAvatar } from '../../components/FarmerAvatar';
 
 /** The welcome is spoken once per app launch, not every time the farmer comes back to Home. */
@@ -26,7 +25,7 @@ let greetedThisLaunch = false;
 
 export function HomeScreen() {
   const { t, i18n } = useTranslation();
-  const { open, tab } = useAppNavigation();
+  const { open, tab, talk } = useAppNavigation();
   const { name, village, district, region, crop, stage, acres } = useFarmStore();
   const [home, setHome] = useState<HomeOut | null>(null);
 
@@ -65,16 +64,21 @@ export function HomeScreen() {
 
   return (
     <ScreenContainer>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-        <View style={{ flex: 1, gap: theme.spacing.xs }}>
-          <Text variant="h1">{trimmedName ? t('home.helloName', { name: trimmedName }) : t('home.hello')}</Text>
-          <Pill icon={MapPin}>{`${location} · ${t(`states.${region}`)}`}</Pill>
-        </View>
-        {/* Talks while the welcome is spoken. */}
-        <FarmerAvatar state={audioPlaying ? 'speaking' : 'idle'} size={120} />
+      <View style={{ gap: theme.spacing.xs }}>
+        <Text variant="h1">{trimmedName ? t('home.helloName', { name: trimmedName }) : t('home.hello')}</Text>
+        <Pill icon={MapPin}>{`${location} · ${t(`states.${region}`)}`}</Pill>
       </View>
 
-      <MicButton accessibilityLabel={t('nav.ask')} onPress={() => tab('AskTab')} />
+      {/* The farmer is the voice button: talks during the welcome; tap opens Ask already listening. */}
+      <FarmerAvatar
+        state={audioPlaying ? 'speaking' : 'idle'}
+        size={150}
+        onPress={() => {
+          stopSpeaking();
+          talk();
+        }}
+        accessibilityLabel={t('nav.ask')}
+      />
       <View style={{ gap: theme.spacing.xxs, marginTop: -theme.spacing.xs }}>
         <Text variant="h2" align="center">
           {t('home.askTitle')}

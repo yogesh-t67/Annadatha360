@@ -149,7 +149,7 @@
     "acresValue": "{{acres}} acres",
     "manageCrop": "Manage crop",
     "askTitle": "What would you like to ask?",
-    "tapMic": "Tap the microphone",
+    "tapMic": "Tap the farmer and ask your question",
     "exploreServices": "Explore Services",
     "todayWeather": "Today",
     "latestAdvisory": "Latest advisory",
@@ -189,14 +189,14 @@
     "micDenied": "Microphone permission is off. Allow it in Settings to speak your question.",
     "noSpeech": "Didn’t hear a question. Tap the mic and speak a little louder, close to the phone.",
     "languageNotSupported": "This phone doesn't support voice input in this language. Type your question instead.",
-    "tapToSpeak": "Tap the mic and ask",
-    "speakHint": "Speak in Telugu or English, like you would to a person",
-    "autoSend": "Stops by itself when you finish",
-    "speakingTapToStop": "Speaking… tap to stop",
+    "tapToSpeak": "Tap the farmer and ask",
+    "speakHint": "Speak in Telugu or English. Tap him again when you finish.",
+    "speakingTapToStop": "Speaking… tap the farmer to stop",
     "youAsked": "You asked",
     "orType": "Or type your question",
     "tooShort": "Hold on — that was too short. Tap the mic and say your full question.",
-    "tryAgainMic": "Voice is switching to your phone’s speech typing. Tap the mic again."
+    "tryAgainMic": "Voice is switching to your phone’s speech typing. Tap the mic again.",
+    "tapAgainToSend": "Tap the farmer again to send"
   },
   "diagnosis": {
     "title": "Crop Diagnosis",

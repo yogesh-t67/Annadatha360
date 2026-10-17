@@ -21,7 +21,7 @@ import {
 import { theme } from '../../theme';
 import { Button, Card, Text, TextField } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
-import { MicButton, MicState } from '../../components/MicButton';
+type MicState = 'idle' | 'listening' | 'thinking' | 'speaking';
 import { Notice } from '../../components/Notice';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { AskStackParamList } from '../../navigation/types';
@@ -165,6 +165,17 @@ export function VoiceAssistantScreen() {
 
   useEffect(() => () => stopSpeaking(), []);
 
+  // Opened by tapping the farmer on Home: start listening straight away (one tap from Home to talking).
+  const listenRequest = route.params?.listen;
+  useEffect(() => {
+    if (!listenRequest || recorder.recording || asking) return;
+    stopSpeaking();
+    setErrorKey(null);
+    if (deviceSpeech) speech.start();
+    else recorder.start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listenRequest]);
+
   // Language switched: the AI answer on screen is in the old language. Re-translate a chip question and
   // ask again (fresh thread, so the reply is in the new language only).
   const prevLanguage = useRef(i18n.language);
@@ -187,7 +198,7 @@ export function VoiceAssistantScreen() {
   const micState: MicState = listening ? 'listening' : asking ? 'thinking' : speaking ? 'speaking' : 'idle';
   // Avatar follows the same lifecycle; "speaking" comes from the actual audio (starts when the voice does).
   const audioPlaying = useIsSpeaking();
-  const avatarState: AvatarState = audioPlaying ? 'speaking' : listening || asking ? 'listening' : 'idle';
+  const avatarState: AvatarState = listening ? 'listening' : asking ? 'thinking' : audioPlaying ? 'speaking' : 'idle';
 
   function onMicPress() {
     setErrorKey(null);
@@ -216,7 +227,7 @@ export function VoiceAssistantScreen() {
           : t('voice.tapToSpeak');
   const hint =
     micState === 'listening'
-      ? `${t('voice.autoSend')} · 0:${String(recorder.seconds).padStart(2, '0')}`
+      ? `${t('voice.tapAgainToSend')} · 0:${String(recorder.seconds).padStart(2, '0')}`
       : micState === 'idle'
         ? t('voice.speakHint')
         : null;
@@ -229,13 +240,8 @@ export function VoiceAssistantScreen() {
     <ScreenContainer>
       <Text variant="h1">{t('voice.title')}</Text>
 
-      <FarmerAvatar state={avatarState} size={132} />
-      <MicButton
-        state={micState}
-        level={recorder.level}
-        accessibilityLabel={status}
-        onPress={onMicPress}
-      />
+      {/* The farmer is the voice button: green ring = tap to talk, red = listening (tap again to send). */}
+      <FarmerAvatar state={avatarState} size={150} onPress={onMicPress} disabled={asking} accessibilityLabel={status} />
       <View style={{ alignItems: 'center', gap: 2, marginTop: -theme.spacing.sm }} accessibilityLiveRegion="polite">
         <Text
           variant="h2"

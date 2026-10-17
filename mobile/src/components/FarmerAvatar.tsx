@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Pressable, View } from 'react-native';
 
 import { theme } from '../theme';
 
@@ -14,7 +14,7 @@ import { theme } from '../theme';
  * All four frames stay mounted and only their opacity changes, so switching never reloads an image.
  * Only Animated with the native driver — no extra dependencies, light on low-end Android.
  */
-export type AvatarState = 'idle' | 'listening' | 'speaking' | 'finished';
+export type AvatarState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'finished';
 
 const FRAMES = {
   idle: require('../../assets/avatar/idle.jpg'),
@@ -36,7 +36,20 @@ function useReduceMotion() {
   return reduce;
 }
 
-export function FarmerAvatar({ state, size = 140 }: { state: AvatarState; size?: number }) {
+export function FarmerAvatar({
+  state,
+  size = 140,
+  onPress,
+  disabled,
+  accessibilityLabel,
+}: {
+  state: AvatarState;
+  size?: number;
+  /** Makes the avatar the voice button (tap to talk / tap again to send). */
+  onPress?: () => void;
+  disabled?: boolean;
+  accessibilityLabel?: string;
+}) {
   const reduceMotion = useReduceMotion();
 
   // "finished" is also entered automatically when speaking stops.
@@ -60,7 +73,7 @@ export function FarmerAvatar({ state, size = 140 }: { state: AvatarState; size?:
   // Which frame is on screen right now (mouth flaps and idle winks change it within a state).
   const [frame, setFrame] = useState<Frame>('idle');
   useEffect(() => {
-    if (shown === 'listening') return setFrame('listening');
+    if (shown === 'listening' || shown === 'thinking') return setFrame('listening');
     if (shown === 'finished') return setFrame('winking');
     if (shown === 'speaking') {
       if (reduceMotion) return setFrame('talking');
@@ -106,10 +119,10 @@ export function FarmerAvatar({ state, size = 140 }: { state: AvatarState; size?:
     return () => loop.stop();
   }, [breathe, reduceMotion]);
 
-  // Listening ring pulse.
+  // Ring pulse while listening (red) or thinking (green).
   const ring = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    if (shown !== 'listening' || reduceMotion) {
+    if ((shown !== 'listening' && shown !== 'thinking') || reduceMotion) {
       ring.setValue(0);
       return;
     }
@@ -120,39 +133,38 @@ export function FarmerAvatar({ state, size = 140 }: { state: AvatarState; size?:
     return () => loop.stop();
   }, [shown, ring, reduceMotion]);
 
-  const ringColor = shown === 'listening' ? theme.color.status.dangerText : theme.color.surface.brandMid;
+  // The ring is the control's state: green = ready / answering, red = recording the farmer.
+  const ringColor = shown === 'listening' ? theme.color.status.dangerText : theme.color.surface.brand;
+  const RING = Math.max(5, Math.round(size * 0.045));
 
-  return (
-    <View
-      style={{ width: size * 1.3, height: size * 1.3, alignItems: 'center', justifyContent: 'center', alignSelf: 'center' }}
-      accessibilityRole="image"
-      accessibilityLabel="Annadata assistant"
-    >
-      {shown === 'listening' ? (
+  const content = (
+    <>
+      {shown === 'listening' || shown === 'thinking' ? (
         <Animated.View
           pointerEvents="none"
           style={{
             position: 'absolute',
-            width: size + 8,
-            height: size + 8,
-            borderRadius: (size + 8) / 2,
+            width: size + RING * 2,
+            height: size + RING * 2,
+            borderRadius: (size + RING * 2) / 2,
             borderWidth: 3,
             borderColor: ringColor,
             opacity: ring.interpolate({ inputRange: [0, 1], outputRange: [0.9, 0] }),
-            transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [1, 1.25] }) }],
+            transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [1, 1.22] }) }],
           }}
         />
       ) : null}
       <Animated.View
         style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
+          width: size + RING * 2,
+          height: size + RING * 2,
+          borderRadius: (size + RING * 2) / 2,
+          borderWidth: RING,
+          borderColor: ringColor,
           overflow: 'hidden',
           backgroundColor: theme.color.surface.base,
-          borderWidth: 3,
-          borderColor: shown === 'listening' ? theme.color.status.dangerText : theme.color.surface.brandMid,
-          ...theme.elevation.level1,
+          ...theme.elevation.level2,
+          shadowColor: ringColor,
           transform: [
             { translateY: breathe.interpolate({ inputRange: [0, 1], outputRange: [0, -4] }) },
             { scale: breathe.interpolate({ inputRange: [0, 1], outputRange: [1, 1.02] }) },
@@ -166,10 +178,31 @@ export function FarmerAvatar({ state, size = 140 }: { state: AvatarState; size?:
             fadeDuration={0}
             accessibilityIgnoresInvertColors
             // Explicit size: percentage sizes stretched images on some Android phones (see crop tiles).
-            style={{ position: 'absolute', top: -3, left: -3, width: size, height: size, opacity: f === frame ? 1 : 0 }}
+            style={{ position: 'absolute', top: 0, left: 0, width: size, height: size, opacity: f === frame ? 1 : 0 }}
           />
         ))}
       </Animated.View>
-    </View>
+    </>
+  );
+
+  const box = { width: size * 1.35, height: size * 1.35, alignItems: 'center', justifyContent: 'center', alignSelf: 'center' } as const;
+  if (!onPress) {
+    return (
+      <View style={box} accessibilityRole="image" accessibilityLabel={accessibilityLabel ?? 'Annadata assistant'}>
+        {content}
+      </View>
+    );
+  }
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ busy: shown === 'thinking' }}
+      style={({ pressed }) => [box, { transform: [{ scale: pressed ? 0.96 : 1 }] }]}
+    >
+      {content}
+    </Pressable>
   );
 }

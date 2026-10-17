@@ -25,7 +25,8 @@ export type FeatureStackParamList = {
 export type FeatureScreen = keyof FeatureStackParamList;
 
 export type HomeStackParamList = { Home: undefined } & FeatureStackParamList;
-export type AskStackParamList = { Voice: { question?: string } | undefined } & FeatureStackParamList;
+/** `listen`: a fresh timestamp asks the Voice screen to start recording immediately (tap on Home's avatar). */
+export type AskStackParamList = { Voice: { question?: string; listen?: number } | undefined } & FeatureStackParamList;
 export type FarmStackParamList = { MyFarm: undefined } & FeatureStackParamList;
 export type ServicesStackParamList = { Services: undefined } & FeatureStackParamList;
 

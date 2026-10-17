@@ -12,7 +12,7 @@ import {
  *
  * - Mono AAC in M4A at speech quality: small uploads on rural networks, and Gemini understands it as-is.
  * - Live input level (0–1) so the UI can show the app is hearing them.
- * - Stops by itself ~1.5 s after the farmer stops talking, and after 30 s at most.
+ * - Stops when the farmer taps again (optionally also on silence), and after 60 s at most.
  */
 const OPTIONS = {
   ...RecordingPresets.HIGH_QUALITY,
@@ -25,12 +25,12 @@ const OPTIONS = {
 const SPEECH_DB = -38; // louder than this = talking
 const SILENCE_DB = -45; // quieter than this = pause
 const SILENCE_MS = 1500;
-const MAX_MS = 30_000;
+const MAX_MS = 60_000;
 const MIN_MS = 700; // shorter taps are mistakes, not questions
 
 export type RecorderError = 'not-allowed' | 'too-short' | 'failed';
 
-export function useVoiceRecorder(onRecorded: (uri: string) => void) {
+export function useVoiceRecorder(onRecorded: (uri: string) => void, { autoStopOnSilence = false } = {}) {
   const recorder = useAudioRecorder(OPTIONS);
   const state = useAudioRecorderState(recorder, 100);
   const [recording, setRecording] = useState(false);
@@ -83,7 +83,8 @@ export function useVoiceRecorder(onRecorded: (uri: string) => void) {
     }
   }, [recorder]);
 
-  // Auto-stop: after the farmer has spoken, stop once it's been quiet for SILENCE_MS; hard cap at MAX_MS.
+  // The farmer taps again to send (they decide when they're done — pauses to think don't cut them off).
+  // With autoStopOnSilence, it also stops ~1.5 s after they stop talking. Hard cap at MAX_MS either way.
   const db = state.metering;
   useEffect(() => {
     if (!recording) return;
@@ -91,7 +92,7 @@ export function useVoiceRecorder(onRecorded: (uri: string) => void) {
       stop();
       return;
     }
-    if (db === undefined) return; // no metering on this device: the farmer taps to stop
+    if (!autoStopOnSilence || db === undefined) return;
     if (db > SPEECH_DB) heardSpeech.current = true;
     if (!heardSpeech.current) return;
     if (db < SILENCE_DB) {
@@ -100,7 +101,7 @@ export function useVoiceRecorder(onRecorded: (uri: string) => void) {
     } else {
       quietSince.current = null;
     }
-  }, [db, state.durationMillis, recording, stop]);
+  }, [db, state.durationMillis, recording, stop, autoStopOnSilence]);
 
   // Leaving the screen mid-recording: discard it.
   useEffect(
