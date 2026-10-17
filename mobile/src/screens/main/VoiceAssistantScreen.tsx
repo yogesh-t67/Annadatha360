@@ -31,7 +31,8 @@ import { ApiError } from '../../api/client';
 import { errorMessageKey } from '../../api/errorMessage';
 import { hasSession } from '../../api/tokens';
 import type { AskOut } from '../../api/types';
-import { speak, stopSpeaking } from '../../voice/speech';
+import { speak, stopSpeaking, useIsSpeaking } from '../../voice/speech';
+import { AvatarState, FarmerAvatar } from '../../components/FarmerAvatar';
 import { SpeechInputError, useSpeechInput } from '../../voice/useSpeechInput';
 import { RecorderError, useVoiceRecorder } from '../../voice/useVoiceRecorder';
 
@@ -184,6 +185,9 @@ export function VoiceAssistantScreen() {
 
   const listening = deviceSpeech ? speech.listening : recorder.recording;
   const micState: MicState = listening ? 'listening' : asking ? 'thinking' : speaking ? 'speaking' : 'idle';
+  // Avatar follows the same lifecycle; "speaking" comes from the actual audio (starts when the voice does).
+  const audioPlaying = useIsSpeaking();
+  const avatarState: AvatarState = audioPlaying ? 'speaking' : listening || asking ? 'listening' : 'idle';
 
   function onMicPress() {
     setErrorKey(null);
@@ -225,6 +229,7 @@ export function VoiceAssistantScreen() {
     <ScreenContainer>
       <Text variant="h1">{t('voice.title')}</Text>
 
+      <FarmerAvatar state={avatarState} size={132} />
       <MicButton
         state={micState}
         level={recorder.level}

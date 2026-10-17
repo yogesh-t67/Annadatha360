@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 import * as Speech from 'expo-speech';
 
 import { useFarmStore } from '../store/farmStore';
@@ -55,21 +56,48 @@ function chosenVoice(language: string): { voice?: string; pitch: number } {
   return male ? { voice: male.identifier, pitch: 1 } : { pitch: 0.85 };
 }
 
+// ---- "Is the app speaking right now?" — one app-wide signal, so the farmer avatar can animate its mouth for
+// any read-aloud (answers, welcome, diagnosis, schemes) without each screen wiring it up.
+let speakingNow = false;
+const speakingListeners = new Set<() => void>();
+
+function setSpeakingNow(value: boolean) {
+  if (speakingNow === value) return;
+  speakingNow = value;
+  speakingListeners.forEach((l) => l());
+}
+
+export function useIsSpeaking(): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      speakingListeners.add(listener);
+      return () => speakingListeners.delete(listener);
+    },
+    () => speakingNow,
+  );
+}
+
 /** Read text aloud in the farmer's language. Uses the phone's own text-to-speech (works in Expo Go). */
 export function speak(text: string, language: string, onDone?: () => void, voiceOverride?: string): void {
   Speech.stop();
   const { voice, pitch } = voiceOverride ? { voice: voiceOverride, pitch: 1 } : chosenVoice(language);
+  const finished = () => {
+    setSpeakingNow(false);
+    onDone?.();
+  };
   Speech.speak(text, {
     language: speechLocale(language),
     voice,
     pitch,
     rate: 0.95,
-    onDone,
-    onStopped: onDone,
-    onError: onDone,
+    onStart: () => setSpeakingNow(true),
+    onDone: finished,
+    onStopped: finished,
+    onError: finished,
   });
 }
 
 export function stopSpeaking(): void {
   Speech.stop();
+  setSpeakingNow(false);
 }

@@ -18,7 +18,8 @@ import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { getHome } from '../../api/endpoints';
 import { hasSession } from '../../api/tokens';
 import type { HomeOut } from '../../api/types';
-import { speak } from '../../voice/speech';
+import { speak, useIsSpeaking } from '../../voice/speech';
+import { FarmerAvatar } from '../../components/FarmerAvatar';
 
 /** The welcome is spoken once per app launch, not every time the farmer comes back to Home. */
 let greetedThisLaunch = false;
@@ -44,6 +45,7 @@ export function HomeScreen() {
 
   // Spoken welcome, once each time the app is opened, in the selected language.
   const voiceEnabled = useFarmStore((s) => s.voiceEnabled);
+  const audioPlaying = useIsSpeaking();
   useFocusEffect(
     useCallback(() => {
       if (greetedThisLaunch || !voiceEnabled) return;
@@ -63,9 +65,13 @@ export function HomeScreen() {
 
   return (
     <ScreenContainer>
-      <View style={{ gap: theme.spacing.xs }}>
-        <Text variant="h1">{trimmedName ? t('home.helloName', { name: trimmedName }) : t('home.hello')}</Text>
-        <Pill icon={MapPin}>{`${location} · ${t(`states.${region}`)}`}</Pill>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+        <View style={{ flex: 1, gap: theme.spacing.xs }}>
+          <Text variant="h1">{trimmedName ? t('home.helloName', { name: trimmedName }) : t('home.hello')}</Text>
+          <Pill icon={MapPin}>{`${location} · ${t(`states.${region}`)}`}</Pill>
+        </View>
+        {/* Talks while the welcome is spoken. */}
+        <FarmerAvatar state={audioPlaying ? 'speaking' : 'idle'} size={120} />
       </View>
 
       <MicButton accessibilityLabel={t('nav.ask')} onPress={() => tab('AskTab')} />
