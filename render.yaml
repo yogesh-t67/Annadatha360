@@ -1,5 +1,7 @@
-# Render Blueprint for the closed-beta backend (API + scheduler in one service, plus Postgres).
-# Render dashboard → New → Blueprint → pick this repo/branch. Then fill the two "sync: false" keys.
+# Render Blueprint for the closed-beta backend (API + scheduler in one free service).
+# Database: a free Neon Postgres (neon.tech) — paste its connection string as DATABASE_URL.
+# Render dashboard → New → Blueprint → pick this repo/branch, then fill the three "sync: false" keys.
+# Free plan: the service sleeps after 15 min idle; the first request after that takes ~50 s to wake it.
 # Region singapore is the closest Render region to India.
 services:
   - type: web
@@ -8,13 +10,11 @@ services:
     rootDir: backend
     dockerfilePath: ./Dockerfile
     region: singapore
-    plan: starter
+    plan: free
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: annadata-db
-          property: connectionString
+        sync: false
       - key: APP_ENV
         value: staging
       - key: JWT_SECRET
@@ -23,6 +23,7 @@ services:
       - key: GUEST_LOGIN_ENABLED
         value: "true"
       # One service runs the background jobs too (mandi price import, housekeeping). Keep instances at 1.
+      # Each start (including waking from sleep) also imports today's mandi prices.
       - key: RUN_SCHEDULER
         value: "true"
       - key: SMS_PROVIDER
@@ -39,10 +40,3 @@ services:
         sync: false
       - key: DATA_GOV_IN_API_KEY
         sync: false
-
-databases:
-  - name: annadata-db
-    region: singapore
-    plan: basic-256mb
-    databaseName: annadata
-    user: annadata
