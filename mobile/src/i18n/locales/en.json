@@ -405,7 +405,7 @@
   "settings": {
     "title": "Settings",
     "language": "Language",
-    "voice": "Voice assistance (demo)",
+    "voice": "Read answers aloud",
     "notifications": "Notifications (demo)",
     "editProfile": "Edit Profile",
     "manageFarm": "Manage Farm",
@@ -413,7 +413,13 @@
     "logout": "Log out",
     "logoutTitle": "Log out of Annadata 360?",
     "logoutBody": "Your name, farm details and chats will be removed from this phone and the app will start again from the beginning. If you are using it without a verified phone number, this profile cannot be opened again.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "assistantVoice": "Assistant voice",
+    "maleVoice": "Male voice {{n}}",
+    "otherVoice": "Voice {{n}}",
+    "voiceSample": "Namaskaram. I am your Annadata farming assistant.",
+    "voiceHint": "Tap a voice to hear it. Your phone’s voices are used; more can be added in Google speech settings.",
+    "noVoices": "No voices found for this language on this phone. Install it in Settings → Google text-to-speech."
   },
   "verifyPhone": {
     "title": "Verify your phone",

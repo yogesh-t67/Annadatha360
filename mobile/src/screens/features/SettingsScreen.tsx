@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Alert, Switch, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, Pressable, Switch, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
-import { Bell, LogOut, Mic, Sprout, UserRound } from 'lucide-react-native';
+import { Bell, Check, LogOut, Mic, Sprout, UserRound, Volume2 } from 'lucide-react-native';
+
+import { AppVoice, speak, stopSpeaking, voicesFor } from '../../voice/speech';
 
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 
@@ -46,6 +48,76 @@ function ToggleRow({
   );
 }
 
+/** Pick the assistant's voice by ear: tap a voice to hear a sample and use it. */
+function VoicePicker() {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language === 'te' ? 'te' : 'en';
+  const saved = useFarmStore((s) => s.voiceIds[lang]);
+  const setVoiceId = useFarmStore((s) => s.setVoiceId);
+  const [voices, setVoices] = useState<AppVoice[] | null>(null);
+
+  useEffect(() => {
+    voicesFor(lang).then(setVoices);
+  }, [lang]);
+  useEffect(() => () => stopSpeaking(), []);
+
+  if (!voices) return null;
+  const current = saved && voices.some((v) => v.identifier === saved) ? saved : voices.find((v) => v.male)?.identifier;
+  let maleN = 0;
+  let otherN = 0;
+
+  return (
+    <Card style={{ gap: theme.spacing.sm }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+        <Volume2 size={20} color={theme.color.surface.brandDeep} strokeWidth={2} />
+        <Text variant="label" weight="semibold" style={{ flex: 1 }}>
+          {t('settings.assistantVoice')}
+        </Text>
+      </View>
+      {voices.length === 0 ? (
+        <Text variant="caption" color={theme.color.text.muted}>
+          {t('settings.noVoices')}
+        </Text>
+      ) : (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
+          {voices.map((v) => {
+            const selected = v.identifier === current;
+            const label = v.male ? t('settings.maleVoice', { n: ++maleN }) : t('settings.otherVoice', { n: ++otherN });
+            return (
+              <Pressable
+                key={v.identifier}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                onPress={() => {
+                  setVoiceId(lang, v.identifier);
+                  speak(t('settings.voiceSample'), i18n.language, undefined, v.identifier);
+                }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  minHeight: 44,
+                  paddingHorizontal: theme.spacing.sm,
+                  borderRadius: theme.radius.full,
+                  borderWidth: selected ? 2 : 1,
+                  borderColor: selected ? theme.color.surface.brand : theme.color.border.default,
+                  backgroundColor: selected ? theme.color.surface.brandSoft : theme.color.surface.base,
+                }}
+              >
+                {selected ? <Check size={16} color={theme.color.surface.brand} strokeWidth={3} /> : null}
+                <Text variant="bodyStrong">{label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
+      <Text variant="caption" color={theme.color.text.muted}>
+        {t('settings.voiceHint')}
+      </Text>
+    </Card>
+  );
+}
+
 export function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const { navigation, tab } = useAppNavigation();
@@ -65,6 +137,7 @@ export function SettingsScreen() {
         onChange={(code) => setStoredLanguage(code)}
       />
       <ToggleRow icon={Mic} label={t('settings.voice')} value={voiceEnabled} onChange={setVoiceEnabled} />
+      <VoicePicker />
       <ToggleRow icon={Bell} label={t('settings.notifications')} value={notificationsEnabled} onChange={setNotificationsEnabled} />
       <Button label={t('settings.editProfile')} variant="secondary" icon={UserRound} onPress={() => navigation.navigate('FarmerProfile')} />
       <Button label={t('settings.manageFarm')} variant="secondary" icon={Sprout} onPress={() => tab('FarmTab')} />

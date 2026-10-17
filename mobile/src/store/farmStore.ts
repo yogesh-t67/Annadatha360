@@ -26,6 +26,9 @@ interface FarmState extends FarmProfile {
   completeOnboarding: () => void;
   setVoiceEnabled: (on: boolean) => void;
   setNotificationsEnabled: (on: boolean) => void;
+  /** Text-to-speech voice picked in Settings, per language (phone voice identifier). */
+  voiceIds: Partial<Record<'te' | 'en', string>>;
+  setVoiceId: (language: 'te' | 'en', identifier: string) => void;
   /** Back to a fresh install (logout). */
   reset: () => void;
 }
@@ -49,7 +52,9 @@ export const useFarmStore = create<FarmState>()(
   persist(
     (set) => ({
       ...INITIAL,
-      reset: () => set(INITIAL),
+      voiceIds: {},
+      setVoiceId: (language, identifier) => set((s) => ({ voiceIds: { ...s.voiceIds, [language]: identifier } })),
+      reset: () => set({ ...INITIAL, voiceIds: {} }),
       update: (patch) => set(patch),
       completeOnboarding: () => set({ onboarded: true }),
       setVoiceEnabled: (voiceEnabled) => set({ voiceEnabled }),
