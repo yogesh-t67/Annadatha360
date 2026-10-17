@@ -38,8 +38,7 @@
         "expo-image-picker",
         {
           "cameraPermission": "Annadata 360 uses the camera to photograph crop problems.",
-          "photosPermission": false,
-          "microphonePermission": false
+          "photosPermission": "Annadata 360 lets you pick a crop photo from your gallery."
         }
       ],
       "expo-status-bar",

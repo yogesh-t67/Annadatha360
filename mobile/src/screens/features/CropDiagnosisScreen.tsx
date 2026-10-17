@@ -133,13 +133,13 @@ export function CropDiagnosisScreen() {
   }, [i18n.language]);
 
   async function getPhoto(source: 'camera' | 'gallery') {
-    const permission =
-      source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setDenied(true);
-      return;
+    // Only the camera needs a permission. The gallery opens Android's system photo picker, which needs none.
+    if (source === 'camera') {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        setDenied(true);
+        return;
+      }
     }
     setDenied(false);
     const options: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 1 };
