@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Pressable, View } from 'react-native';
+import { Image, Pressable, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight } from 'lucide-react-native';
 
@@ -23,6 +23,10 @@ export function CropSelectionScreen() {
   const stage = useFarmStore((s) => s.stage);
   const update = useFarmStore((s) => s.update);
   const completeOnboarding = useFarmStore((s) => s.completeOnboarding);
+  // Exact square tiles, 3 per row. A percentage width + aspectRatio let Android draw the photo at its full
+  // natural height (very tall tiles), so the size is computed from the screen width instead.
+  const { width } = useWindowDimensions();
+  const tile = Math.floor((width - theme.spacing.md * 2 - theme.spacing.sm * 2) / 3) - 1;
 
   return (
     <ScreenContainer showBack>
@@ -40,9 +44,7 @@ export function CropSelectionScreen() {
               accessibilityLabel={t(`crops.${c.code}`)}
               onPress={() => update({ crop: c.code })}
               style={({ pressed }) => ({
-                flexBasis: '30%',
-                flexGrow: 1,
-                maxWidth: '32%',
+                width: tile,
                 overflow: 'hidden',
                 borderRadius: theme.radius.lg,
                 borderWidth: selected ? 2.5 : 1,
@@ -56,7 +58,7 @@ export function CropSelectionScreen() {
                 source={cropImages[c.code]}
                 accessibilityIgnoresInvertColors
                 resizeMode="cover"
-                style={{ width: '100%', aspectRatio: 1, backgroundColor: theme.color.surface.sunken }}
+                style={{ width: tile, height: tile, backgroundColor: theme.color.surface.sunken }}
               />
               <View style={{ paddingHorizontal: theme.spacing.xs, paddingVertical: theme.spacing.xs, minHeight: 44, justifyContent: 'center' }}>
                 <Text variant="caption" weight="bold" align="center" numberOfLines={2}>
