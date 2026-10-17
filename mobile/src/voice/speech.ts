@@ -11,7 +11,16 @@ export function speechLocale(language: string): 'te-IN' | 'en-IN' {
  * Android doesn't say which voices are male, but Google's on-device voice ids follow a pattern
  * ("te-in-x-tem-local" = Telugu male). These are the male ids we know; anything named "male" counts too.
  */
-const MALE_ID = /-x-(tem|ene|end|iom|iol|cxm|mal)\b|(^|[^e])male/i;
+const MALE_ID = new RegExp(
+  [
+    '-x-(tem|ene|end|iom|iol|cxm|mal)\\b', // Google on-device / network ids (te-in-x-tem-local, en-in-x-end-network…)
+    '(Standard|Wavenet|Neural2|Chirp)-[BCD]\\b', // Google cloud-style names: B/C/D are the male Indian voices
+    '(^|[^e])male', // engines that put "male" in the name (but not "female")
+  ].join('|'),
+  'i',
+);
+/** No male voice on the phone: the default voice at this pitch sounds clearly deeper. */
+const FALLBACK_MALE_PITCH = 0.78;
 
 export interface AppVoice {
   identifier: string;
@@ -53,7 +62,7 @@ function chosenVoice(language: string): { voice?: string; pitch: number } {
   }
   // Default: a male voice if the phone has one; otherwise the default voice a little deeper.
   const male = available.find((v) => MALE_ID.test(v.identifier) || MALE_ID.test(v.name));
-  return male ? { voice: male.identifier, pitch: 1 } : { pitch: 0.85 };
+  return male ? { voice: male.identifier, pitch: 1 } : { pitch: FALLBACK_MALE_PITCH };
 }
 
 // ---- "Is the app speaking right now?" — one app-wide signal, so the farmer avatar can animate its mouth for

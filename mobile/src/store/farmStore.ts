@@ -63,10 +63,12 @@ export const useFarmStore = create<FarmState>()(
     {
       name: 'annadata.farm',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 1,
+      version: 2,
       // v0 → v1: district list expanded to all AP/TS districts; map retired keys and keep state consistent.
+      // v1 → v2: male voice is the default in both languages; forget voices picked while testing.
       migrate: (persisted, version) => {
-        const s = persisted as Partial<FarmProfile>;
+        const s = persisted as Partial<FarmState>;
+        if (version < 2) s.voiceIds = {};
         if (version < 1 && s.district) {
           const key = (LEGACY_DISTRICT[s.district] ?? s.district) as DistrictKey;
           const d = getDistrict(key);
