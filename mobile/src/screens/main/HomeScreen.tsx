@@ -18,6 +18,10 @@ import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { getHome } from '../../api/endpoints';
 import { hasSession } from '../../api/tokens';
 import type { HomeOut } from '../../api/types';
+import { speak } from '../../voice/speech';
+
+/** The welcome is spoken once per app launch, not every time the farmer comes back to Home. */
+let greetedThisLaunch = false;
 
 export function HomeScreen() {
   const { t, i18n } = useTranslation();
@@ -38,6 +42,18 @@ export function HomeScreen() {
 
   );
 
+  // Spoken welcome, once each time the app is opened, in the selected language.
+  const voiceEnabled = useFarmStore((s) => s.voiceEnabled);
+  useFocusEffect(
+    useCallback(() => {
+      if (greetedThisLaunch || !voiceEnabled) return;
+      greetedThisLaunch = true;
+      // Short delay: lets the screen appear and the phone's voices load before speaking.
+      const timer = setTimeout(() => speak(t('home.welcomeSpeech'), i18n.language), 700);
+      return () => clearTimeout(timer);
+    }, [voiceEnabled, t, i18n.language]),
+  );
+
   const nameTe = useFarmStore((s) => s.nameTe);
   // In the Telugu app, show the name in Telugu letters (farmer's own spelling, else automatic).
   const trimmedName = displayName(name, nameTe, i18n.language);
@@ -50,6 +66,16 @@ export function HomeScreen() {
       <View style={{ gap: theme.spacing.xs }}>
         <Text variant="h1">{trimmedName ? t('home.helloName', { name: trimmedName }) : t('home.hello')}</Text>
         <Pill icon={MapPin}>{`${location} · ${t(`states.${region}`)}`}</Pill>
+      </View>
+
+      <MicButton accessibilityLabel={t('nav.ask')} onPress={() => tab('AskTab')} />
+      <View style={{ gap: theme.spacing.xxs, marginTop: -theme.spacing.xs }}>
+        <Text variant="h2" align="center">
+          {t('home.askTitle')}
+        </Text>
+        <Text variant="body" align="center" color={theme.color.text.muted}>
+          {t('home.tapMic')}
+        </Text>
       </View>
 
       {today || home?.latest_advisory ? (
@@ -93,16 +119,6 @@ export function HomeScreen() {
         </View>
         <Button label={t('home.manageCrop')} variant="onBrand" compact onPress={() => tab('FarmTab')} />
       </Card>
-
-      <MicButton accessibilityLabel={t('nav.ask')} onPress={() => tab('AskTab')} />
-      <View style={{ gap: theme.spacing.xxs, marginTop: -theme.spacing.xs }}>
-        <Text variant="h2" align="center">
-          {t('home.askTitle')}
-        </Text>
-        <Text variant="body" align="center" color={theme.color.text.muted}>
-          {t('home.tapMic')}
-        </Text>
-      </View>
 
       <TileGrid>
         <FeatureTile icon={Leaf} tint="clay" label={t('home.tiles.cropProblem')} showArrow onPress={() => open('Diagnosis')} />

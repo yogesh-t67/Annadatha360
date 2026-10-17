@@ -158,7 +158,8 @@
       "weather": "Weather",
       "irrigation": "Irrigation",
       "marketPrices": "Market Prices"
-    }
+    },
+    "welcomeSpeech": "Namaste, welcome to Annadata 360. How can I help you today?"
   },
   "voice": {
     "title": "Ask Annadata AI",
