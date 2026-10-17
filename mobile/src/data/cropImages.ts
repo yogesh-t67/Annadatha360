@@ -3,8 +3,8 @@ import type { ImageSourcePropType } from 'react-native';
 import type { CropCode } from './cropCatalog';
 
 /**
- * Bundled crop photos (assets/crops, 480px squares from Wikimedia Commons). Metro needs literal
- * require() paths, so each one is listed. Authors and licenses: assets/crops/CREDITS.md.
+ * Bundled crop images (assets/crops, 512px JPEG squares, AI-generated as one matching set on an off-white
+ * background). Metro needs literal require() paths, so each one is listed.
  */
 export const cropImages: Record<CropCode, ImageSourcePropType> = {
   paddy: require('../../assets/crops/paddy.jpg'),

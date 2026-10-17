@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
-import { Linking, Pressable, Switch, View } from 'react-native';
+import React from 'react';
+import { Switch, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
-import { Bell, ChevronDown, ChevronUp, Image as ImageIcon, Mic, Sprout, UserRound } from 'lucide-react-native';
-
-import photoCredits from '../../../assets/crops/credits.json';
+import { Bell, Mic, Sprout, UserRound } from 'lucide-react-native';
 
 import { theme } from '../../theme';
 import { Button, Card, Text } from '../../components/primitives';
@@ -44,45 +42,6 @@ function ToggleRow({
   );
 }
 
-/** CC BY / CC BY-SA require crediting each photographer; this is where the app does it. */
-function PhotoCredits() {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const Chevron = open ? ChevronUp : ChevronDown;
-
-  return (
-    <Card>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-        onPress={() => setOpen((o) => !o)}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, minHeight: 40 }}
-      >
-        <ImageIcon size={20} color={theme.color.surface.brandDeep} strokeWidth={2} />
-        <Text variant="label" weight="semibold" style={{ flex: 1 }}>
-          {t('settings.photoCredits')}
-        </Text>
-        <Chevron size={20} color={theme.color.text.muted} strokeWidth={2.25} />
-      </Pressable>
-      {open ? (
-        <View style={{ gap: theme.spacing.xs, marginTop: theme.spacing.xs }}>
-          <Text variant="caption" color={theme.color.text.muted}>
-            {t('settings.photoCreditsBody')}
-          </Text>
-          {photoCredits.map((c) => (
-            <Pressable key={c.code} accessibilityRole="link" onPress={() => Linking.openURL(c.source)}>
-              <Text variant="caption">
-                <Text variant="caption" weight="bold">{`${t(`crops.${c.code}`)}: `}</Text>
-                {`${c.artist} · ${c.license}`}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
-    </Card>
-  );
-}
-
 export function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const { navigation, tab } = useAppNavigation();
@@ -104,7 +63,6 @@ export function SettingsScreen() {
       <ToggleRow icon={Bell} label={t('settings.notifications')} value={notificationsEnabled} onChange={setNotificationsEnabled} />
       <Button label={t('settings.editProfile')} variant="secondary" icon={UserRound} onPress={() => navigation.navigate('FarmerProfile')} />
       <Button label={t('settings.manageFarm')} variant="secondary" icon={Sprout} onPress={() => tab('FarmTab')} />
-      <PhotoCredits />
       <Text variant="caption" align="center" color={theme.color.text.muted}>
         {t('settings.version', { version: Constants.expoConfig?.version ?? '1.0.0' })}
       </Text>
