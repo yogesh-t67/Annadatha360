@@ -59,7 +59,8 @@
           "microphonePermission": "Annadata 360 records your spoken question so the assistant can answer it.",
           "enableBackgroundPlayback": false
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "extra": {
       "eas": {
