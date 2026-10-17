@@ -1,12 +1,14 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, Globe, Sprout } from 'lucide-react-native';
+import { ChevronLeft, Globe } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import { theme } from '../theme';
 import { LanguageCode, setStoredLanguage } from '../i18n';
 import { Text } from './primitives';
+
+const LOGO = require('../../assets/logo.jpg');
 
 /** Brand bar shown on every screen: optional back arrow, logo, and a one-tap Telugu/English switch. */
 export function AppHeader({ showBack = false }: { showBack?: boolean }) {
@@ -47,20 +49,17 @@ export function AppHeader({ showBack = false }: { showBack?: boolean }) {
           <ChevronLeft size={26} color={theme.color.surface.brandDeep} strokeWidth={2.5} />
         </Pressable>
       ) : (
-        <View
+        <Image
+          source={LOGO}
+          accessibilityIgnoresInvertColors
           style={{
             width: 44,
             height: 44,
             borderRadius: 13,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: theme.color.surface.brandSoft,
             borderWidth: 1,
             borderColor: theme.color.border.brand,
           }}
-        >
-          <Sprout size={22} color={theme.color.surface.brandDeep} strokeWidth={2} />
-        </View>
+        />
       )}
 
       <View style={{ flex: 1, minWidth: 0 }}>

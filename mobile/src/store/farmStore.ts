@@ -26,23 +26,30 @@ interface FarmState extends FarmProfile {
   completeOnboarding: () => void;
   setVoiceEnabled: (on: boolean) => void;
   setNotificationsEnabled: (on: boolean) => void;
+  /** Back to a fresh install (logout). */
+  reset: () => void;
 }
+
+const INITIAL: FarmProfile & Pick<FarmState, 'onboarded' | 'voiceEnabled' | 'notificationsEnabled'> = {
+  name: '',
+  nameTe: '',
+  phone: '',
+  region: 'ap',
+  district: 'guntur',
+  village: '',
+  crop: 'paddy',
+  acres: '2',
+  stage: 'growing',
+  onboarded: false,
+  voiceEnabled: true,
+  notificationsEnabled: true,
+};
 
 export const useFarmStore = create<FarmState>()(
   persist(
     (set) => ({
-      name: '',
-      nameTe: '',
-      phone: '',
-      region: 'ap',
-      district: 'guntur',
-      village: '',
-      crop: 'paddy',
-      acres: '2',
-      stage: 'growing',
-      onboarded: false,
-      voiceEnabled: true,
-      notificationsEnabled: true,
+      ...INITIAL,
+      reset: () => set(INITIAL),
       update: (patch) => set(patch),
       completeOnboarding: () => set({ onboarded: true }),
       setVoiceEnabled: (voiceEnabled) => set({ voiceEnabled }),

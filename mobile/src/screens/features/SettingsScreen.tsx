@@ -1,8 +1,12 @@
-import React from 'react';
-import { Switch, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Switch, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
-import { Bell, Mic, Sprout, UserRound } from 'lucide-react-native';
+import { Bell, LogOut, Mic, Sprout, UserRound } from 'lucide-react-native';
+
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
+
+import { signOut } from '../../api/signOut';
 
 import { theme } from '../../theme';
 import { Button, Card, Text } from '../../components/primitives';
@@ -49,6 +53,7 @@ export function SettingsScreen() {
   const notificationsEnabled = useFarmStore((s) => s.notificationsEnabled);
   const setVoiceEnabled = useFarmStore((s) => s.setVoiceEnabled);
   const setNotificationsEnabled = useFarmStore((s) => s.setNotificationsEnabled);
+  const [signingOut, setSigningOut] = useState(false);
 
   return (
     <ScreenContainer showBack>
@@ -63,6 +68,29 @@ export function SettingsScreen() {
       <ToggleRow icon={Bell} label={t('settings.notifications')} value={notificationsEnabled} onChange={setNotificationsEnabled} />
       <Button label={t('settings.editProfile')} variant="secondary" icon={UserRound} onPress={() => navigation.navigate('FarmerProfile')} />
       <Button label={t('settings.manageFarm')} variant="secondary" icon={Sprout} onPress={() => tab('FarmTab')} />
+      <Button
+        label={t('settings.logout')}
+        variant="secondary"
+        icon={LogOut}
+        loading={signingOut}
+        onPress={() =>
+          Alert.alert(t('settings.logoutTitle'), t('settings.logoutBody'), [
+            { text: t('settings.cancel'), style: 'cancel' },
+            {
+              text: t('settings.logout'),
+              style: 'destructive',
+              onPress: async () => {
+                setSigningOut(true);
+                await signOut().catch((e) => console.warn('Sign out failed', e));
+                // Reset the whole app (not just this tab) back to the first screen.
+                let root: NavigationProp<ParamListBase> = navigation;
+                while (root.getParent()) root = root.getParent()!;
+                root.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+              },
+            },
+          ])
+        }
+      />
       <Text variant="caption" align="center" color={theme.color.text.muted}>
         {t('settings.version', { version: Constants.expoConfig?.version ?? '1.0.0' })}
       </Text>

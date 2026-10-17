@@ -409,7 +409,11 @@
     "notifications": "Notifications (demo)",
     "editProfile": "Edit Profile",
     "manageFarm": "Manage Farm",
-    "version": "Annadata 360 v{{version}}"
+    "version": "Annadata 360 v{{version}}",
+    "logout": "Log out",
+    "logoutTitle": "Log out of Annadata 360?",
+    "logoutBody": "Your name, farm details and chats will be removed from this phone and the app will start again from the beginning. If you are using it without a verified phone number, this profile cannot be opened again.",
+    "cancel": "Cancel"
   },
   "verifyPhone": {
     "title": "Verify your phone",

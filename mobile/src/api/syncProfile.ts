@@ -8,7 +8,7 @@ import { ApiError } from './client';
 import { createField, updateField, updateMe } from './endpoints';
 import type { GrowthStage, Language } from './types';
 
-const FIELD_ID_KEY = 'annadata.api.fieldId';
+export const FIELD_ID_KEY = 'annadata.api.fieldId';
 
 const STAGE: Record<StageKey, GrowthStage> = {
   sowing: 'sowing',

@@ -18,10 +18,9 @@
     "android": {
       "package": "com.annadata360.app",
       "adaptiveIcon": {
-        "backgroundColor": "#1F7A3F",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundImage": "./assets/android-icon-background.png"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [

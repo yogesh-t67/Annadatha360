@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { Image, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Mic, Sprout, UsersRound } from 'lucide-react-native';
 
@@ -17,7 +17,13 @@ export function WelcomeScreen() {
 
   return (
     <ScreenContainer>
-      <Hero icon={Sprout}>
+      <Hero>
+        <Image
+          source={require('../../../assets/logo.jpg')}
+          accessibilityIgnoresInvertColors
+          accessibilityLabel="Annadata 360"
+          style={{ width: 168, height: 168, borderRadius: 36, marginBottom: theme.spacing.xs }}
+        />
         <Text variant="display" align="center">
           {t('welcome.title')}
         </Text>
