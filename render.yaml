@@ -1,0 +1,48 @@
+# Render Blueprint for the closed-beta backend (API + scheduler in one service, plus Postgres).
+# Render dashboard → New → Blueprint → pick this repo/branch. Then fill the two "sync: false" keys.
+# Region singapore is the closest Render region to India.
+services:
+  - type: web
+    name: annadata-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    region: singapore
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: annadata-db
+          property: connectionString
+      - key: APP_ENV
+        value: staging
+      - key: JWT_SECRET
+        generateValue: true
+      # Beta testers use every feature without SMS OTP (guest accounts). Must be false in production.
+      - key: GUEST_LOGIN_ENABLED
+        value: "true"
+      # One service runs the background jobs too (mandi price import, housekeeping). Keep instances at 1.
+      - key: RUN_SCHEDULER
+        value: "true"
+      - key: SMS_PROVIDER
+        value: console
+      - key: AI_PROVIDER
+        value: gemini
+      - key: GEMINI_MODEL
+        value: gemini-3.8-flash
+      - key: AI_MONTHLY_BUDGET_USD
+        value: "25"
+      - key: AI_FARMER_DAILY_REQUEST_LIMIT
+        value: "30"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATA_GOV_IN_API_KEY
+        sync: false
+
+databases:
+  - name: annadata-db
+    region: singapore
+    plan: basic-256mb
+    databaseName: annadata
+    user: annadata

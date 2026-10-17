@@ -1,3 +1,4 @@
+import secrets
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select
@@ -114,6 +115,23 @@ def verify_otp(db: Session, phone: str, code: str) -> tuple[Farmer, bool]:
         # A concurrent verify for the same phone created the farmer first.
         db.rollback()
         return db.scalar(select(Farmer).where(Farmer.phone == phone)), False
+
+
+def create_guest(db: Session, language: str) -> Farmer:
+    """Closed-beta account without a phone number. The phone column gets a placeholder that can never be a real
+    E.164 number ("+0" prefix), so a guest can't collide with, or be logged into as, a real farmer."""
+    settings = get_settings()
+    if not settings.guest_login_enabled or settings.is_production:
+        raise AppError(403, "guest_login_disabled", "Guest login is not enabled on this server")
+    for _ in range(5):
+        farmer = Farmer(phone="+0" + "".join(secrets.choice("0123456789") for _ in range(14)), preferred_language=language)
+        db.add(farmer)
+        try:
+            db.commit()
+            return farmer
+        except IntegrityError:  # placeholder collision (1 in 10^14): try another
+            db.rollback()
+    raise AppError(503, "guest_login_failed", "Could not create a guest account")
 
 
 def issue_tokens(db: Session, farmer_id: int) -> dict:

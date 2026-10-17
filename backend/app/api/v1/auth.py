@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 
 from app.api.deps import DbSession
 from app.core.config import get_settings
-from app.schemas.auth import LoginOut, OtpRequest, OtpRequestOut, OtpVerify, RefreshIn, TokenPair
+from app.schemas.auth import GuestLoginIn, LoginOut, OtpRequest, OtpRequestOut, OtpVerify, RefreshIn, TokenPair
 from app.services import auth as auth_service
 from app.services.serializers import farmer_out
 from app.services.sms import SmsSender, get_sms_sender
@@ -28,6 +28,14 @@ def verify_otp(body: OtpVerify, db: DbSession):
     farmer, is_new = auth_service.verify_otp(db, body.phone, body.code)
     tokens = auth_service.issue_tokens(db, farmer.id)
     return LoginOut(**tokens, is_new_user=is_new, farmer=farmer_out(db, farmer))
+
+
+@router.post("/guest", response_model=LoginOut, status_code=status.HTTP_201_CREATED)
+def guest_login(db: DbSession, body: GuestLoginIn | None = None):
+    """Closed beta only (GUEST_LOGIN_ENABLED): a new account without phone verification."""
+    farmer = auth_service.create_guest(db, (body or GuestLoginIn()).language)
+    tokens = auth_service.issue_tokens(db, farmer.id)
+    return LoginOut(**tokens, is_new_user=True, farmer=farmer_out(db, farmer))
 
 
 @router.post("/refresh", response_model=TokenPair)

@@ -1,6 +1,7 @@
 import os
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +28,9 @@ class Settings(BaseSettings):
     # Closed-beta testers: these numbers log in with OTP_TEST_CODE and no SMS is sent. Refused in production.
     otp_test_numbers: list[str] = []
     otp_test_code: str = ""
+    # Closed-beta APK: POST /auth/guest creates an account without a phone number, so testers can use every
+    # feature without SMS. Refused in production.
+    guest_login_enabled: bool = False
 
     # --- Weather (Open-Meteo) ---
     open_meteo_base_url: str = "https://api.open-meteo.com"
@@ -66,6 +70,16 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["*"]
 
+    @field_validator("database_url")
+    @classmethod
+    def _psycopg_driver(cls, url: str) -> str:
+        # Hosted Postgres (Render, Railway, Neon…) hands out postgres:// or postgresql:// URLs; SQLAlchemy needs
+        # the driver named explicitly.
+        for prefix in ("postgres://", "postgresql://"):
+            if url.startswith(prefix):
+                return "postgresql+psycopg://" + url[len(prefix):]
+        return url
+
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
@@ -79,6 +93,8 @@ def get_settings() -> Settings:
             raise RuntimeError("JWT_SECRET must be set to at least 32 characters in production")
         if settings.otp_test_numbers:
             raise RuntimeError("OTP_TEST_NUMBERS must be empty in production")
+        if settings.guest_login_enabled:
+            raise RuntimeError("GUEST_LOGIN_ENABLED must be false in production")
         if settings.ai_provider in ("fake", "gemini"):
             raise RuntimeError(f"AI_PROVIDER={settings.ai_provider} is for testing only, not production")
     return settings

@@ -53,7 +53,13 @@ def test_test_numbers_ignored_in_production(client, sms, testers, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "env", [{"OTP_TEST_NUMBERS": '["9000000077"]'}, {"AI_PROVIDER": "fake"}, {"AI_PROVIDER": "gemini"}]
+    "env",
+    [
+        {"OTP_TEST_NUMBERS": '["9000000077"]'},
+        {"AI_PROVIDER": "fake"},
+        {"AI_PROVIDER": "gemini"},
+        {"GUEST_LOGIN_ENABLED": "true"},
+    ],
 )
 def test_production_refuses_test_settings(monkeypatch, env):
     get_settings.cache_clear()
@@ -67,6 +73,42 @@ def test_production_refuses_test_settings(monkeypatch, env):
     finally:
         monkeypatch.undo()
         get_settings.cache_clear()
+
+
+# ---------- Guest login (closed-beta APK) ----------
+
+
+@pytest.fixture
+def guests(monkeypatch):
+    s = get_settings()
+    monkeypatch.setattr(s, "guest_login_enabled", True)
+    return s
+
+
+def test_guest_login_disabled_by_default(client):
+    res = client.post("/api/v1/auth/guest")
+    assert res.status_code == 403 and res.json()["error"]["code"] == "guest_login_disabled"
+
+
+def test_guest_login_gives_working_session(client, guests):
+    res = client.post("/api/v1/auth/guest", json={"language": "en"})
+    assert res.status_code == 201
+    body = res.json()
+    assert body["is_new_user"] is True and body["farmer"]["preferred_language"] == "en"
+    assert body["farmer"]["phone"].startswith("+0")  # placeholder, never a real number
+    me = client.get("/api/v1/farmers/me", headers={"Authorization": f"Bearer {body['access_token']}"})
+    assert me.status_code == 200
+
+
+def test_each_guest_is_a_separate_account(client, guests):
+    a = client.post("/api/v1/auth/guest").json()["farmer"]
+    b = client.post("/api/v1/auth/guest").json()["farmer"]
+    assert a["id"] != b["id"] and a["preferred_language"] == "te"
+
+
+def test_guest_login_refused_in_production(client, guests, monkeypatch):
+    monkeypatch.setattr(guests, "app_env", "production")
+    assert client.post("/api/v1/auth/guest").status_code == 403
 
 
 # ---------- Fake AI ----------

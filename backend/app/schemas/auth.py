@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from app.schemas.common import PhoneNumber
@@ -17,6 +19,10 @@ class OtpRequestOut(BaseModel):
 class OtpVerify(BaseModel):
     phone: PhoneNumber
     code: str = Field(pattern=r"^\d{6}$")
+
+
+class GuestLoginIn(BaseModel):
+    language: Literal["en", "te"] = "te"
 
 
 class TokenPair(BaseModel):
