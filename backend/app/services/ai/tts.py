@@ -26,8 +26,9 @@ CACHE_DIR = Path(os.getenv("TTS_CACHE_DIR", "/tmp/annadata-tts"))
 MAX_CHARS = 2000
 SKIP_SECONDS = 60  # a model that hit its per-minute quota is skipped for this long
 
-# A short delivery note; the TTS models follow natural-language style instructions.
-STYLE = "Say this in a warm, friendly, respectful village elder's voice, clearly and not too fast:"
+# Send only the words to speak: a style instruction in front ("Say this warmly: …") was sometimes read aloud
+# in English before the Telugu. The voice ("Charon") already gives the calm, warm delivery.
+CACHE_VERSION = "v2"  # bump when the request changes, so old cached audio isn't reused
 
 _skip_until: dict[str, float] = {}
 
@@ -37,7 +38,7 @@ def audio_path(key: str) -> Path:
 
 
 def cache_key(voice: str, text: str) -> str:
-    return hashlib.sha256(f"{voice}\n{text}".encode()).hexdigest()
+    return hashlib.sha256(f"{CACHE_VERSION}\n{voice}\n{text}".encode()).hexdigest()
 
 
 def _to_wav(data: bytes, mime: str) -> bytes:
@@ -77,7 +78,7 @@ def synthesize(text: str, http: httpx.Client | None = None) -> str:
     for model in models:
         url = f"{s.gemini_base_url.rstrip('/').removesuffix('/openai')}/models/{model}:generateContent"
         body = {
-            "contents": [{"parts": [{"text": f"{STYLE} {text}"}]}],
+            "contents": [{"parts": [{"text": text}]}],
             "generationConfig": {
                 "responseModalities": ["AUDIO"],
                 "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": s.gemini_tts_voice}}},

@@ -41,6 +41,7 @@ def test_speak_returns_playable_wav_and_caches(client, login, gemini_tts):
     assert [m for m, _ in gemini_tts] == ["tts-a", "tts-b"]  # busy model skipped to the next
     body = gemini_tts[-1][1]
     assert body["generationConfig"]["speechConfig"]["voiceConfig"]["prebuiltVoiceConfig"]["voiceName"] == "Charon"
+    assert body["contents"][0]["parts"][0]["text"] == "నమస్తే రైతన్నా"  # only the words — no instruction to read aloud
 
     audio = client.get(url)  # no auth needed for the hashed file
     assert audio.status_code == 200 and audio.headers["content-type"] == "audio/wav"
