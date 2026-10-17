@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Pressable, View } from 'react-native';
 
 import { theme } from '../theme';
@@ -6,25 +6,67 @@ import { theme } from '../theme';
 /**
  * The assistant's face: a friendly Telugu farmer (white shirt, green-and-white checked kanduva).
  *
- * - idle: smiling; breathes and floats gently, and winks now and then
- * - listening: the curious/thoughtful look, with a pulsing ring (the farmer is speaking, or the AI is thinking)
- * - speaking: mouth moves (switches between the talking and smiling frames) while audio plays
- * - finished: a short wink when an answer ends, then back to idle
+ * 28 hand-drawn frames (assets/avatar), sequenced per state and cross-faded so changes never look abrupt:
+ * - idle: smiling base with natural micro-events — blinks, a gentle smile, looking around, a friendly nod
+ * - listening: attentive base, with curious / understanding / nodding reactions while the farmer speaks
+ * - thinking: looking up → hand on chin → "hmm" → slight frown while the AI works; "eureka" as the answer arrives
+ * - speaking: mouth cycles closed → small → medium → wide (+ smiling talk), with occasional explaining /
+ *   happy-talk gestures, and a "finish" frame when the audio ends
+ * - finished: a short reaction (`mood`: happy / agree / confused / surprised / concerned), then idle
  *
- * All four frames stay mounted and only their opacity changes, so switching never reloads an image.
- * Only Animated with the native driver — no extra dependencies, light on low-end Android.
+ * Only the frames the current state can use are mounted (≤ 10 of 384 px JPEG), each with its own native-driver
+ * opacity. Built-in Animated only — no extra dependencies, light on low-end Android.
  */
 export type AvatarState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'finished';
+export type AvatarMood = 'happy' | 'agree' | 'confused' | 'surprised' | 'concerned';
 
 const FRAMES = {
-  idle: require('../../assets/avatar/idle.jpg'),
-  talking: require('../../assets/avatar/talking.jpg'),
-  winking: require('../../assets/avatar/winking.jpg'),
-  listening: require('../../assets/avatar/listening.jpg'),
+  idle_01: require('../../assets/avatar/idle_01.jpg'), // smiling (base)
+  idle_02: require('../../assets/avatar/idle_02.jpg'), // gentle smile
+  idle_03: require('../../assets/avatar/idle_03.jpg'), // soft blink
+  idle_04: require('../../assets/avatar/idle_04.jpg'), // looking around
+  idle_05: require('../../assets/avatar/idle_05.jpg'), // friendly nod
+  listen_01: require('../../assets/avatar/listen_01.jpg'), // attentive (base)
+  listen_02: require('../../assets/avatar/listen_02.jpg'), // curious
+  listen_03: require('../../assets/avatar/listen_03.jpg'), // understanding
+  listen_04: require('../../assets/avatar/listen_04.jpg'), // surprised
+  listen_05: require('../../assets/avatar/listen_05.jpg'), // nodding
+  talk_01: require('../../assets/avatar/talk_01.jpg'), // mouth closed
+  talk_02: require('../../assets/avatar/talk_02.jpg'), // mouth open small
+  talk_03: require('../../assets/avatar/talk_03.jpg'), // mouth open medium
+  talk_04: require('../../assets/avatar/talk_04.jpg'), // mouth open wide
+  talk_05: require('../../assets/avatar/talk_05.jpg'), // smiling talk
+  talk_06: require('../../assets/avatar/talk_06.jpg'), // explaining (gesture)
+  talk_07: require('../../assets/avatar/talk_07.jpg'), // happy talk (gesture)
+  talk_08: require('../../assets/avatar/talk_08.jpg'), // finish / close
+  think_01: require('../../assets/avatar/think_01.jpg'), // looking up
+  think_02: require('../../assets/avatar/think_02.jpg'), // hand on chin
+  think_03: require('../../assets/avatar/think_03.jpg'), // slight frown
+  think_04: require('../../assets/avatar/think_04.jpg'), // hmm
+  think_05: require('../../assets/avatar/think_05.jpg'), // eureka / idea
+  happy: require('../../assets/avatar/happy.jpg'),
+  agree: require('../../assets/avatar/agree.jpg'),
+  confused: require('../../assets/avatar/confused.jpg'),
+  surprised: require('../../assets/avatar/surprised.jpg'),
+  concerned: require('../../assets/avatar/concerned.jpg'),
 };
 type Frame = keyof typeof FRAMES;
 
-const FINISHED_MS = 1100;
+/** Frames each state can show — only these are mounted, to keep decoded-bitmap memory small. */
+const STATE_FRAMES: Record<AvatarState, Frame[]> = {
+  idle: ['idle_01', 'idle_02', 'idle_03', 'idle_04', 'idle_05'],
+  listening: ['listen_01', 'listen_02', 'listen_03', 'listen_04', 'listen_05'],
+  thinking: ['think_01', 'think_02', 'think_03', 'think_04', 'think_05'],
+  speaking: ['talk_01', 'talk_02', 'talk_03', 'talk_04', 'talk_05', 'talk_06', 'talk_07', 'talk_08'],
+  finished: ['talk_08', 'happy', 'agree', 'confused', 'surprised', 'concerned', 'idle_01'],
+};
+
+/** Cross-fade length: quick for the mouth, softer for expression changes. */
+const FADE_MS = { mouth: 60, expression: 200 };
+const FINISHED_MS = 1500;
+
+const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
+const between = (min: number, max: number) => min + Math.random() * (max - min);
 
 function useReduceMotion() {
   const [reduce, setReduce] = useState(false);
@@ -39,12 +81,15 @@ function useReduceMotion() {
 export function FarmerAvatar({
   state,
   size = 140,
+  mood = 'agree',
   onPress,
   disabled,
   accessibilityLabel,
 }: {
   state: AvatarState;
   size?: number;
+  /** Reaction shown when an answer finishes (e.g. 'concerned' for a crop problem, 'confused' if nothing was heard). */
+  mood?: AvatarMood;
   /** Makes the avatar the voice button (tap to talk / tap again to send). */
   onPress?: () => void;
   disabled?: boolean;
@@ -52,7 +97,7 @@ export function FarmerAvatar({
 }) {
   const reduceMotion = useReduceMotion();
 
-  // "finished" is also entered automatically when speaking stops.
+  // "finished" is also entered automatically when speaking stops; "eureka" bridges thinking → speaking.
   const [shown, setShown] = useState<AvatarState>(state);
   const prev = useRef(state);
   useEffect(() => {
@@ -70,40 +115,155 @@ export function FarmerAvatar({
     }
   }, [state]);
 
-  // Which frame is on screen right now (mouth flaps and idle winks change it within a state).
-  const [frame, setFrame] = useState<Frame>('idle');
+  // A reaction shown while idle, when the mood changes (e.g. an error → concerned / confused).
+  const [reaction, setReaction] = useState<AvatarMood | null>(null);
+  const lastMood = useRef(mood);
   useEffect(() => {
-    if (shown === 'listening' || shown === 'thinking') return setFrame('listening');
-    if (shown === 'finished') return setFrame('winking');
-    if (shown === 'speaking') {
-      if (reduceMotion) return setFrame('talking');
-      // Mouth: alternate open/closed at a slightly irregular pace, like syllables.
-      let open = true;
-      let timer: ReturnType<typeof setTimeout>;
-      const tick = () => {
-        setFrame(open ? 'talking' : 'idle');
-        open = !open;
-        timer = setTimeout(tick, open ? 140 + Math.random() * 90 : 110 + Math.random() * 120);
-      };
-      tick();
-      return () => clearTimeout(timer);
+    if (mood === lastMood.current) return;
+    lastMood.current = mood;
+    if (mood === 'confused' || mood === 'concerned' || mood === 'surprised') {
+      setReaction(mood);
+      const t = setTimeout(() => setReaction(null), 1800);
+      return () => clearTimeout(t);
     }
-    // idle: an occasional wink every 6–10 s
-    setFrame('idle');
-    if (reduceMotion) return;
-    let timer: ReturnType<typeof setTimeout>;
-    const schedule = () => {
-      timer = setTimeout(() => {
-        setFrame('winking');
-        timer = setTimeout(() => {
-          setFrame('idle');
-          schedule();
-        }, 380);
-      }, 6000 + Math.random() * 4000);
+  }, [mood]);
+
+  // ---- Frame sequencer: which frame is on screen, and how fast to fade to it.
+  const [frame, setFrame] = useState<{ name: Frame; prev: Frame; fade: number }>({ name: 'idle_01', prev: 'idle_01', fade: 0 });
+  const show = (name: Frame, fade = FADE_MS.expression) =>
+    setFrame((f) => (f.name === name ? f : { name, prev: f.name, fade }));
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const later = (fn: () => void, ms: number) => {
+      timer = setTimeout(fn, ms);
     };
-    schedule();
+
+    if (shown === 'idle' && reaction) {
+      show(reaction);
+      return;
+    }
+
+    if (shown === 'listening') {
+      show('listen_01');
+      if (!reduceMotion) {
+        // Attentive base, reacting now and then: understanding, nodding, curious.
+        const react = () =>
+          later(() => {
+            show(pick<Frame>(['listen_03', 'listen_05', 'listen_03', 'listen_02']));
+            later(() => {
+              show('listen_01');
+              react();
+            }, between(700, 1100));
+          }, between(1200, 2000));
+        react();
+      }
+    } else if (shown === 'thinking') {
+      // looking up → hand on chin → hmm → slight frown, looping while the AI works
+      const seq: Frame[] = ['think_01', 'think_02', 'think_04', 'think_03'];
+      let i = 0;
+      show(seq[0]);
+      if (!reduceMotion) {
+        const step = () =>
+          later(() => {
+            i = (i + 1) % seq.length;
+            show(seq[i]);
+            step();
+          }, between(900, 1300));
+        step();
+      }
+    } else if (shown === 'speaking') {
+      if (reduceMotion) {
+        show('talk_05');
+      } else {
+        // Brief "eureka" if we were thinking, then the mouth: closed → small → medium → wide, irregular like
+        // syllables, with a smiling-talk frame mixed in and an occasional explaining / happy-talk gesture.
+        const mouth: Frame[] = ['talk_02', 'talk_03', 'talk_04', 'talk_03', 'talk_02', 'talk_01', 'talk_05', 'talk_03', 'talk_01'];
+        let i = 0;
+        let sinceGesture = 0;
+        const talk = () => {
+          if (sinceGesture > between(2800, 4200)) {
+            sinceGesture = 0;
+            show(pick<Frame>(['talk_06', 'talk_07']), FADE_MS.expression);
+            later(talk, between(550, 750));
+            return;
+          }
+          i = (i + 1 + (Math.random() < 0.3 ? 1 : 0)) % mouth.length;
+          show(mouth[i], FADE_MS.mouth);
+          const ms = between(95, 190);
+          sinceGesture += ms;
+          later(talk, ms);
+        };
+        if (frame.name.startsWith('think_')) {
+          show('think_05');
+          later(talk, 420);
+        } else {
+          talk();
+        }
+      }
+    } else if (shown === 'finished') {
+      // Close the mouth, then react.
+      show('talk_08');
+      later(() => show(mood), 280);
+    } else {
+      // idle: smiling base with natural micro-events every few seconds.
+      show('idle_01');
+      if (!reduceMotion) {
+        const next = () =>
+          later(() => {
+            const r = Math.random();
+            if (r < 0.45) {
+              show('idle_03', 90); // blink
+              later(() => {
+                show('idle_01', 90);
+                next();
+              }, 160);
+            } else {
+              const look = r < 0.65 ? 'idle_02' : r < 0.85 ? 'idle_04' : 'idle_05';
+              show(look);
+              later(() => {
+                show('idle_01');
+                next();
+              }, between(1100, 1700));
+            }
+          }, between(2500, 4500));
+        next();
+      }
+    }
     return () => clearTimeout(timer);
-  }, [shown, reduceMotion]);
+    // `frame` is read once to decide on "eureka"; re-running on every frame change would restart the sequence.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown, reduceMotion, reaction, mood]);
+
+  // ---- Cross-fade: one opacity value per frame; mount only frames this state can use (+ the one on screen).
+  const opacity = useRef<Partial<Record<Frame, Animated.Value>>>({ idle_01: new Animated.Value(1) }).current;
+  const valueFor = (f: Frame) => (opacity[f] ??= new Animated.Value(0));
+  // The outgoing frame stays mounted until its fade is done, so a state change never flashes white.
+  const mounted = useMemo(
+    () => Array.from(new Set<Frame>([...STATE_FRAMES[shown], ...(reaction ? [reaction] : []), frame.name, frame.prev])),
+    [shown, reaction, frame.name, frame.prev],
+  );
+  useEffect(() => {
+    const from = frame.prev;
+    const to = frame.name;
+    if (from === to) return;
+    // Anything else still visible (an interrupted fast mouth change) is hidden now.
+    for (const [f, v] of Object.entries(opacity)) if (f !== from && f !== to) v!.setValue(0);
+    const toValue = valueFor(to);
+    const fromValue = valueFor(from);
+    if (frame.fade <= 0) {
+      toValue.setValue(1);
+      fromValue.setValue(0);
+      return;
+    }
+    // Fade the new frame in over the old one, then hide the old one (no see-through dip in between).
+    Animated.timing(toValue, { toValue: 1, duration: frame.fade, easing: Easing.out(Easing.quad), useNativeDriver: true }).start(
+      ({ finished }) => {
+        if (finished) fromValue.setValue(0);
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frame]);
 
   // Breathing (scale) + floating (translateY), always on unless reduce-motion.
   const breathe = useRef(new Animated.Value(0)).current;
@@ -171,14 +331,23 @@ export function FarmerAvatar({
           ],
         }}
       >
-        {(Object.keys(FRAMES) as Frame[]).map((f) => (
+        {mounted.map((f) => (
           <Animated.Image
             key={f}
             source={FRAMES[f]}
             fadeDuration={0}
             accessibilityIgnoresInvertColors
             // Explicit size: percentage sizes stretched images on some Android phones (see crop tiles).
-            style={{ position: 'absolute', top: 0, left: 0, width: size, height: size, opacity: f === frame ? 1 : 0 }}
+            // The frame on screen is drawn last so a fading-in frame sits on top of the old one.
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: size,
+              height: size,
+              opacity: valueFor(f),
+              zIndex: f === frame.name ? 2 : 1,
+            }}
           />
         ))}
       </Animated.View>

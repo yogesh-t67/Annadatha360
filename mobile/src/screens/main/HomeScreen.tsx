@@ -72,6 +72,7 @@ export function HomeScreen() {
       {/* The farmer is the voice button: talks during the welcome; tap opens Ask already listening. */}
       <FarmerAvatar
         state={audioPlaying ? 'speaking' : 'idle'}
+        mood="happy"
         size={150}
         onPress={() => {
           stopSpeaking();

@@ -32,7 +32,7 @@ import { errorMessageKey } from '../../api/errorMessage';
 import { hasSession } from '../../api/tokens';
 import type { AskOut } from '../../api/types';
 import { speak, stopSpeaking, useIsSpeaking } from '../../voice/speech';
-import { AvatarState, FarmerAvatar } from '../../components/FarmerAvatar';
+import { AvatarMood, AvatarState, FarmerAvatar } from '../../components/FarmerAvatar';
 import { SpeechInputError, useSpeechInput } from '../../voice/useSpeechInput';
 import { RecorderError, useVoiceRecorder } from '../../voice/useVoiceRecorder';
 
@@ -199,6 +199,14 @@ export function VoiceAssistantScreen() {
   // Avatar follows the same lifecycle; "speaking" comes from the actual audio (starts when the voice does).
   const audioPlaying = useIsSpeaking();
   const avatarState: AvatarState = listening ? 'listening' : asking ? 'thinking' : audioPlaying ? 'speaking' : 'idle';
+  // Reaction after a turn: nothing heard → confused; error/busy → concerned; a normal answer → agree.
+  const micErrorShown = deviceSpeech ? speech.error : recorder.error;
+  const avatarMood: AvatarMood =
+    errorKey === 'voice.noSpeech' || micErrorShown === 'no-speech' || micErrorShown === 'too-short'
+      ? 'confused'
+      : errorKey
+        ? 'concerned'
+        : 'agree';
 
   function onMicPress() {
     setErrorKey(null);
@@ -241,7 +249,14 @@ export function VoiceAssistantScreen() {
       <Text variant="h1">{t('voice.title')}</Text>
 
       {/* The farmer is the voice button: green ring = tap to talk, red = listening (tap again to send). */}
-      <FarmerAvatar state={avatarState} size={150} onPress={onMicPress} disabled={asking} accessibilityLabel={status} />
+      <FarmerAvatar
+        state={avatarState}
+        mood={avatarMood}
+        size={150}
+        onPress={onMicPress}
+        disabled={asking}
+        accessibilityLabel={status}
+      />
       <View style={{ alignItems: 'center', gap: 2, marginTop: -theme.spacing.sm }} accessibilityLiveRegion="polite">
         <Text
           variant="h2"
