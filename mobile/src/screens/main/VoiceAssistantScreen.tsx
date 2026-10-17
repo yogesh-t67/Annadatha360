@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { RouteProp, useFocusEffect, useRoute } from '@react-navigation/native';
@@ -75,8 +75,13 @@ export function VoiceAssistantScreen() {
     [i18n.language],
   );
 
+  /** Last question that got an answer; re-asked when the farmer switches language. */
+  const lastAsked = useRef<string | null>(null);
+  /** Set when the question came from a "common question" chip, so it can be re-translated. */
+  const [chipKey, setChipKey] = useState<string | null>(null);
+
   const ask = useCallback(
-    async (text: string) => {
+    async (text: string, opts: { newThread?: boolean } = {}) => {
       const q = text.trim();
       if (!q || asking) return;
       if (!(await hasSession())) {
@@ -88,8 +93,9 @@ export function VoiceAssistantScreen() {
       setErrorKey(null);
       setAnswer(null);
       try {
-        const res = await askAssistant(q, threadId);
+        const res = await askAssistant(q, opts.newThread ? undefined : threadId);
         setThreadId(res.thread.id);
+        lastAsked.current = q;
         setAnswer(res.reply.content);
         if (voiceEnabled) readAloud(res.reply.content);
       } catch (e) {
@@ -103,6 +109,7 @@ export function VoiceAssistantScreen() {
 
   const speech = useSpeechInput(i18n.language, (transcript) => {
     setQuestion(transcript);
+    setChipKey(null);
     ask(transcript);
   });
 
@@ -110,11 +117,30 @@ export function VoiceAssistantScreen() {
   useEffect(() => {
     if (incoming) {
       setQuestion(incoming);
+      setChipKey(null);
       setAnswer(null);
     }
   }, [incoming]);
 
   useEffect(() => () => stopSpeaking(), []);
+
+  // Language switched: the AI answer on screen is in the old language. Re-translate a chip question and
+  // ask again (fresh thread, so the reply is in the new language only).
+  const prevLanguage = useRef(i18n.language);
+  useEffect(() => {
+    if (prevLanguage.current === i18n.language) return;
+    prevLanguage.current = i18n.language;
+    stopSpeaking();
+    setSpeaking(false);
+    setErrorKey(null);
+    const q = chipKey ? t(`voice.questions.${chipKey}`) : question;
+    if (chipKey) setQuestion(q);
+    if (answer && lastAsked.current) {
+      setThreadId(undefined);
+      ask(chipKey ? q : lastAsked.current, { newThread: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i18n.language]);
 
   function onMicPress() {
     if (speech.listening) {
@@ -159,6 +185,7 @@ export function VoiceAssistantScreen() {
         value={question}
         onChangeText={(v) => {
           setQuestion(v);
+          setChipKey(null);
           setAnswer(null);
         }}
         placeholder={t('voice.placeholder')}
@@ -174,6 +201,7 @@ export function VoiceAssistantScreen() {
             accessibilityRole="button"
             onPress={() => {
               setQuestion(t(`voice.questions.${q.key}`));
+              setChipKey(q.key);
               setAnswer(null);
             }}
             style={({ pressed }) => ({

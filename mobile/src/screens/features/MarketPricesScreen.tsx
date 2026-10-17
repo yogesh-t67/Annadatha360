@@ -11,7 +11,18 @@ import { ScreenContainer } from '../../components/ScreenContainer';
 import { CropImage } from '../../components/CropImage';
 import { SelectField } from '../../components/SelectField';
 import { Notice } from '../../components/Notice';
-import { CropKey, cropImages, crops, marketDistricts } from '../../data/farm';
+import { StatePicker } from '../../components/StatePicker';
+import { districtKeyForFeed, marketName, varietyName } from '../../data/mandiNames';
+import {
+  CropKey,
+  cropImages,
+  crops,
+  DistrictKey,
+  districtsOf,
+  getDistrict,
+  RegionKey,
+  STATE_CODE,
+} from '../../data/farm';
 import { useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { getMarketPrices } from '../../api/endpoints';
@@ -19,7 +30,8 @@ import { errorMessageKey } from '../../api/errorMessage';
 import { hasSession } from '../../api/tokens';
 import type { MarketPrice } from '../../api/types';
 
-type MarketKey = (typeof marketDistricts)[number];
+const ALL = 'all';
+type MarketKey = DistrictKey | typeof ALL;
 
 const trendColor = {
   up: theme.color.status.successText,
@@ -30,14 +42,46 @@ const trendColor = {
 const trendIcon = { up: TrendingUp, down: TrendingDown, flat: Minus } as const;
 
 export function MarketPricesScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { navigation } = useAppNavigation();
   const farmCrop = useFarmStore((s) => s.crop);
   const farmDistrict = useFarmStore((s) => s.district);
+  const farmRegion = getDistrict(farmDistrict)?.state ?? 'ap';
   const [crop, setCrop] = useState<CropKey>(farmCrop);
-  const [market, setMarket] = useState<MarketKey>(
-    (marketDistricts as readonly string[]).includes(farmDistrict) ? (farmDistrict as MarketKey) : 'guntur',
-  );
+  // Any state and district can be browsed; start at the farmer's own.
+  const [region, setRegion] = useState<RegionKey>(farmRegion);
+  const [market, setMarket] = useState<MarketKey>(farmDistrict);
+
+  // Follow the farm district when it changes in My Farm / profile.
+  useEffect(() => {
+    setRegion(farmRegion);
+    setMarket(farmDistrict);
+  }, [farmDistrict, farmRegion]);
+
+  const chooseState = (r: RegionKey) => {
+    if (r === region) return;
+    setRegion(r);
+    setMarket(r === farmRegion ? farmDistrict : ALL);
+  };
+
+  const marketOptions: { value: MarketKey; label: string }[] = [
+    { value: ALL, label: t('market.allDistricts', { state: t(`states.${region}`) }) },
+    ...districtsOf(region)
+      .map((d) => ({
+        value: d.key as MarketKey,
+        label: t(`districts.${d.key}`),
+        keywords: i18n.getFixedT('en')(`districts.${d.key}`),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
+  ];
+  // The mandi feed is English-only; translate what we can, fall back to the feed text.
+  const lang = i18n.language;
+  const en = i18n.getFixedT('en');
+  const feedDistrict = (name: string) => {
+    const key = districtKeyForFeed(name, (k) => en(`districts.${k}`));
+    return key ? t(`districts.${key}`) : name;
+  };
+  const marketLabel = market === ALL ? t(`states.${region}`) : t(`districts.${market}`);
   const [prices, setPrices] = useState<MarketPrice[] | null>(null);
   const [asOf, setAsOf] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,8 +98,13 @@ export function MarketPricesScreen() {
     setLoading(true);
     setErrorKey(null);
     try {
-      const district = market.charAt(0).toUpperCase() + market.slice(1);
-      const res = await getMarketPrices({ crop, district });
+      const d = market === ALL ? undefined : getDistrict(market);
+      const res = await getMarketPrices({
+        crop,
+        state: STATE_CODE[d?.state ?? region],
+        // Agmarknet spelling where it differs from ours.
+        district: d ? (d.mandi ?? i18n.getFixedT('en')(`districts.${d.key}`)) : undefined,
+      });
       setPrices(res.prices);
       setAsOf(res.as_of);
     } catch (e) {
@@ -64,7 +113,7 @@ export function MarketPricesScreen() {
     } finally {
       setLoading(false);
     }
-  }, [crop, market]);
+  }, [crop, market, region, i18n]);
 
   useEffect(() => {
     if (signedIn) load();
@@ -80,10 +129,15 @@ export function MarketPricesScreen() {
         options={crops.map((c) => ({ value: c.code, label: t(`crops.${c.code}`), image: cropImages[c.code] }))}
         onChange={setCrop}
       />
+      <StatePicker label={t('farmLocation.state')} value={region} onChange={chooseState} />
       <SelectField
+        key={region}
         label={t('market.market')}
         value={market}
-        options={marketDistricts.map((d) => ({ value: d, label: t(`districts.${d}`) }))}
+        options={marketOptions}
+        searchable
+        searchPlaceholder={t('farmLocation.searchDistrict')}
+        noResultsText={t('farmLocation.noDistrict')}
         onChange={setMarket}
       />
 
@@ -108,12 +162,20 @@ export function MarketPricesScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
             <CropImage code={crop} size={56} />
             <Text variant="h2" style={{ flex: 1 }}>
-              {`${t(`crops.${crop}`)} · ${t(`districts.${market}`)}`}
+              {`${t(`crops.${crop}`)} · ${marketLabel}`}
             </Text>
           </View>
           <Text variant="body" color={theme.color.text.muted}>
             {t('market.noReports')}
           </Text>
+          {market !== ALL ? (
+            <Button
+              label={t('market.allDistricts', { state: t(`states.${region}`) })}
+              variant="secondary"
+              compact
+              onPress={() => setMarket(ALL)}
+            />
+          ) : null}
         </Card>
       ) : (
         <View style={{ gap: theme.spacing.sm }}>
@@ -127,9 +189,17 @@ export function MarketPricesScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
                 <CropImage code={crop} size={44} />
                 <View style={{ flex: 1 }}>
-                  <Text variant="bodyStrong">{`${p.market}, ${p.district}`}</Text>
+                  <Text variant="bodyStrong">{`${marketName(p.market, lang)}, ${feedDistrict(p.district)}`}</Text>
                   <Text variant="caption" color={theme.color.text.muted}>
-                    {`${p.commodity} · ${p.variety}`}
+                    {[
+                      t(`crops.${crop}`),
+                      // Skip a variety that only repeats the crop ("Paddy", "Tomato").
+                      p.variety.trim().toLowerCase() === en(`crops.${crop}`).toLowerCase()
+                        ? ''
+                        : varietyName(p.variety, lang),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </Text>
                 </View>
               </View>

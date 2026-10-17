@@ -16,20 +16,11 @@ export type StageKey = (typeof stages)[number];
 export const regions = ['ap', 'ts'] as const;
 export type RegionKey = (typeof regions)[number];
 
-export const farmDistricts = [
-  'guntur',
-  'krishna',
-  'kurnool',
-  'prakasam',
-  'warangal',
-  'nizamabad',
-  'khammam',
-  'karimnagar',
-] as const;
+export { districtList, districtsOf, getDistrict, LEGACY_DISTRICT } from './districts';
+export type { District, DistrictKey } from './districts';
 
-export const marketDistricts = ['guntur', 'vijayawada', 'warangal', 'nizamabad', 'khammam', 'kurnool'] as const;
-
-export type DistrictKey = (typeof farmDistricts)[number] | (typeof marketDistricts)[number];
+/** API state code for our region key. */
+export const STATE_CODE: Record<RegionKey, 'AP' | 'TG'> = { ap: 'AP', ts: 'TG' };
 
 export const soilStates: { key: 'dry' | 'moist' | 'wet' | 'unknown'; icon: typeof Droplet; tint: Tint }[] = [
   { key: 'dry', icon: CloudSun, tint: 'sun' },

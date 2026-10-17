@@ -2,14 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import i18n from '../i18n';
 import type { FarmProfile } from '../store/farmStore';
-import type { DistrictKey, RegionKey, StageKey } from '../data/farm';
+import { getDistrict, STATE_CODE } from '../data/farm';
+import type { StageKey } from '../data/farm';
 import { ApiError } from './client';
 import { createField, updateField, updateMe } from './endpoints';
 import type { GrowthStage, Language } from './types';
 
 const FIELD_ID_KEY = 'annadata.api.fieldId';
-
-const STATE: Record<RegionKey, 'AP' | 'TG'> = { ap: 'AP', ts: 'TG' };
 
 const STAGE: Record<StageKey, GrowthStage> = {
   sowing: 'sowing',
@@ -18,25 +17,14 @@ const STAGE: Record<StageKey, GrowthStage> = {
   harvest: 'maturity',
 };
 
-/** Approximate district centres, so the backend can fetch weather until the app asks for GPS. */
-const DISTRICT_COORDS: Partial<Record<DistrictKey, [number, number]>> = {
-  guntur: [16.3, 80.44],
-  krishna: [16.19, 81.14],
-  kurnool: [15.83, 78.04],
-  prakasam: [15.5, 80.05],
-  warangal: [17.97, 79.59],
-  nizamabad: [18.67, 78.09],
-  khammam: [17.25, 80.15],
-  karimnagar: [18.44, 79.13],
-  vijayawada: [16.51, 80.65],
-};
-
 /**
- * Push the profile collected during onboarding to the backend: farmer profile + one field.
+ * Push the profile to the backend: farmer profile + one field.
  * Safe to call again; the field is created once and updated afterwards.
+ * District HQ coordinates stand in for the farm location until the app asks for GPS (weather uses them).
  */
 export async function syncProfile(profile: FarmProfile, language: string): Promise<void> {
-  const [latitude, longitude] = DISTRICT_COORDS[profile.district] ?? [null, null];
+  const d = getDistrict(profile.district);
+  const [latitude, longitude] = d?.coords ?? [null, null];
   const district = i18n.getFixedT('en')(`districts.${profile.district}`);
 
   await updateMe({
@@ -44,7 +32,7 @@ export async function syncProfile(profile: FarmProfile, language: string): Promi
     preferred_language: (language === 'te' ? 'te' : 'en') as Language,
     primary_crop_code: profile.crop,
     location: {
-      state: STATE[profile.region],
+      state: STATE_CODE[d?.state ?? profile.region],
       district,
       village: profile.village.trim() || null,
       latitude,

@@ -120,6 +120,9 @@ export function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        // Leaving a tab returns it to its main page, so "Explore Services" or tapping a tab always opens
+        // that tab's start screen instead of whatever feature page was open there before.
+        popToTopOnBlur: true,
         tabBarActiveTintColor: theme.color.surface.brandDeep,
         tabBarInactiveTintColor: theme.color.text.muted,
         tabBarStyle: {

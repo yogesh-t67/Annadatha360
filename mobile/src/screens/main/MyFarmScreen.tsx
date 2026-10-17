@@ -12,11 +12,13 @@ import { CropImage } from '../../components/CropImage';
 import { cropImages, crops, stages } from '../../data/farm';
 import { FarmProfile, useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
+import { hasSession } from '../../api/tokens';
+import { syncProfile } from '../../api/syncProfile';
 
 type Draft = Pick<FarmProfile, 'crop' | 'acres' | 'stage'>;
 
 export function MyFarmScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { open } = useAppNavigation();
   const saved = useFarmStore();
   const [draft, setDraft] = useState<Draft>({ crop: saved.crop, acres: saved.acres, stage: saved.stage });
@@ -81,6 +83,10 @@ export function MyFarmScreen() {
         onPress={() => {
           saved.update(draft);
           setJustSaved(true);
+          // Best effort: keep the backend profile (AI context, prices, weather) in step. Never blocks.
+          hasSession()
+            .then((signedIn) => (signedIn ? syncProfile(useFarmStore.getState(), i18n.language) : undefined))
+            .catch((e) => console.warn('Profile sync failed', e));
         }}
       />
       {justSaved ? (

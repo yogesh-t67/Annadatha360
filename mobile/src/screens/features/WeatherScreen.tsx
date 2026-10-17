@@ -26,6 +26,7 @@ import { getWeatherForecast } from '../../api/endpoints';
 import { errorMessageKey } from '../../api/errorMessage';
 import { hasSession } from '../../api/tokens';
 import { CONDITION_ICON } from '../../data/weatherIcons';
+import { getDistrict } from '../../data/districts';
 import type { ForecastOut } from '../../api/types';
 
 export function WeatherScreen() {
@@ -51,11 +52,13 @@ export function WeatherScreen() {
     }
     setLoading(true);
     setErrorKey(null);
-    getWeatherForecast()
+    // Always ask for the farmer's current district, even if the backend profile hasn't synced yet.
+    const coords = getDistrict(district)?.coords;
+    getWeatherForecast(coords ? { lat: coords[0], lng: coords[1] } : {})
       .then(setForecast)
       .catch((e) => setErrorKey(errorMessageKey(e)))
       .finally(() => setLoading(false));
-  }, [signedIn]);
+  }, [signedIn, district]);
 
   const today = forecast?.days[0];
   const TodayIcon = today ? CONDITION_ICON[today.condition] : Thermometer;

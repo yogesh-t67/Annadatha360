@@ -18,6 +18,9 @@ export async function getStoredLanguage(): Promise<LanguageCode | null> {
 }
 
 export async function setStoredLanguage(code: LanguageCode): Promise<void> {
+  // Don't keep reading aloud in the old language.
+  const { stopSpeaking } = await import('../voice/speech');
+  stopSpeaking();
   await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, code);
   await i18n.changeLanguage(code);
   // Best-effort: keep the backend's preferred_language (used for AI replies) in sync with the UI

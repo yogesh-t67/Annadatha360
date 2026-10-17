@@ -31,6 +31,37 @@ export async function clearTokens(): Promise<void> {
   await SecureStore.deleteItemAsync(REFRESH_KEY);
 }
 
+let guestAttempt: Promise<boolean> | null = null;
+let guestUnavailableUntil = 0;
+
+/**
+ * Closed-beta servers (GUEST_LOGIN_ENABLED) hand out guest accounts, so testers use every feature without
+ * phone verification. Concurrent callers share one request; if the server says no (or is unreachable),
+ * we don't ask again for a minute and the screens show "Verify phone" as before.
+ */
+function tryGuestLogin(): Promise<boolean> {
+  if (Date.now() < guestUnavailableUntil) return Promise.resolve(false);
+  guestAttempt ??= (async () => {
+    try {
+      const [{ guestLogin }, { default: i18n }] = await Promise.all([import('./endpoints'), import('i18next')]);
+      await guestLogin(i18n.language === 'en' ? 'en' : 'te');
+      // Tell the new account the farm details already entered on this phone (crop, district, language).
+      const [{ useFarmStore }, { syncProfile }] = await Promise.all([import('../store/farmStore'), import('./syncProfile')]);
+      const farm = useFarmStore.getState();
+      if (farm.onboarded) syncProfile(farm, i18n.language).catch((e) => console.warn('Profile sync failed', e));
+      return true;
+    } catch {
+      guestUnavailableUntil = Date.now() + 60_000;
+      return false;
+    }
+  })().finally(() => {
+    guestAttempt = null;
+  });
+  return guestAttempt;
+}
+
+/** True when the app can call signed-in endpoints, logging in as a guest first if the server allows it. */
 export async function hasSession(): Promise<boolean> {
-  return (await getRefreshToken()) !== null;
+  if ((await getRefreshToken()) !== null) return true;
+  return tryGuestLogin();
 }

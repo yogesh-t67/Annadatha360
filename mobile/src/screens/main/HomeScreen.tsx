@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { CloudSun, Droplet, Leaf, MapPin, Thermometer, TrendingUp, Wrench } from 'lucide-react-native';
 
 import { theme } from '../../theme';
+import { displayName } from '../../i18n/transliterate';
 import { Button, Card, Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { Pill } from '../../components/Blocks';
@@ -19,7 +20,7 @@ import { hasSession } from '../../api/tokens';
 import type { HomeOut } from '../../api/types';
 
 export function HomeScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { open, tab } = useAppNavigation();
   const { name, village, district, region, crop, stage, acres } = useFarmStore();
   const [home, setHome] = useState<HomeOut | null>(null);
@@ -33,10 +34,13 @@ export function HomeScreen() {
       return () => {
         active = false;
       };
-    }, []),
+    }, [i18n.language]), // the advisory comes back in the new language
+
   );
 
-  const trimmedName = name.trim();
+  const nameTe = useFarmStore((s) => s.nameTe);
+  // In the Telugu app, show the name in Telugu letters (farmer's own spelling, else automatic).
+  const trimmedName = displayName(name, nameTe, i18n.language);
   const location = [village.trim(), t(`districts.${district}`)].filter(Boolean).join(', ');
   const today = home?.weather?.today;
   const TodayIcon = today ? CONDITION_ICON[today.condition] : Thermometer;

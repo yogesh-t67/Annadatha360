@@ -18,6 +18,10 @@ export function errorMessageKey(e: unknown): string {
     case 'ai_budget_exceeded':
     case 'ai_not_configured':
       return 'errors.aiUnavailable';
+    case 'image_too_large':
+    case 'unsupported_image':
+    case 'image_required':
+      return 'errors.badPhoto';
     case 'validation_error':
       return 'errors.invalidPhone';
     case 'otp_invalid':

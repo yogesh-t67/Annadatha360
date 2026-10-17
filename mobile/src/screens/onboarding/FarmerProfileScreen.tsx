@@ -7,11 +7,13 @@ import { ScreenContainer } from '../../components/ScreenContainer';
 import { ScreenTitle, StepProgress } from '../../components/Blocks';
 import { useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
+import { toTeluguName } from '../../i18n/transliterate';
 
 export function FarmerProfileScreen() {
   const { t } = useTranslation();
   const { navigation } = useAppNavigation();
   const name = useFarmStore((s) => s.name);
+  const nameTe = useFarmStore((s) => s.nameTe);
   const phone = useFarmStore((s) => s.phone);
   const update = useFarmStore((s) => s.update);
 
@@ -26,6 +28,15 @@ export function FarmerProfileScreen() {
         autoCapitalize="words"
         returnKeyType="next"
       />
+      {/[a-z]/i.test(name) ? (
+        // Shown as the greeting in the Telugu app. Pre-filled with an automatic spelling the farmer can fix.
+        <TextField
+          label={t('farmerProfile.nameTe')}
+          value={nameTe}
+          placeholder={toTeluguName(name)}
+          onChangeText={(v) => update({ nameTe: v })}
+        />
+      ) : null}
       <TextField
         label={t('farmerProfile.phone')}
         value={phone}

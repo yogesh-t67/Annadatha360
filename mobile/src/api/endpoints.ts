@@ -3,6 +3,7 @@ import { AI_TIMEOUT_MS } from './config';
 import { clearTokens, getRefreshToken, saveTokens } from './tokens';
 import type {
   AskOut,
+  DiagnosisOut,
   Farmer,
   FarmerUpdate,
   FieldIn,
@@ -24,6 +25,13 @@ export function requestOtp(phone: string) {
 
 export async function verifyOtp(phone: string, code: string): Promise<LoginOut> {
   const login = await api<LoginOut>('/auth/otp/verify', { method: 'POST', body: { phone, code }, auth: false });
+  await saveTokens(login);
+  return login;
+}
+
+/** Closed beta: account without phone verification (only if the server has GUEST_LOGIN_ENABLED). */
+export async function guestLogin(language: 'en' | 'te'): Promise<LoginOut> {
+  const login = await api<LoginOut>('/auth/guest', { method: 'POST', body: { language }, auth: false });
   await saveTokens(login);
   return login;
 }
@@ -113,6 +121,17 @@ export const getScheme = (slug: string) => api<SchemeDetail>(`/schemes/${slug}`)
 // ---- Home dashboard (docs/api/advisory.md) ----
 
 export const getHome = () => api<HomeOut>('/home');
+
+// ---- Crop diagnosis (docs/api/diagnosis.md) ----
+
+export function createDiagnosis(photo: { uri: string }, opts: { cropCode?: string; notes?: string } = {}) {
+  const form = new FormData();
+  // React Native's FormData takes {uri, name, type} for files; the server sniffs the real type from the bytes.
+  form.append('image', { uri: photo.uri, name: 'crop.jpg', type: 'image/jpeg' } as unknown as Blob);
+  if (opts.cropCode) form.append('crop_code', opts.cropCode);
+  if (opts.notes?.trim()) form.append('notes', opts.notes.trim().slice(0, 500));
+  return api<DiagnosisOut>('/diagnoses', { method: 'POST', body: form, timeoutMs: AI_TIMEOUT_MS });
+}
 
 // ---- AI assistant (docs/api/assistant.md) ----
 

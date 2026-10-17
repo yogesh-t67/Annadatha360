@@ -127,6 +127,45 @@ export interface DayForecast {
   good_for_spraying: boolean;
 }
 
+// ---- Crop diagnosis (docs/api/diagnosis.md) ----
+
+export type IssueCategory =
+  | 'disease'
+  | 'pest'
+  | 'nutrient_deficiency'
+  | 'water_stress'
+  | 'weather_damage'
+  | 'weed'
+  | 'other'
+  | 'none';
+
+export type ActionType = 'cultural' | 'organic' | 'chemical' | 'monitor';
+
+/** Free-text fields are in the farmer's language; enums are codes the app translates. */
+export interface DiagnosisResult {
+  is_plant_image: boolean;
+  image_quality: 'good' | 'poor';
+  crop_identified: string;
+  matches_expected_crop: boolean;
+  health_status: 'healthy' | 'problem_found' | 'uncertain';
+  issue: { name: string; category: IssueCategory; confidence: 'low' | 'medium' | 'high' };
+  symptoms: string[];
+  actions: { step: string; type: ActionType }[];
+  prevention: string[];
+  consult_expert: boolean;
+  summary: string;
+}
+
+export interface DiagnosisOut {
+  id: number;
+  field_id: number | null;
+  crop: CropRef | null;
+  language: string;
+  notes: string | null;
+  result: DiagnosisResult;
+  created_at: string;
+}
+
 export interface ForecastOut {
   latitude: number;
   longitude: number;

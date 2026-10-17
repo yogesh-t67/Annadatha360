@@ -1,3 +1,5 @@
+import i18n from 'i18next';
+
 import { API_BASE_URL, DEFAULT_TIMEOUT_MS } from './config';
 import { clearTokens, getAccessToken, getRefreshToken, saveTokens, TokenPair } from './tokens';
 
@@ -22,26 +24,47 @@ type Method = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
 
 export interface RequestOptions {
   method?: Method;
+  /** JSON-encoded, unless it's FormData (sent as multipart; fetch sets the boundary header). */
   body?: unknown;
   /** Send the bearer token (default true). */
   auth?: boolean;
   timeoutMs?: number;
 }
 
+/**
+ * Multipart upload via XMLHttpRequest. Expo SDK 57 replaces global fetch with expo/fetch, which can't send
+ * React Native file parts ({uri, name, type}); RN's XHR can. Returns a standard Response.
+ */
+function sendForm(url: string, method: Method, headers: Record<string, string>, body: FormData, timeoutMs: number) {
+  return new Promise<Response>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
+    xhr.timeout = timeoutMs;
+    xhr.onload = () => resolve(new Response(xhr.responseText, { status: xhr.status }));
+    xhr.ontimeout = () => reject(new ApiError(0, 'timeout', `Request timed out: ${method} ${url}`));
+    xhr.onerror = () => reject(new ApiError(0, 'network_error', `Network error: ${method} ${url}`));
+    xhr.send(body);
+  });
+}
+
 async function send(path: string, { method = 'GET', body, auth = true, timeoutMs = DEFAULT_TIMEOUT_MS }: RequestOptions) {
-  const headers: Record<string, string> = { Accept: 'application/json' };
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  // The server follows the language the screen is showing (content, scheme text, AI replies).
+  const headers: Record<string, string> = { Accept: 'application/json', 'X-App-Language': i18n.language === 'te' ? 'te' : 'en' };
+  const isForm = body instanceof FormData;
+  if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
   if (auth) {
     const token = await getAccessToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
+  if (isForm) return sendForm(`${API_BASE_URL}${path}`, method, headers, body, timeoutMs);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetch(`${API_BASE_URL}${path}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
       signal: controller.signal,
     });
   } catch (e) {

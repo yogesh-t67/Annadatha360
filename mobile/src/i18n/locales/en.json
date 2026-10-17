@@ -5,7 +5,8 @@
     "getStarted": "Get Started",
     "finish": "Finish",
     "back": "Back",
-    "demoNotice": "Demo only. No verified live data or production AI is connected."
+    "demoNotice": "Demo only. No verified live data or production AI is connected.",
+    "clear": "Clear"
   },
   "languageName": {
     "te": "తెలుగు",
@@ -29,13 +30,17 @@
   "farmerProfile": {
     "title": "Farmer profile",
     "name": "Name",
-    "phone": "Phone (optional in demo)"
+    "phone": "Phone (optional in demo)",
+    "nameTe": "Name in Telugu (check the spelling)"
   },
   "farmLocation": {
     "title": "Farm location",
     "state": "State",
     "district": "District",
-    "village": "Village"
+    "village": "Village",
+    "districtCount": "{{count}} districts",
+    "searchDistrict": "Search your district",
+    "noDistrict": "No district found. Check the spelling or the state."
   },
   "cropSelection": {
     "title": "Select your crop",
@@ -74,15 +79,68 @@
     "ts": "Telangana"
   },
   "districts": {
+    "alluri_sitharama_raju": "Alluri Sitharama Raju",
+    "anakapalli": "Anakapalli",
+    "ananthapuramu": "Ananthapuramu",
+    "annamayya": "Annamayya",
+    "bapatla": "Bapatla",
+    "chittoor": "Chittoor",
+    "konaseema": "Dr. B.R. Ambedkar Konaseema",
+    "east_godavari": "East Godavari",
+    "eluru": "Eluru",
     "guntur": "Guntur",
+    "kakinada": "Kakinada",
     "krishna": "Krishna",
     "kurnool": "Kurnool",
+    "madanapalle": "Madanapalle",
+    "markapuram": "Markapuram",
+    "nandyal": "Nandyal",
+    "ntr": "NTR",
+    "palnadu": "Palnadu",
+    "parvathipuram_manyam": "Parvathipuram Manyam",
+    "polavaram": "Polavaram",
     "prakasam": "Prakasam",
-    "warangal": "Warangal",
-    "nizamabad": "Nizamabad",
-    "khammam": "Khammam",
+    "nellore": "Sri Potti Sriramulu Nellore",
+    "sri_sathya_sai": "Sri Sathya Sai",
+    "srikakulam": "Srikakulam",
+    "tirupati": "Tirupati",
+    "visakhapatnam": "Visakhapatnam",
+    "vizianagaram": "Vizianagaram",
+    "west_godavari": "West Godavari",
+    "ysr_kadapa": "YSR Kadapa",
+    "adilabad": "Adilabad",
+    "bhadradri_kothagudem": "Bhadradri Kothagudem",
+    "hanumakonda": "Hanumakonda",
+    "hyderabad": "Hyderabad",
+    "jagtial": "Jagtial",
+    "jangaon": "Jangaon",
+    "jayashankar_bhupalpally": "Jayashankar Bhupalpally",
+    "jogulamba_gadwal": "Jogulamba Gadwal",
+    "kamareddy": "Kamareddy",
     "karimnagar": "Karimnagar",
-    "vijayawada": "Vijayawada"
+    "khammam": "Khammam",
+    "kumuram_bheem_asifabad": "Kumuram Bheem Asifabad",
+    "mahabubabad": "Mahabubabad",
+    "mahabubnagar": "Mahabubnagar",
+    "mancherial": "Mancherial",
+    "medak": "Medak",
+    "medchal_malkajgiri": "Medchal Malkajgiri",
+    "mulugu": "Mulugu",
+    "nagarkurnool": "Nagarkurnool",
+    "nalgonda": "Nalgonda",
+    "narayanpet": "Narayanpet",
+    "nirmal": "Nirmal",
+    "nizamabad": "Nizamabad",
+    "peddapalli": "Peddapalli",
+    "rajanna_sircilla": "Rajanna Sircilla",
+    "ranga_reddy": "Ranga Reddy",
+    "sangareddy": "Sangareddy",
+    "siddipet": "Siddipet",
+    "suryapet": "Suryapet",
+    "vikarabad": "Vikarabad",
+    "wanaparthy": "Wanaparthy",
+    "warangal": "Warangal",
+    "yadadri_bhuvanagiri": "Yadadri Bhuvanagiri"
   },
   "home": {
     "hello": "Hello",
@@ -133,17 +191,63 @@
   },
   "diagnosis": {
     "title": "Crop Diagnosis",
-    "photoPrompt": "Take a photo of the affected crop",
-    "openCamera": "Open camera",
-    "retake": "Take another photo",
-    "photoNote": "Photo stays on your phone; no diagnosis is performed.",
+    "photoPrompt": "Take a clear, close photo of the sick part of the plant",
+    "openCamera": "Camera",
+    "retake": "New photo",
     "cameraDenied": "Camera permission is needed to take a photo. Allow it in your phone settings.",
-    "chooseSymptom": "Choose symptom",
+    "chooseSymptom": "What did you notice? (optional)",
     "symptoms": {
       "yellowLeaves": "Yellow leaves",
       "brownSpots": "Brown spots",
       "insects": "Insects",
       "wilting": "Wilting"
+    },
+    "gallery": "Gallery",
+    "photoTip": "Good light, one leaf or stem filling the photo.",
+    "forCrop": "Checking your {{crop}} crop",
+    "check": "Check my crop",
+    "checking": "Looking at your photo…",
+    "checkingHint": "This can take up to 40 seconds.",
+    "signInNeeded": "Verify your phone number to check your crop with a photo.",
+    "whatToDo": "What to do",
+    "seenInPhoto": "Seen in the photo",
+    "prevention": "Prevent it next time",
+    "consultExpert": "Show this to your Agriculture Extension Officer or KVK before spending on treatment.",
+    "chemicalSafety": "For chemical sprays: wear gloves and a mask, follow the label dose, and do not spray before rain.",
+    "newCheck": "Check another photo",
+    "disclaimer": "AI guidance, not a certified diagnosis. Confirm with an agriculture officer before costly treatment.",
+    "status": {
+      "healthy": "Looks healthy",
+      "problem": "Problem found",
+      "uncertain": "Not sure",
+      "retake": "Please take a better photo"
+    },
+    "category": {
+      "disease": "Disease",
+      "pest": "Pest",
+      "nutrient_deficiency": "Nutrient shortage",
+      "water_stress": "Water stress",
+      "weather_damage": "Weather damage",
+      "weed": "Weed",
+      "other": "Other",
+      "none": "No problem"
+    },
+    "confidence": {
+      "low": "Low confidence",
+      "medium": "Medium confidence",
+      "high": "High confidence"
+    },
+    "actionType": {
+      "cultural": "Field practice",
+      "organic": "Organic",
+      "chemical": "Chemical",
+      "monitor": "Watch"
+    },
+    "cropCheck": {
+      "yours": "Yes, this is your {{crop}} crop.",
+      "other": "This looks like {{seen}}, not your {{crop}} crop.",
+      "unclear": "Could not tell if this is your {{crop}} crop.",
+      "notPlant": "This photo does not show a plant."
     }
   },
   "weather": {
@@ -177,16 +281,43 @@
   },
   "irrigation": {
     "title": "Irrigation Assistant",
-    "soilQuestion": "How is the soil?",
+    "soilQuestion": "How does the soil feel near the roots?",
     "soil": {
       "dry": "Dry",
       "moist": "Moist",
       "wet": "Waterlogged",
       "unknown": "Not sure"
     },
-    "nextStep": "Suggested next step",
-    "wetAdvice": "Check drainage before adding more water.",
-    "defaultAdvice": "Check root-zone moisture, crop stage and verified forecast before irrigating."
+    "rainNext": "Rain in the next 3 days",
+    "tomorrow": "Tomorrow",
+    "signInForRain": "Verify your phone to include the rain forecast in this advice.",
+    "verdict": {
+      "water": "Water today",
+      "light": "Give light water only",
+      "wait": "Wait — rain is coming",
+      "skip": "No water needed today",
+      "check": "Check the soil first"
+    },
+    "why": {
+      "wet": "The soil is already waterlogged. Open the drains so roots get air.",
+      "rainComing": "About {{mm}} mm of rain is expected in the next 2 days.",
+      "harvest": "Near harvest the crop needs little water. Water only if plants are wilting.",
+      "harvestPaddy": "Drain the field 10–15 days before harvest so the grain ripens evenly.",
+      "fingerTest": "Push a finger 5 cm into the soil near the roots. If it is dry and crumbly, water. If it sticks to your finger, wait.",
+      "flowering": "Flowering is the stage where water shortage cuts yield the most. Do not let the soil dry out.",
+      "hot": "It will be hot today (about {{temp}}°C), so the soil dries fast.",
+      "dry": "The root zone is dry.",
+      "dryPaddy": "Paddy needs 2–5 cm of standing water. Refill the field.",
+      "noRain": "No useful rain is expected in the next 2 days.",
+      "moist": "The soil still has enough moisture. Check again in 2–3 days.",
+      "moistHot": "The soil has moisture, but it will be hot (about {{temp}}°C). Check again tomorrow.",
+      "moistPaddy": "Keep a thin layer of standing water; top up only if the field surface is showing."
+    },
+    "timing": "Water early morning or evening so less is lost to the sun.",
+    "noSpray": "Do not spray pesticide or fertilizer before the rain; it will wash off.",
+    "askAi": "Ask AI about watering",
+    "aiQuestion": "My {{crop}} crop is at {{stage}} stage and the soil is {{soil}}. How much water should I give and how often?",
+    "disclaimer": "Advice uses the live rain forecast for your district and general rules. Your local agriculture officer knows your field best."
   },
   "market": {
     "title": "Market Prices",
@@ -196,19 +327,30 @@
     "apiNote": "A verified mandi API must provide price, unit, date and market.",
     "noReports": "No price reports for this market in the last 14 days. Try another market.",
     "asOf": "Prices as of {{date}}",
-    "perQuintal": "/ quintal"
+    "perQuintal": "/ quintal",
+    "allDistricts": "All markets in {{state}}"
   },
   "schemes": {
     "title": "Government Schemes",
-    "pmKisan": "Income support for eligible farmers",
-    "pmfby": "Crop insurance",
-    "kcc": "Agricultural credit",
     "askEligibility": "Ask about eligibility",
     "none": "No schemes found right now.",
     "verifiedOn": "Checked on {{date}}",
     "mayQualify": "You may qualify",
     "mayNotQualify": "You may not qualify",
-    "contentNotice": "Scheme details shown here are sample content for testing, not verified government information yet."
+    "contentNotice": "Collected from official and news sources. Amounts and dates change — confirm at your Rythu Seva Kendra / Rythu Vedika or the official website before applying.",
+    "details": "View details",
+    "hideDetails": "Hide details",
+    "benefits": "What you get",
+    "eligibility": "Who can apply",
+    "documents": "Documents needed",
+    "howToApply": "How to apply",
+    "applyOnline": "Open official website",
+    "officialSource": "Official source",
+    "central": "Central govt",
+    "stateGovt": {
+      "ap": "Andhra Pradesh govt",
+      "ts": "Telangana govt"
+    }
   },
   "expert": {
     "title": "Expert Help",
@@ -259,9 +401,7 @@
     "notifications": "Notifications (demo)",
     "editProfile": "Edit Profile",
     "manageFarm": "Manage Farm",
-    "version": "Annadata 360 v{{version}}",
-    "photoCredits": "Photo credits",
-    "photoCreditsBody": "Crop photos are from Wikimedia Commons under free licenses. Tap a crop to see the original."
+    "version": "Annadata 360 v{{version}}"
   },
   "verifyPhone": {
     "title": "Verify your phone",
@@ -286,6 +426,7 @@
     "otpInvalid": "Wrong code. Please check and try again.",
     "otpExpired": "This code has expired. Send a new one.",
     "otpTooMany": "Too many attempts. Please wait and try again.",
-    "generic": "Something went wrong. Please try again."
+    "generic": "Something went wrong. Please try again.",
+    "badPhoto": "This photo could not be used. Take a new JPG photo and try again."
   }
 }
