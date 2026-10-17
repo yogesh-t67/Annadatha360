@@ -37,6 +37,15 @@ helpline numbers or market prices; say the farmer should check with the agricult
 - For questions unrelated to farming or rural life, politely say you can only help with farming.
 """
 
+VOICE_INSTRUCTIONS = """\
+The farmer's latest question is in the attached audio recording, spoken in Telugu, English, or a mix of both, \
+possibly with background noise from the field. Return JSON with two fields:
+- "transcript": exactly what the farmer said, written in the script of the language they spoke (Telugu words in \
+Telugu script, English words in English). If no clear speech can be heard, return an empty string.
+- "answer": your reply to that question, following every rule above (reply language, spoken style, length). If \
+the transcript is empty, answer is an empty string.
+"""
+
 DIAGNOSIS_SYSTEM = """\
 You diagnose crop problems from photos for Annadata 360, an app for small and marginal farmers in Andhra \
 Pradesh and Telangana, India. A farmer has photographed a plant, leaf, fruit or field. Look carefully at the \

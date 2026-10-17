@@ -14,22 +14,26 @@ import {
   Smartphone,
   Square,
   TriangleAlert,
+  UserRound,
   Volume2,
 } from 'lucide-react-native';
 
 import { theme } from '../../theme';
 import { Button, Card, Text, TextField } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
-import { MicButton } from '../../components/MicButton';
+import { MicButton, MicState } from '../../components/MicButton';
 import { Notice } from '../../components/Notice';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { AskStackParamList } from '../../navigation/types';
 import { useFarmStore } from '../../store/farmStore';
-import { askAssistant } from '../../api/endpoints';
+import { askAssistant, askAssistantVoice } from '../../api/endpoints';
+import { ApiError } from '../../api/client';
 import { errorMessageKey } from '../../api/errorMessage';
 import { hasSession } from '../../api/tokens';
+import type { AskOut } from '../../api/types';
 import { speak, stopSpeaking } from '../../voice/speech';
 import { SpeechInputError, useSpeechInput } from '../../voice/useSpeechInput';
+import { RecorderError, useVoiceRecorder } from '../../voice/useVoiceRecorder';
 
 const commonQuestions = [
   { key: 'yellowLeaves', icon: Leaf },
@@ -38,12 +42,18 @@ const commonQuestions = [
   { key: 'whenSell', icon: CalendarClock },
 ] as const;
 
-const MIC_ERROR_KEYS: Record<SpeechInputError, string> = {
+const DEVICE_MIC_ERROR_KEYS: Record<SpeechInputError, string> = {
   unavailable: 'voice.micUnavailable',
   'not-allowed': 'voice.micDenied',
   'no-speech': 'voice.noSpeech',
   'language-not-supported': 'voice.languageNotSupported',
   other: 'errors.generic',
+};
+
+const RECORDER_ERROR_KEYS: Record<RecorderError, string> = {
+  'not-allowed': 'voice.micDenied',
+  'too-short': 'voice.tooShort',
+  failed: 'errors.generic',
 };
 
 export function VoiceAssistantScreen() {
@@ -53,12 +63,16 @@ export function VoiceAssistantScreen() {
   const voiceEnabled = useFarmStore((s) => s.voiceEnabled);
 
   const [question, setQuestion] = useState('');
+  /** What the AI heard / was asked, shown above the answer ("You asked: …"). */
+  const [asked, setAsked] = useState<string | null>(null);
   const [answer, setAnswer] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<number | undefined>();
   const [asking, setAsking] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  /** The server can't hear audio (AI provider without voice): fall back to the phone's speech-to-text. */
+  const [deviceSpeech, setDeviceSpeech] = useState(false);
 
   // Re-check on focus: the farmer may have just come back from verifying their phone.
   useFocusEffect(
@@ -80,33 +94,58 @@ export function VoiceAssistantScreen() {
   /** Set when the question came from a "common question" chip, so it can be re-translated. */
   const [chipKey, setChipKey] = useState<string | null>(null);
 
-  const ask = useCallback(
-    async (text: string, opts: { newThread?: boolean } = {}) => {
-      const q = text.trim();
-      if (!q || asking) return;
+  /** Shared by typed and spoken questions: send, show "You asked", show + read the answer. */
+  const run = useCallback(
+    async (send: () => Promise<AskOut>) => {
       if (!(await hasSession())) {
         setSignedIn(false);
         return;
       }
       stopSpeaking();
+      setSpeaking(false);
       setAsking(true);
       setErrorKey(null);
       setAnswer(null);
       try {
-        const res = await askAssistant(q, opts.newThread ? undefined : threadId);
+        const res = await send();
         setThreadId(res.thread.id);
-        lastAsked.current = q;
+        lastAsked.current = res.message.content;
+        setAsked(res.message.content);
         setAnswer(res.reply.content);
         if (voiceEnabled) readAloud(res.reply.content);
       } catch (e) {
-        setErrorKey(errorMessageKey(e));
+        if (e instanceof ApiError && e.code === 'voice_not_supported') {
+          setDeviceSpeech(true);
+          setErrorKey('voice.tryAgainMic');
+        } else {
+          setErrorKey(errorMessageKey(e));
+        }
       } finally {
         setAsking(false);
       }
     },
-    [asking, threadId, voiceEnabled, readAloud],
+    [voiceEnabled, readAloud],
   );
 
+  const ask = useCallback(
+    (text: string, opts: { newThread?: boolean } = {}) => {
+      const q = text.trim();
+      if (!q || asking) return;
+      setAsked(q);
+      return run(() => askAssistant(q, opts.newThread ? undefined : threadId));
+    },
+    [asking, threadId, run],
+  );
+
+  // Main path: record → the AI hears the audio directly (one step, good with Telugu).
+  const recorder = useVoiceRecorder((uri) => {
+    setAsked(null);
+    setQuestion('');
+    setChipKey(null);
+    run(() => askAssistantVoice(uri, threadId));
+  });
+
+  // Fallback path: on-device speech-to-text, then a typed question.
   const speech = useSpeechInput(i18n.language, (transcript) => {
     setQuestion(transcript);
     setChipKey(null);
@@ -119,6 +158,7 @@ export function VoiceAssistantScreen() {
       setQuestion(incoming);
       setChipKey(null);
       setAnswer(null);
+      setAsked(null);
     }
   }, [incoming]);
 
@@ -142,32 +182,76 @@ export function VoiceAssistantScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i18n.language]);
 
+  const listening = deviceSpeech ? speech.listening : recorder.recording;
+  const micState: MicState = listening ? 'listening' : asking ? 'thinking' : speaking ? 'speaking' : 'idle';
+
   function onMicPress() {
-    if (speech.listening) {
-      speech.stop();
+    setErrorKey(null);
+    if (micState === 'listening') {
+      if (deviceSpeech) speech.stop();
+      else recorder.stop(); // sends the recording
       return;
     }
-    stopSpeaking();
-    setErrorKey(null);
-    speech.start();
+    if (micState === 'speaking') {
+      stopSpeaking();
+      setSpeaking(false);
+      return;
+    }
+    if (micState === 'thinking') return;
+    if (deviceSpeech) speech.start();
+    else recorder.start();
   }
+
+  const status =
+    micState === 'listening'
+      ? t('voice.listening')
+      : micState === 'thinking'
+        ? t('voice.thinking')
+        : micState === 'speaking'
+          ? t('voice.speakingTapToStop')
+          : t('voice.tapToSpeak');
+  const hint =
+    micState === 'listening'
+      ? `${t('voice.autoSend')} · 0:${String(recorder.seconds).padStart(2, '0')}`
+      : micState === 'idle'
+        ? t('voice.speakHint')
+        : null;
+
+  const micErrorKey = deviceSpeech
+    ? speech.error && DEVICE_MIC_ERROR_KEYS[speech.error]
+    : recorder.error && RECORDER_ERROR_KEYS[recorder.error];
 
   return (
     <ScreenContainer>
       <Text variant="h1">{t('voice.title')}</Text>
+
       <MicButton
-        accessibilityLabel={speech.listening ? t('voice.tapToStop') : t('voice.prompt')}
+        state={micState}
+        level={recorder.level}
+        accessibilityLabel={status}
         onPress={onMicPress}
       />
-      <Text variant="body" align="center" color={theme.color.text.muted} style={{ marginTop: -theme.spacing.xs }}>
-        {speech.listening ? t('voice.listening') : t('voice.prompt')}
-      </Text>
-      {speech.listening && speech.partial ? (
+      <View style={{ alignItems: 'center', gap: 2, marginTop: -theme.spacing.sm }} accessibilityLiveRegion="polite">
+        <Text
+          variant="h2"
+          align="center"
+          color={micState === 'listening' ? theme.color.status.dangerText : theme.color.text.primary}
+        >
+          {status}
+        </Text>
+        {hint ? (
+          <Text variant="body" align="center" color={theme.color.text.muted}>
+            {hint}
+          </Text>
+        ) : null}
+      </View>
+      {deviceSpeech && speech.listening && speech.partial ? (
         <Text variant="bodyStrong" align="center">
           {speech.partial}
         </Text>
       ) : null}
-      {speech.error ? <Notice icon={Mic} message={t(MIC_ERROR_KEYS[speech.error])} /> : null}
+      {micErrorKey ? <Notice icon={Mic} message={t(micErrorKey)} /> : null}
+      {errorKey ? <Notice icon={TriangleAlert} message={t(errorKey)} /> : null}
 
       {signedIn === false ? (
         <Card tone="soft" style={{ gap: theme.spacing.sm }}>
@@ -181,59 +265,18 @@ export function VoiceAssistantScreen() {
         </Card>
       ) : null}
 
-      <TextField
-        value={question}
-        onChangeText={(v) => {
-          setQuestion(v);
-          setChipKey(null);
-          setAnswer(null);
-        }}
-        placeholder={t('voice.placeholder')}
-        multiline
-        editable={!asking}
-      />
-
-      <Text variant="h2">{t('voice.commonQuestions')}</Text>
-      <View style={{ gap: theme.spacing.xs }}>
-        {commonQuestions.map((q) => (
-          <Pressable
-            key={q.key}
-            accessibilityRole="button"
-            onPress={() => {
-              setQuestion(t(`voice.questions.${q.key}`));
-              setChipKey(q.key);
-              setAnswer(null);
-            }}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: theme.spacing.sm,
-              minHeight: 54,
-              paddingHorizontal: theme.spacing.md,
-              paddingVertical: theme.spacing.xs,
-              borderRadius: theme.radius.md,
-              borderWidth: 1,
-              borderColor: theme.color.border.default,
-              backgroundColor: pressed ? theme.color.surface.brandSoft : theme.color.surface.base,
-            })}
-          >
-            <q.icon size={20} color={theme.color.surface.brandDeep} strokeWidth={2} />
-            <Text variant="bodyStrong" color={theme.color.text.secondary} style={{ flex: 1 }}>
-              {t(`voice.questions.${q.key}`)}
+      {/* What was asked + the answer, right under the mic so the farmer sees it without scrolling. */}
+      {asked && (asking || answer) ? (
+        <View style={{ flexDirection: 'row', gap: theme.spacing.xs, alignItems: 'flex-start' }}>
+          <UserRound size={18} color={theme.color.text.muted} strokeWidth={2.25} style={{ marginTop: 3 }} />
+          <View style={{ flex: 1 }}>
+            <Text variant="caption" color={theme.color.text.muted}>
+              {t('voice.youAsked')}
             </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      <Button
-        label={asking ? t('voice.thinking') : t('voice.getAnswer')}
-        trailingIcon={Send}
-        loading={asking}
-        disabled={!question.trim() || asking}
-        onPress={() => ask(question)}
-      />
-
-      {errorKey ? <Notice icon={TriangleAlert} message={t(errorKey)} /> : null}
+            <Text variant="bodyStrong">{asked}</Text>
+          </View>
+        </View>
+      ) : null}
 
       {answer ? (
         <Card tone="soft" style={{ gap: theme.spacing.sm }}>
@@ -261,6 +304,61 @@ export function VoiceAssistantScreen() {
           <Button label={t('voice.viewDiagnosis')} variant="secondary" compact trailingIcon={ArrowRight} onPress={() => open('Diagnosis')} />
         </Card>
       ) : null}
+
+      {/* Typing is the secondary way in. */}
+      <Text variant="h2" style={{ marginTop: theme.spacing.sm }}>
+        {t('voice.orType')}
+      </Text>
+      <TextField
+        value={question}
+        onChangeText={(v) => {
+          setQuestion(v);
+          setChipKey(null);
+        }}
+        placeholder={t('voice.placeholder')}
+        multiline
+        editable={!asking}
+      />
+      <Button
+        label={t('voice.getAnswer')}
+        trailingIcon={Send}
+        disabled={!question.trim() || asking || listening}
+        onPress={() => ask(question)}
+      />
+
+      <Text variant="h2">{t('voice.commonQuestions')}</Text>
+      <View style={{ gap: theme.spacing.xs }}>
+        {commonQuestions.map((q) => (
+          <Pressable
+            key={q.key}
+            accessibilityRole="button"
+            disabled={asking || listening}
+            onPress={() => {
+              const text = t(`voice.questions.${q.key}`);
+              setQuestion(text);
+              setChipKey(q.key);
+              ask(text); // one tap asks — no extra "Get answer" step
+            }}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: theme.spacing.sm,
+              minHeight: 54,
+              paddingHorizontal: theme.spacing.md,
+              paddingVertical: theme.spacing.xs,
+              borderRadius: theme.radius.md,
+              borderWidth: 1,
+              borderColor: theme.color.border.default,
+              backgroundColor: pressed ? theme.color.surface.brandSoft : theme.color.surface.base,
+            })}
+          >
+            <q.icon size={20} color={theme.color.surface.brandDeep} strokeWidth={2} />
+            <Text variant="bodyStrong" color={theme.color.text.secondary} style={{ flex: 1 }}>
+              {t(`voice.questions.${q.key}`)}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
     </ScreenContainer>
   );
 }

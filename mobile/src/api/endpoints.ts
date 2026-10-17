@@ -135,6 +135,14 @@ export function createDiagnosis(photo: { uri: string }, opts: { cropCode?: strin
 
 // ---- AI assistant (docs/api/assistant.md) ----
 
+/** Spoken question: the AI hears the recording; `message.content` is what it heard, `reply` the answer. */
+export function askAssistantVoice(recordingUri: string, threadId?: number) {
+  const form = new FormData();
+  form.append('audio', { uri: recordingUri, name: 'question.m4a', type: 'audio/mp4' } as unknown as Blob);
+  if (threadId) form.append('thread_id', String(threadId));
+  return api<AskOut>('/assistant/voice', { method: 'POST', body: form, timeoutMs: AI_TIMEOUT_MS });
+}
+
 export function askAssistant(message: string, threadId?: number, fieldId?: number) {
   return api<AskOut>('/assistant/messages', {
     method: 'POST',

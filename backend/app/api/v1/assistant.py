@@ -1,13 +1,13 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 from sqlalchemy import select
 
 from app.api.deps import CurrentFarmer, DbSession
 from app.core.errors import not_found
 from app.models import ChatThread, Field
 from app.schemas.assistant import AskIn, AskOut, ThreadDetailOut, ThreadOut
-from app.services.ai.assistant import ask
+from app.services.ai.assistant import MAX_AUDIO_BYTES, ask, ask_by_voice
 from app.services.ai.claude import get_ai_client
 from app.services.weather import WeatherProvider, get_weather_provider
 
@@ -38,6 +38,38 @@ def send_message(
             raise not_found("field")
 
     thread, user_msg, reply = ask(db, client, farmer, thread, field, body.message.strip(), weather)
+    return AskOut(thread=thread, message=user_msg, reply=reply)
+
+
+AUDIO_TYPES = {"audio/mp4", "audio/m4a", "audio/x-m4a", "audio/aac", "audio/mpeg", "audio/mp3", "audio/wav",
+               "audio/x-wav", "audio/ogg", "audio/webm", "audio/flac", "audio/3gpp"}  # fmt: skip
+
+
+@router.post("/voice", response_model=AskOut)
+def send_voice_message(
+    farmer: CurrentFarmer,
+    db: DbSession,
+    client: Annotated[object, Depends(get_ai_client)],
+    weather: Annotated[WeatherProvider, Depends(get_weather_provider)],
+    audio: Annotated[UploadFile, File(description="Recording of the question (M4A/AAC/MP3/WAV/OGG), ≤ 5 MB")],
+    thread_id: Annotated[int | None, Form()] = None,
+    field_id: Annotated[int | None, Form()] = None,
+):
+    """Spoken question → the AI hears it directly and returns what was said (message) and the answer (reply)."""
+    media_type = (audio.content_type or "").split(";")[0].strip().lower()
+    if media_type not in AUDIO_TYPES:
+        media_type = "audio/mp4"  # phones send M4A; some clients label it application/octet-stream
+    elif media_type in ("audio/m4a", "audio/x-m4a"):
+        media_type = "audio/mp4"
+    thread = field = None
+    if thread_id is not None:
+        thread = _owned_thread(db, farmer, thread_id)
+    elif field_id is not None:
+        field = db.get(Field, field_id)
+        if field is None or field.farmer_id != farmer.id:
+            raise not_found("field")
+    data = audio.file.read(MAX_AUDIO_BYTES + 1)
+    thread, user_msg, reply = ask_by_voice(db, client, farmer, thread, field, data, media_type, weather)
     return AskOut(thread=thread, message=user_msg, reply=reply)
 
 

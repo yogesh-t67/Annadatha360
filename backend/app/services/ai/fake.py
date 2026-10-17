@@ -65,8 +65,11 @@ class FakeClaudeClient:
 
     def _create(self, *, model: str, system=None, output_config=None, **_):
         lang = _language(system)
-        structured = bool((output_config or {}).get("format"))
-        text = _diagnosis_json(lang) if structured else CHAT_REPLY[lang]
+        fmt = (output_config or {}).get("format") or {}
+        if "transcript" in (fmt.get("schema") or {}).get("properties", {}):  # spoken question
+            text = json.dumps({"transcript": "[test] spoken question", "answer": CHAT_REPLY[lang]}, ensure_ascii=False)
+        else:
+            text = _diagnosis_json(lang) if fmt else CHAT_REPLY[lang]
         return SimpleNamespace(
             content=[SimpleNamespace(type="text", text=text)],
             stop_reason="end_turn",

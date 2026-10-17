@@ -52,6 +52,13 @@
             "com.google.android.googlequicksearchbox"
           ]
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Annadata 360 records your spoken question so the assistant can answer it.",
+          "enableBackgroundPlayback": false
+        }
       ]
     ],
     "extra": {

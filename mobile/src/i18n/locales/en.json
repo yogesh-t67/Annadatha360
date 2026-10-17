@@ -186,8 +186,16 @@
     "signInNeeded": "Verify your phone number to ask the AI.",
     "verifyNow": "Verify phone",
     "micDenied": "Microphone permission is off. Allow it in Settings to speak your question.",
-    "noSpeech": "Didn't hear anything. Tap the mic and try again.",
-    "languageNotSupported": "This phone doesn't support voice input in this language. Type your question instead."
+    "noSpeech": "Didn’t hear a question. Tap the mic and speak a little louder, close to the phone.",
+    "languageNotSupported": "This phone doesn't support voice input in this language. Type your question instead.",
+    "tapToSpeak": "Tap the mic and ask",
+    "speakHint": "Speak in Telugu or English, like you would to a person",
+    "autoSend": "Stops by itself when you finish",
+    "speakingTapToStop": "Speaking… tap to stop",
+    "youAsked": "You asked",
+    "orType": "Or type your question",
+    "tooShort": "Hold on — that was too short. Tap the mic and say your full question.",
+    "tryAgainMic": "Voice is switching to your phone’s speech typing. Tap the mic again."
   },
   "diagnosis": {
     "title": "Crop Diagnosis",

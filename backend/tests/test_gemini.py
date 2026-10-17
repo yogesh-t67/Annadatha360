@@ -79,6 +79,18 @@ def test_errors(status, code):
     assert exc.value.code == code
 
 
+def test_retries_once_on_high_demand(monkeypatch):
+    monkeypatch.setattr(GeminiClient, "RETRY_DELAY_SECONDS", 0)
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        return httpx.Response(503, text="high demand") if len(calls) == 1 else _ok("ok")
+
+    assert _gemini(handler).beta.messages.create(max_tokens=10, messages=[]).content[0].text == "ok"
+    assert len(calls) == 2
+
+
 @pytest.fixture
 def gemini_mode(monkeypatch):
     s = get_settings()
@@ -106,6 +118,83 @@ def test_chat_and_diagnosis_end_to_end_at_zero_cost(login, client, gemini_mode, 
     with db_session() as db:
         rows = db.query(AiUsage).all()
         assert [(r.model, r.cost_usd) for r in rows] == [("gemini-3.8-flash", 0), ("gemini-3.8-flash", 0)]
+
+
+def test_audio_goes_to_native_endpoint():
+    seen = {}
+
+    def handler(request):
+        seen["url"] = str(request.url)
+        seen["body"] = json.loads(request.content)
+        return httpx.Response(200, json={
+            "responseId": "r-1",
+            "candidates": [{"content": {"parts": [{"text": "plan", "thought": True}, {"text": '{"transcript":"t","answer":"a"}'}]}, "finishReason": "STOP"}],
+            "usageMetadata": {"promptTokenCount": 300, "candidatesTokenCount": 20, "thoughtsTokenCount": 30},
+        })  # fmt: skip
+
+    res = _gemini(handler).beta.messages.create(
+        max_tokens=800,
+        system=[{"type": "text", "text": "S"}],
+        output_config={"format": {"type": "json_schema", "schema": {"type": "object", "additionalProperties": False}}},
+        messages=[
+            {"role": "user", "content": "earlier"},
+            {"role": "assistant", "content": "reply"},
+            {"role": "user", "content": [{"type": "audio", "source": {"media_type": "audio/mp4", "data": "QUJD"}}]},
+        ],
+    )
+    body = seen["body"]
+    assert seen["url"] == "https://gemini.test/v1beta/models/gemini-3.8-flash:generateContent"
+    assert body["systemInstruction"] == {"parts": [{"text": "S"}]}
+    assert [c["role"] for c in body["contents"]] == ["user", "model", "user"]
+    assert body["contents"][2]["parts"][0] == {"inline_data": {"mime_type": "audio/mp4", "data": "QUJD"}}
+    assert body["generationConfig"]["responseMimeType"] == "application/json"
+    assert res.content[0].text == '{"transcript":"t","answer":"a"}'  # thought parts dropped
+    assert (res.usage.input_tokens, res.usage.output_tokens) == (300, 50)
+
+
+def test_voice_question_end_to_end(login, client, monkeypatch, db_session):
+    s = get_settings()
+    monkeypatch.setattr(s, "ai_provider", "gemini")
+    monkeypatch.setattr(s, "gemini_api_key", "g-key")
+
+    def handler(request):
+        assert request.url.path.endswith(":generateContent")
+        return httpx.Response(200, json={
+            "candidates": [{"content": {"parts": [{"text": '{"transcript":"మిర్చి ఆకులు ముడుచుకుంటున్నాయి","answer":"Spray neem oil."}'}]}, "finishReason": "STOP"}],
+            "usageMetadata": {"promptTokenCount": 1, "candidatesTokenCount": 1},
+        })  # fmt: skip
+
+    monkeypatch.setattr(claude, "_gemini_for", lambda *a: _gemini(handler))
+    headers, _ = login()
+    res = client.post(
+        "/api/v1/assistant/voice", headers=headers, files={"audio": ("q.m4a", io.BytesIO(b"\x00" * 100), "audio/m4a")}
+    )
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["message"]["content"] == "మిర్చి ఆకులు ముడుచుకుంటున్నాయి"
+    assert body["reply"]["content"] == "Spray neem oil."
+    # saved like a typed question: transcript + answer in the thread
+    thread = client.get(f"/api/v1/assistant/threads/{body['thread']['id']}", headers=headers).json()
+    assert [m["role"] for m in thread["messages"]] == ["user", "assistant"]
+
+
+def test_voice_no_speech(login, client, monkeypatch):
+    s = get_settings()
+    monkeypatch.setattr(s, "ai_provider", "gemini")
+    monkeypatch.setattr(s, "gemini_api_key", "g-key")
+    empty = {"candidates": [{"content": {"parts": [{"text": '{"transcript":"","answer":""}'}]}}], "usageMetadata": {}}
+    monkeypatch.setattr(claude, "_gemini_for", lambda *a: _gemini(lambda r: httpx.Response(200, json=empty)))
+    headers, _ = login()
+    res = client.post("/api/v1/assistant/voice", headers=headers, files={"audio": ("q.m4a", io.BytesIO(b"\x00"), "audio/mp4")})
+    assert res.status_code == 422 and res.json()["error"]["code"] == "no_speech"
+
+
+def test_voice_needs_gemini(login, client, monkeypatch):
+    monkeypatch.setattr(get_settings(), "ai_provider", "anthropic")
+    monkeypatch.setattr(get_settings(), "anthropic_api_key", "k")
+    headers, _ = login()
+    res = client.post("/api/v1/assistant/voice", headers=headers, files={"audio": ("q.m4a", io.BytesIO(b"\x00"), "audio/mp4")})
+    assert res.status_code == 422 and res.json()["error"]["code"] == "voice_not_supported"
 
 
 def test_gemini_without_key_is_not_configured(login, client, monkeypatch):
