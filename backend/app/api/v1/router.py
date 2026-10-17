@@ -14,6 +14,7 @@ from app.api.v1 import (
     schemes,
     services,
     shop,
+    tts,
     weather,
 )
 
@@ -25,6 +26,7 @@ api_router.include_router(crops.router)
 api_router.include_router(weather.router)
 api_router.include_router(market.router)
 api_router.include_router(assistant.router)
+api_router.include_router(tts.router)
 api_router.include_router(diagnosis.router)
 api_router.include_router(shop.router)
 api_router.include_router(schemes.router)

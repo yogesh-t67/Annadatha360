@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import * as Speech from 'expo-speech';
+import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
 import { useFarmStore } from '../store/farmStore';
 
@@ -65,48 +66,129 @@ function chosenVoice(language: string): { voice?: string; pitch: number } {
   return male ? { voice: male.identifier, pitch: 1 } : { pitch: FALLBACK_MALE_PITCH };
 }
 
-// ---- "Is the app speaking right now?" — one app-wide signal, so the farmer avatar can animate its mouth for
-// any read-aloud (answers, welcome, diagnosis, schemes) without each screen wiring it up.
-let speakingNow = false;
-const speakingListeners = new Set<() => void>();
+// ---- Voice phase, app-wide: 'preparing' (server voice being generated) → 'playing' → 'idle'.
+// The farmer avatar uses it to think while a voice is prepared and move its mouth only while sound plays.
+export type VoicePhase = 'idle' | 'preparing' | 'playing';
+let phase: VoicePhase = 'idle';
+const phaseListeners = new Set<() => void>();
 
-function setSpeakingNow(value: boolean) {
-  if (speakingNow === value) return;
-  speakingNow = value;
-  speakingListeners.forEach((l) => l());
+function setPhase(value: VoicePhase) {
+  if (phase === value) return;
+  phase = value;
+  phaseListeners.forEach((l) => l());
 }
 
-export function useIsSpeaking(): boolean {
+export function useVoicePhase(): VoicePhase {
   return useSyncExternalStore(
     (listener) => {
-      speakingListeners.add(listener);
-      return () => speakingListeners.delete(listener);
+      phaseListeners.add(listener);
+      return () => phaseListeners.delete(listener);
     },
-    () => speakingNow,
+    () => phase,
   );
 }
 
-/** Read text aloud in the farmer's language. Uses the phone's own text-to-speech (works in Expo Go). */
-export function speak(text: string, language: string, onDone?: () => void, voiceOverride?: string): void {
-  Speech.stop();
+export function useIsSpeaking(): boolean {
+  return useVoicePhase() === 'playing';
+}
+
+// ---- Telugu: natural male voice from the server (phones rarely have a male Telugu voice), phone voice as backup.
+let seq = 0; // each speak() call gets a number; anything older is stale and must not play
+let player: AudioPlayer | null = null;
+let pendingDone: (() => void) | undefined;
+
+function releasePlayer() {
+  if (player) {
+    try {
+      player.remove();
+    } catch {
+      // already released
+    }
+    player = null;
+  }
+}
+
+function useServerVoice(language: string, voiceOverride?: string): boolean {
+  if (language !== 'te' || voiceOverride) return false;
+  // A phone voice picked in Settings wins; otherwise Telugu uses the server's male voice.
+  return !useFarmStore.getState().voiceIds?.te;
+}
+
+function speakOnPhone(text: string, language: string, finished: () => void, voiceOverride?: string) {
   const { voice, pitch } = voiceOverride ? { voice: voiceOverride, pitch: 1 } : chosenVoice(language);
-  const finished = () => {
-    setSpeakingNow(false);
-    onDone?.();
-  };
   Speech.speak(text, {
     language: speechLocale(language),
     voice,
     pitch,
     rate: 0.95,
-    onStart: () => setSpeakingNow(true),
+    onStart: () => setPhase('playing'),
     onDone: finished,
     onStopped: finished,
     onError: finished,
   });
 }
 
+async function speakFromServer(text: string, mine: number, finished: () => void): Promise<boolean> {
+  try {
+    const { api } = await import('../api/client');
+    const { API_BASE_URL } = await import('../api/config');
+    const { audio_url } = await api<{ audio_url: string }>('/tts', {
+      method: 'POST',
+      body: { text, language: 'te' },
+      timeoutMs: 45_000,
+    });
+    if (mine !== seq) return true; // stopped or replaced meanwhile: stay quiet
+    await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false }).catch(() => undefined);
+    const origin = API_BASE_URL.replace(/\/api\/v1$/, '');
+    const p = createAudioPlayer({ uri: origin + audio_url, headers: { 'ngrok-skip-browser-warning': '1' } });
+    player = p;
+    p.addListener('playbackStatusUpdate', (status) => {
+      if (mine !== seq) return;
+      if (status.playing) setPhase('playing');
+      if (status.didJustFinish) {
+        releasePlayer();
+        finished();
+      }
+    });
+    p.play();
+    return true;
+  } catch (e) {
+    console.warn('Server voice unavailable, using the phone voice', e);
+    return false;
+  }
+}
+
+/**
+ * Read text aloud in the farmer's language. English: the phone's voice. Telugu: the server's natural male voice
+ * (cached, so repeats are instant), falling back to the phone voice if the server can't make it.
+ */
+export function speak(text: string, language: string, onDone?: () => void, voiceOverride?: string): void {
+  stopSpeaking();
+  const mine = ++seq;
+  pendingDone = onDone;
+  const finished = () => {
+    if (mine !== seq) return;
+    setPhase('idle');
+    const done = pendingDone;
+    pendingDone = undefined;
+    done?.();
+  };
+  if (!useServerVoice(language, voiceOverride)) {
+    speakOnPhone(text, language, finished, voiceOverride);
+    return;
+  }
+  setPhase('preparing');
+  speakFromServer(text, mine, finished).then((ok) => {
+    if (!ok && mine === seq) speakOnPhone(text, language, finished);
+  });
+}
+
 export function stopSpeaking(): void {
+  seq++;
   Speech.stop();
-  setSpeakingNow(false);
+  releasePlayer();
+  setPhase('idle');
+  const done = pendingDone;
+  pendingDone = undefined;
+  done?.();
 }

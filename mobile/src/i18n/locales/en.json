@@ -420,7 +420,8 @@
     "otherVoice": "Voice {{n}}",
     "voiceSample": "Namaskaram. I am your Annadata farming assistant.",
     "voiceHint": "Tap a voice to hear it. Your phone’s voices are used; more can be added in Google speech settings.",
-    "noVoices": "No voices found for this language on this phone. Install it in Settings → Google text-to-speech."
+    "noVoices": "No voices found for this language on this phone. Install it in Settings → Google text-to-speech.",
+    "naturalMaleVoice": "Natural male voice (online)"
   },
   "verifyPhone": {
     "title": "Verify your phone",

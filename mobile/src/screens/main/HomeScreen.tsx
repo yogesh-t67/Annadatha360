@@ -17,7 +17,7 @@ import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { getHome } from '../../api/endpoints';
 import { hasSession } from '../../api/tokens';
 import type { HomeOut } from '../../api/types';
-import { speak, stopSpeaking, useIsSpeaking } from '../../voice/speech';
+import { speak, stopSpeaking, useVoicePhase } from '../../voice/speech';
 import { FarmerAvatar } from '../../components/FarmerAvatar';
 
 /** The welcome is spoken once per app launch, not every time the farmer comes back to Home. */
@@ -44,7 +44,7 @@ export function HomeScreen() {
 
   // Spoken welcome, once each time the app is opened, in the selected language.
   const voiceEnabled = useFarmStore((s) => s.voiceEnabled);
-  const audioPlaying = useIsSpeaking();
+  const voicePhase = useVoicePhase();
   useFocusEffect(
     useCallback(() => {
       if (greetedThisLaunch || !voiceEnabled) return;
@@ -71,7 +71,7 @@ export function HomeScreen() {
 
       {/* The farmer is the voice button: talks during the welcome; tap opens Ask already listening. */}
       <FarmerAvatar
-        state={audioPlaying ? 'speaking' : 'idle'}
+        state={voicePhase === 'playing' ? 'speaking' : voicePhase === 'preparing' ? 'thinking' : 'idle'}
         mood="happy"
         size={150}
         onPress={() => {

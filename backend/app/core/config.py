@@ -49,6 +49,9 @@ class Settings(BaseSettings):
     # Gemini free tier: Google may use what you send to improve its products. Test data only — never real farmers'.
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"
+    # Server voice (Telugu answers): a natural male Gemini voice, trying these TTS models in order.
+    gemini_tts_voice: str = "Charon"
+    gemini_tts_models: list[str] = ["gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts", "gemini-3.1-flash-tts-preview"]
     # Tried in order when the model above is out of its free daily quota or overloaded (each model has its own).
     gemini_fallback_models: list[str] = [
         "gemini-3.7-flash",

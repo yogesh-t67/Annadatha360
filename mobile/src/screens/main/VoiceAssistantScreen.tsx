@@ -31,7 +31,7 @@ import { ApiError } from '../../api/client';
 import { errorMessageKey } from '../../api/errorMessage';
 import { hasSession } from '../../api/tokens';
 import type { AskOut } from '../../api/types';
-import { speak, stopSpeaking, useIsSpeaking } from '../../voice/speech';
+import { speak, stopSpeaking, useVoicePhase } from '../../voice/speech';
 import { AvatarMood, AvatarState, FarmerAvatar } from '../../components/FarmerAvatar';
 import { SpeechInputError, useSpeechInput } from '../../voice/useSpeechInput';
 import { RecorderError, useVoiceRecorder } from '../../voice/useVoiceRecorder';
@@ -197,8 +197,14 @@ export function VoiceAssistantScreen() {
   const listening = deviceSpeech ? speech.listening : recorder.recording;
   const micState: MicState = listening ? 'listening' : asking ? 'thinking' : speaking ? 'speaking' : 'idle';
   // Avatar follows the same lifecycle; "speaking" comes from the actual audio (starts when the voice does).
-  const audioPlaying = useIsSpeaking();
-  const avatarState: AvatarState = listening ? 'listening' : asking ? 'thinking' : audioPlaying ? 'speaking' : 'idle';
+  const voicePhase = useVoicePhase(); // 'preparing' while the Telugu server voice is generated
+  const avatarState: AvatarState = listening
+    ? 'listening'
+    : asking || voicePhase === 'preparing'
+      ? 'thinking'
+      : voicePhase === 'playing'
+        ? 'speaking'
+        : 'idle';
   // Reaction after a turn: nothing heard → confused; error/busy → concerned; a normal answer → agree.
   const micErrorShown = deviceSpeech ? speech.error : recorder.error;
   const avatarMood: AvatarMood =

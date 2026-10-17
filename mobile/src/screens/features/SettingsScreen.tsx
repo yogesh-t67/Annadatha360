@@ -62,7 +62,18 @@ function VoicePicker() {
   useEffect(() => () => stopSpeaking(), []);
 
   if (!voices) return null;
-  const current = saved && voices.some((v) => v.identifier === saved) ? saved : voices.find((v) => v.male)?.identifier;
+  // Telugu: the server's natural male voice is the default (phones rarely have a male Telugu voice).
+  const SERVER = '__server__';
+  const options: (AppVoice & { server?: boolean })[] = [
+    ...(lang === 'te' ? [{ identifier: SERVER, label: '', male: true, server: true }] : []),
+    ...voices,
+  ];
+  const current =
+    saved && voices.some((v) => v.identifier === saved)
+      ? saved
+      : lang === 'te'
+        ? SERVER
+        : voices.find((v) => v.male)?.identifier;
   let maleN = 0;
   let otherN = 0;
 
@@ -74,23 +85,32 @@ function VoicePicker() {
           {t('settings.assistantVoice')}
         </Text>
       </View>
-      {voices.length === 0 ? (
+      {options.length === 0 ? (
         <Text variant="caption" color={theme.color.text.muted}>
           {t('settings.noVoices')}
         </Text>
       ) : (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
-          {voices.map((v) => {
+          {options.map((v) => {
             const selected = v.identifier === current;
-            const label = v.male ? t('settings.maleVoice', { n: ++maleN }) : t('settings.otherVoice', { n: ++otherN });
+            const label = v.server
+              ? t('settings.naturalMaleVoice')
+              : v.male
+                ? t('settings.maleVoice', { n: ++maleN })
+                : t('settings.otherVoice', { n: ++otherN });
             return (
               <Pressable
                 key={v.identifier}
                 accessibilityRole="radio"
                 accessibilityState={{ selected }}
                 onPress={() => {
-                  setVoiceId(lang, v.identifier);
-                  speak(t('settings.voiceSample'), i18n.language, undefined, v.identifier);
+                  if (v.server) {
+                    setVoiceId(lang, ''); // no phone voice chosen → server voice
+                    speak(t('settings.voiceSample'), i18n.language);
+                  } else {
+                    setVoiceId(lang, v.identifier);
+                    speak(t('settings.voiceSample'), i18n.language, undefined, v.identifier);
+                  }
                 }}
                 style={{
                   flexDirection: 'row',
