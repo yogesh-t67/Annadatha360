@@ -92,6 +92,27 @@ export function useIsSpeaking(): boolean {
   return useVoicePhase() === 'playing';
 }
 
+// ---- Live loudness of the playing voice, for lip-sync. Server audio reports PCM samples while it plays (Android
+// Visualizer; needs the mic permission). Phone TTS doesn't, so the avatar falls back to a speech-like rhythm.
+let level = 0;
+let peak = 0.05;
+let levelAt = 0;
+
+function onSamples(frames: number[] | undefined) {
+  if (!frames || frames.length === 0) return;
+  let sum = 0;
+  for (let i = 0; i < frames.length; i += 4) sum += frames[i] * frames[i];
+  const rms = Math.sqrt(sum / Math.ceil(frames.length / 4));
+  peak = Math.max(rms, peak * 0.995, 0.02); // adapts to the voice's loudness
+  level = Math.min(1, rms / peak);
+  levelAt = Date.now();
+}
+
+/** 0 (silent) … 1 (loudest) for the voice playing right now, or null when no live samples are available. */
+export function getMouthLevel(): number | null {
+  return Date.now() - levelAt < 250 ? level : null;
+}
+
 // ---- Telugu: natural male voice from the server (phones rarely have a male Telugu voice), phone voice as backup.
 let seq = 0; // each speak() call gets a number; anything older is stale and must not play
 let player: AudioPlayer | null = null;
@@ -142,6 +163,17 @@ async function speakFromServer(text: string, mine: number, finished: () => void)
     const origin = API_BASE_URL.replace(/\/api\/v1$/, '');
     const p = createAudioPlayer({ uri: origin + audio_url, headers: { 'ngrok-skip-browser-warning': '1' } });
     player = p;
+    peak = 0.05;
+    try {
+      if (p.isAudioSamplingSupported) {
+        p.setAudioSamplingEnabled(true);
+        p.addListener('audioSampleUpdate', (sample) => {
+          if (mine === seq) onSamples(sample.channels[0]?.frames);
+        });
+      }
+    } catch {
+      // no sampling (e.g. mic permission not granted yet): the avatar uses its speech rhythm instead
+    }
     p.addListener('playbackStatusUpdate', (status) => {
       if (mine !== seq) return;
       if (status.playing) setPhase('playing');

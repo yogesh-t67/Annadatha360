@@ -2,67 +2,64 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Pressable, View } from 'react-native';
 
 import { theme } from '../theme';
+import { getMouthLevel } from '../voice/speech';
 
 /**
  * The assistant's face: a friendly Telugu farmer (white shirt, green-and-white checked kanduva).
  *
- * 28 hand-drawn frames (assets/avatar), sequenced per state and cross-faded so changes never look abrupt:
- * - idle: smiling base with natural micro-events — blinks, a gentle smile, looking around, a friendly nod
- * - listening: attentive base, with curious / understanding / nodding reactions while the farmer speaks
- * - thinking: looking up → hand on chin → "hmm" → slight frown while the AI works; "eureka" as the answer arrives
- * - speaking: mouth cycles closed → small → medium → wide (+ smiling talk), with occasional explaining /
- *   happy-talk gestures, and a "finish" frame when the audio ends
- * - finished: a short reaction (`mood`: happy / agree / confused / surprised / concerned), then idle
+ * 21 frames (assets/avatar) built from ONE base portrait: every frame differs from the base only where the
+ * expression changes (mouth, eyes or face), so talking and blinking never make the turban or shirt shimmer.
+ * - idle: base, with real blinks (open -> half -> closed -> half -> open), glances left/right, a warm smile
+ * - listening: attentive look, nodding warmly now and then
+ * - thinking: "hmm" look, glancing aside
+ * - speaking: lip-sync across 8 mouth shapes, driven by the voice's live loudness when the audio reports it
+ *   (server Telugu voice), otherwise a natural syllable rhythm with word pauses
+ * - finished: lips close, then a reaction (`mood`), then idle
  *
- * Only the frames the current state can use are mounted (≤ 10 of 384 px JPEG), each with its own native-driver
- * opacity. Built-in Animated only — no extra dependencies, light on low-end Android.
+ * Frames cross-fade; only the frames the current state can use are mounted. Built-in Animated only.
  */
 export type AvatarState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'finished';
 export type AvatarMood = 'happy' | 'agree' | 'confused' | 'surprised' | 'concerned';
 
 const FRAMES = {
-  idle_01: require('../../assets/avatar/idle_01.jpg'), // smiling (base)
-  idle_02: require('../../assets/avatar/idle_02.jpg'), // gentle smile
-  idle_03: require('../../assets/avatar/idle_03.jpg'), // soft blink
-  idle_04: require('../../assets/avatar/idle_04.jpg'), // looking around
-  idle_05: require('../../assets/avatar/idle_05.jpg'), // friendly nod
-  listen_01: require('../../assets/avatar/listen_01.jpg'), // attentive (base)
-  listen_02: require('../../assets/avatar/listen_02.jpg'), // curious
-  listen_03: require('../../assets/avatar/listen_03.jpg'), // understanding
-  listen_04: require('../../assets/avatar/listen_04.jpg'), // surprised
-  listen_05: require('../../assets/avatar/listen_05.jpg'), // nodding
-  talk_01: require('../../assets/avatar/talk_01.jpg'), // mouth closed
-  talk_02: require('../../assets/avatar/talk_02.jpg'), // mouth open small
-  talk_03: require('../../assets/avatar/talk_03.jpg'), // mouth open medium
-  talk_04: require('../../assets/avatar/talk_04.jpg'), // mouth open wide
-  talk_05: require('../../assets/avatar/talk_05.jpg'), // smiling talk
-  talk_06: require('../../assets/avatar/talk_06.jpg'), // explaining (gesture)
-  talk_07: require('../../assets/avatar/talk_07.jpg'), // happy talk (gesture)
-  talk_08: require('../../assets/avatar/talk_08.jpg'), // finish / close
-  think_01: require('../../assets/avatar/think_01.jpg'), // looking up
-  think_02: require('../../assets/avatar/think_02.jpg'), // hand on chin
-  think_03: require('../../assets/avatar/think_03.jpg'), // slight frown
-  think_04: require('../../assets/avatar/think_04.jpg'), // hmm
-  think_05: require('../../assets/avatar/think_05.jpg'), // eureka / idea
+  base: require('../../assets/avatar/base.jpg'), // relaxed smile (rest pose)
+  mouth_rest: require('../../assets/avatar/mouth_rest.jpg'), // closed, neutral
+  mouth_mbp: require('../../assets/avatar/mouth_mbp.jpg'), // lips pressed (m, b, p)
+  mouth_small: require('../../assets/avatar/mouth_small.jpg'), // slightly open
+  mouth_mid: require('../../assets/avatar/mouth_mid.jpg'), // half open ("eh")
+  mouth_wide: require('../../assets/avatar/mouth_wide.jpg'), // wide open ("aa")
+  mouth_o: require('../../assets/avatar/mouth_o.jpg'), // rounded ("oh", "oo")
+  mouth_ee: require('../../assets/avatar/mouth_ee.jpg'), // stretched ("ee")
+  mouth_fv: require('../../assets/avatar/mouth_fv.jpg'), // teeth on lip (f, v)
+  blink_half: require('../../assets/avatar/blink_half.jpg'),
+  blink_closed: require('../../assets/avatar/blink_closed.jpg'),
+  look_left: require('../../assets/avatar/look_left.jpg'),
+  look_right: require('../../assets/avatar/look_right.jpg'),
+  listen: require('../../assets/avatar/listen.jpg'), // attentive
+  listen_nod: require('../../assets/avatar/listen_nod.jpg'), // understanding / warm
+  think: require('../../assets/avatar/think.jpg'), // "hmm", looking up
   happy: require('../../assets/avatar/happy.jpg'),
-  agree: require('../../assets/avatar/agree.jpg'),
+  agree: require('../../assets/avatar/agree.jpg'), // wink
   confused: require('../../assets/avatar/confused.jpg'),
   surprised: require('../../assets/avatar/surprised.jpg'),
   concerned: require('../../assets/avatar/concerned.jpg'),
 };
 type Frame = keyof typeof FRAMES;
 
-/** Frames each state can show — only these are mounted, to keep decoded-bitmap memory small. */
+const MOUTHS: Frame[] = ['mouth_rest', 'mouth_mbp', 'mouth_small', 'mouth_mid', 'mouth_wide', 'mouth_o', 'mouth_ee', 'mouth_fv'];
+const BLINK: Frame[] = ['blink_half', 'blink_closed'];
+
+/** Frames each state can show; only these are mounted, to keep decoded-bitmap memory small. */
 const STATE_FRAMES: Record<AvatarState, Frame[]> = {
-  idle: ['idle_01', 'idle_02', 'idle_03', 'idle_04', 'idle_05'],
-  listening: ['listen_01', 'listen_02', 'listen_03', 'listen_04', 'listen_05'],
-  thinking: ['think_01', 'think_02', 'think_03', 'think_04', 'think_05'],
-  speaking: ['talk_01', 'talk_02', 'talk_03', 'talk_04', 'talk_05', 'talk_06', 'talk_07', 'talk_08'],
-  finished: ['talk_08', 'happy', 'agree', 'confused', 'surprised', 'concerned', 'idle_01'],
+  idle: ['base', ...BLINK, 'look_left', 'look_right', 'listen_nod'],
+  listening: ['listen', 'listen_nod', ...BLINK],
+  thinking: ['think', 'look_left', 'look_right'],
+  speaking: ['base', ...MOUTHS, ...BLINK],
+  finished: ['mouth_rest', 'base', 'happy', 'agree', 'confused', 'surprised', 'concerned'],
 };
 
-/** Cross-fade length: quick for the mouth, softer for expression changes. */
-const FADE_MS = { mouth: 60, expression: 200 };
+/** Cross-fade length: very quick for mouth shapes, softer for expression changes. */
+const FADE_MS = { mouth: 45, blink: 50, expression: 200 };
 const FINISHED_MS = 1500;
 
 const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
@@ -129,7 +126,7 @@ export function FarmerAvatar({
   }, [mood]);
 
   // ---- Frame sequencer: which frame is on screen, and how fast to fade to it.
-  const [frame, setFrame] = useState<{ name: Frame; prev: Frame; fade: number }>({ name: 'idle_01', prev: 'idle_01', fade: 0 });
+  const [frame, setFrame] = useState<{ name: Frame; prev: Frame; fade: number }>({ name: 'base', prev: 'base', fade: 0 });
   const show = (name: Frame, fade = FADE_MS.expression) =>
     setFrame((f) => (f.name === name ? f : { name, prev: f.name, fade }));
 
@@ -138,6 +135,20 @@ export function FarmerAvatar({
     const later = (fn: () => void, ms: number) => {
       timer = setTimeout(fn, ms);
     };
+    /** A real blink: open -> half -> closed -> half -> back to `open`. */
+    const blink = (open: Frame, then: () => void) => {
+      show('blink_half', FADE_MS.blink);
+      later(() => {
+        show('blink_closed', FADE_MS.blink);
+        later(() => {
+          show('blink_half', FADE_MS.blink);
+          later(() => {
+            show(open, FADE_MS.blink);
+            then();
+          }, 60);
+        }, 90);
+      }, 55);
+    };
 
     if (shown === 'idle' && reaction) {
       show(reaction);
@@ -145,98 +156,100 @@ export function FarmerAvatar({
     }
 
     if (shown === 'listening') {
-      show('listen_01');
+      show('listen');
       if (!reduceMotion) {
-        // Attentive base, reacting now and then: understanding, nodding, curious.
-        const react = () =>
+        const next = () =>
           later(() => {
-            show(pick<Frame>(['listen_03', 'listen_05', 'listen_03', 'listen_02']));
+            if (Math.random() < 0.4) return blink('listen', next);
+            show('listen_nod'); // "I understand"
             later(() => {
-              show('listen_01');
-              react();
-            }, between(700, 1100));
-          }, between(1200, 2000));
-        react();
+              show('listen');
+              next();
+            }, between(800, 1200));
+          }, between(1400, 2400));
+        next();
       }
     } else if (shown === 'thinking') {
-      // looking up → hand on chin → hmm → slight frown, looping while the AI works
-      const seq: Frame[] = ['think_01', 'think_02', 'think_04', 'think_03'];
-      let i = 0;
-      show(seq[0]);
+      show('think');
       if (!reduceMotion) {
-        const step = () =>
+        const next = () =>
           later(() => {
-            i = (i + 1) % seq.length;
-            show(seq[i]);
-            step();
-          }, between(900, 1300));
-        step();
+            show(pick<Frame>(['look_left', 'look_right']));
+            later(() => {
+              show('think');
+              next();
+            }, between(700, 1000));
+          }, between(1300, 2000));
+        next();
       }
     } else if (shown === 'speaking') {
       if (reduceMotion) {
-        show('talk_05');
+        show('mouth_mid');
       } else {
-        // Brief "eureka" if we were thinking, then the mouth: closed → small → medium → wide, irregular like
-        // syllables, with a smiling-talk frame mixed in and an occasional explaining / happy-talk gesture.
-        const mouth: Frame[] = ['talk_02', 'talk_03', 'talk_04', 'talk_03', 'talk_02', 'talk_01', 'talk_05', 'talk_03', 'talk_01'];
-        let i = 0;
-        let sinceGesture = 0;
-        const talk = () => {
-          if (sinceGesture > between(2800, 4200)) {
-            sinceGesture = 0;
-            show(pick<Frame>(['talk_06', 'talk_07']), FADE_MS.expression);
-            later(talk, between(550, 750));
-            return;
-          }
-          i = (i + 1 + (Math.random() < 0.3 ? 1 : 0)) % mouth.length;
-          show(mouth[i], FADE_MS.mouth);
-          const ms = between(95, 190);
-          sinceGesture += ms;
-          later(talk, ms);
+        // Lip-sync. With live loudness (server voice): louder = more open, with "oh"/"ee" variety and closed
+        // lips in pauses. Without it (phone voice): syllable-like shapes every 80-160 ms with short word pauses.
+        let lastMouth: Frame = 'mouth_rest';
+        let sinceBlink = 0;
+        let syllables = 0;
+        let pauseEvery = Math.round(between(3, 6));
+        const fromLevel = (lvl: number): Frame => {
+          if (lvl < 0.12) return lastMouth === 'mouth_rest' && Math.random() < 0.4 ? 'mouth_mbp' : 'mouth_rest';
+          if (lvl < 0.32) return Math.random() < 0.25 ? 'mouth_fv' : 'mouth_small';
+          if (lvl < 0.6) return Math.random() < 0.3 ? 'mouth_ee' : 'mouth_mid';
+          return Math.random() < 0.3 ? 'mouth_o' : 'mouth_wide';
         };
-        if (frame.name.startsWith('think_')) {
-          show('think_05');
-          later(talk, 420);
-        } else {
-          talk();
-        }
+        const rhythm = (): Frame => {
+          if (++syllables >= pauseEvery) {
+            syllables = 0;
+            pauseEvery = Math.round(between(3, 6));
+            return Math.random() < 0.5 ? 'mouth_rest' : 'mouth_mbp'; // between words
+          }
+          const options: Frame[] = ['mouth_small', 'mouth_mid', 'mouth_mid', 'mouth_wide', 'mouth_o', 'mouth_ee', 'mouth_small', 'mouth_fv'];
+          let m = pick(options);
+          if (m === lastMouth) m = pick(options);
+          return m;
+        };
+        const step = () => {
+          const ms = between(80, 160);
+          sinceBlink += ms;
+          if (sinceBlink > between(3500, 5500)) {
+            sinceBlink = 0;
+            return blink(lastMouth, () => later(step, 60));
+          }
+          const lvl = getMouthLevel();
+          lastMouth = lvl == null ? rhythm() : fromLevel(lvl);
+          show(lastMouth, FADE_MS.mouth);
+          later(step, lvl == null ? ms : 75);
+        };
+        step();
       }
     } else if (shown === 'finished') {
-      // Close the mouth, then react.
-      show('talk_08');
-      later(() => show(mood), 280);
+      // Close the lips, then react.
+      show('mouth_rest', FADE_MS.mouth);
+      later(() => show(mood), 220);
     } else {
-      // idle: smiling base with natural micro-events every few seconds.
-      show('idle_01');
+      // idle: rest pose with natural micro-events every few seconds.
+      show('base');
       if (!reduceMotion) {
         const next = () =>
           later(() => {
             const r = Math.random();
-            if (r < 0.45) {
-              show('idle_03', 90); // blink
-              later(() => {
-                show('idle_01', 90);
-                next();
-              }, 160);
-            } else {
-              const look = r < 0.65 ? 'idle_02' : r < 0.85 ? 'idle_04' : 'idle_05';
-              show(look);
-              later(() => {
-                show('idle_01');
-                next();
-              }, between(1100, 1700));
-            }
+            if (r < 0.55) return blink('base', next);
+            show(r < 0.72 ? 'look_left' : r < 0.89 ? 'look_right' : 'listen_nod');
+            later(() => {
+              show('base');
+              next();
+            }, between(1000, 1600));
           }, between(2500, 4500));
         next();
       }
     }
     return () => clearTimeout(timer);
-    // `frame` is read once to decide on "eureka"; re-running on every frame change would restart the sequence.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, reduceMotion, reaction, mood]);
 
   // ---- Cross-fade: one opacity value per frame; mount only frames this state can use (+ the one on screen).
-  const opacity = useRef<Partial<Record<Frame, Animated.Value>>>({ idle_01: new Animated.Value(1) }).current;
+  const opacity = useRef<Partial<Record<Frame, Animated.Value>>>({ base: new Animated.Value(1) }).current;
   const valueFor = (f: Frame) => (opacity[f] ??= new Animated.Value(0));
   // The outgoing frame stays mounted until its fade is done, so a state change never flashes white.
   const mounted = useMemo(
