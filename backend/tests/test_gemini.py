@@ -94,6 +94,17 @@ def test_falls_back_to_next_model_when_quota_runs_out():
     assert asked == ["gemini-a", "gemini-b", "gemini-b"]  # exhausted model skipped for a while
 
 
+def test_falls_back_to_next_model_when_one_hangs():
+    def handler(request):
+        if json.loads(request.content)["model"] == "gemini-a":
+            raise httpx.ReadTimeout("timed out", request=request)
+        return _ok("from b")
+
+    g = GeminiClient("k", ["gemini-a", "gemini-b"], "https://gemini.test/v1beta/openai/", http=httpx.Client(transport=httpx.MockTransport(handler)))
+    res = g.beta.messages.create(max_tokens=10, messages=[{"role": "user", "content": "hi"}])
+    assert res.content[0].text == "from b"
+
+
 def test_all_models_exhausted_is_busy():
     from app.core.errors import AppError
 

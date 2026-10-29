@@ -59,6 +59,8 @@ class GeminiClient:
     RETRY_DELAY_SECONDS = 1.5
     QUOTA_SKIP_SECONDS = 15 * 60  # daily quotas reset once a day; re-check every 15 min
     OVERLOAD_SKIP_SECONDS = 60
+    # Per model. Answers take 2-15 s; a model still silent after this is stuck, and the next one is tried.
+    MODEL_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 
     def __init__(self, api_key: str, model: str | list[str] | tuple[str, ...], base_url: str, http: httpx.Client | None = None):
         self.models = [model] if isinstance(model, str) else list(dict.fromkeys(model))
@@ -80,7 +82,11 @@ class GeminiClient:
         auth = {"x-goog-api-key": self.api_key} if native else {"Authorization": f"Bearer {self.api_key}"}
         for attempt in range(2):
             try:
-                res = self.http.post(url, json=body, headers=auth)
+                res = self.http.post(url, json=body, headers=auth, timeout=self.MODEL_TIMEOUT)
+            except httpx.TimeoutException as exc:
+                # An overloaded model sometimes just hangs instead of answering 503: move on to the next one.
+                log.warning("Gemini timed out: %s", exc)
+                raise _TryNextModel(self.OVERLOAD_SKIP_SECONDS) from exc
             except httpx.HTTPError as exc:
                 log.error("Gemini connection error: %s", exc)
                 raise AppError(503, "ai_unavailable", "The AI assistant is unavailable right now") from exc
