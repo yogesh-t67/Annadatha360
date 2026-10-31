@@ -6,6 +6,7 @@ DOCUMENT_KINDS: dict[str, str] = {
     "fertilizer_licence": "Fertilizer dealer authorisation (FCO 1985)",
     "pesticide_licence": "Pesticide/insecticide sale licence",
     "seed_licence": "Seed dealer licence",
+    "veterinary_drug_licence": "Drug licence for veterinary medicines",
     "drone_pilot_certificate": "DGCA remote pilot certificate",
     "drone_uin": "DGCA drone registration (UIN)",
     "contract_labour_licence": "Contract labour licence",

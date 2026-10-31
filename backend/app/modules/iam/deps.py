@@ -22,6 +22,11 @@ class Principal:
     def has(self, permission: P) -> bool:
         return str(permission) in self.permissions
 
+    @property
+    def vendor_id(self) -> int | None:
+        """The vendor this account works for (vendor accounts only)."""
+        return self.user.vendor_id
+
 
 def get_principal(
     db: DbSession, credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]

@@ -19,6 +19,15 @@ from app.modules.iam.models import (  # noqa: F401  (ERP tables, registered here
     ErpUser,
     ErpUserRole,
     ErpUserToken,
+    ErpVendorMember,
+)
+from app.modules.vendors.models import (  # noqa: F401
+    Vendor,
+    VendorBankAccount,
+    VendorCapability,
+    VendorLicence,
+    VendorServiceArea,
+    VendorStatusHistory,
 )
 
 __all__ = [

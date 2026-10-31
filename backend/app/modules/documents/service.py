@@ -90,8 +90,28 @@ def can_view(principal: Principal, doc: ErpDocument) -> bool:
         return True
     if doc.owner_type == "erp_user":
         return doc.owner_id == principal.user.id
-    # "vendor": the vendor's own team — added with vendor registration (step 3)
+    if doc.owner_type == "vendor":  # the vendor's own team
+        return principal.vendor_id is not None and doc.owner_id == principal.vendor_id
     return False
+
+
+def attach_to_vendor(db: Session, principal: Principal, public_id: str, kind: str, vendor_id: int) -> ErpDocument:
+    """Moves a document the user uploaded into the vendor's application. Re-attaching one that is already the
+    vendor's is allowed (saving the same form twice)."""
+    doc = db.scalar(select(ErpDocument).where(ErpDocument.public_id == public_id, ErpDocument.deleted_at.is_(None)))
+    mine = doc is not None and doc.owner_type == "erp_user" and doc.owner_id == principal.user.id
+    already = doc is not None and doc.owner_type == "vendor" and doc.owner_id == vendor_id
+    if not (mine or already):
+        raise AppError(422, "document_not_found", "Document not found. Upload it again.", {"document_id": public_id})
+    if doc.kind != kind:
+        raise AppError(
+            422,
+            "wrong_document_kind",
+            f"Expected a {DOCUMENT_KINDS[kind]}, got a {DOCUMENT_KINDS.get(doc.kind, doc.kind)}",
+            {"document_id": public_id},
+        )
+    doc.owner_type, doc.owner_id = "vendor", vendor_id
+    return doc
 
 
 def mark_deleted(principal: Principal, doc: ErpDocument) -> None:

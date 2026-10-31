@@ -481,11 +481,10 @@ def change_password(db: Session, user: ErpUser, current: str, new: str, keep: Er
 # ---------- Forgot password ----------
 
 
-def request_password_reset(db: Session, email: str, ip: str | None) -> tuple[ErpUser, str] | None:
-    """Returns (user, link) to email, or None. The caller answers the same either way, so nobody can use this
-    to find out which emails have accounts."""
+def count_public_request(db: Session, email: str, ip: str | None, stage: str) -> None:
+    """For requests anyone can make without logging in (forgot password, vendor sign-up): refuse when this address
+    has made too many attempts, then count this one. success=True so it never counts as a wrong password."""
     settings = get_settings()
-    email = email.strip().lower()
     since = utcnow() - timedelta(minutes=settings.erp_login_lock_minutes)
     if (
         ip
@@ -495,8 +494,15 @@ def request_password_reset(db: Session, email: str, ip: str | None) -> tuple[Erp
         raise AppError(
             429, "too_many_attempts", f"Too many attempts. Try again in {settings.erp_login_lock_minutes} minutes."
         )
-    # Counts toward the per-IP limit; success=True so it never counts as a wrong password.
-    note_attempt(db, email, ip, "reset", True)
+    note_attempt(db, email, ip, stage, True)
+
+
+def request_password_reset(db: Session, email: str, ip: str | None) -> tuple[ErpUser, str] | None:
+    """Returns (user, link) to email, or None. The caller answers the same either way, so nobody can use this
+    to find out which emails have accounts."""
+    settings = get_settings()
+    email = email.strip().lower()
+    count_public_request(db, email, ip, "reset")
     user = db.scalar(select(ErpUser).where(ErpUser.email == email, ErpUser.deleted_at.is_(None)))
     if user is None or user.status != "active":
         return None

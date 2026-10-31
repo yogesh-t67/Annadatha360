@@ -38,10 +38,21 @@ class ErpUser(TimestampMixin, Base):
     roles: Mapped[list["ErpUserRole"]] = relationship(
         cascade="all, delete-orphan", passive_deletes=True, foreign_keys="ErpUserRole.user_id", lazy="selectin"
     )
+    vendor_membership: Mapped["ErpVendorMember | None"] = relationship(
+        uselist=False, passive_deletes=True, lazy="selectin"
+    )
 
     @property
     def role_codes(self) -> list[str]:
-        return sorted(r.role_code for r in self.roles)
+        """Platform roles, plus the vendor team role for vendor accounts."""
+        codes = {r.role_code for r in self.roles}
+        if self.vendor_membership is not None:
+            codes.add(self.vendor_membership.role_code)
+        return sorted(codes)
+
+    @property
+    def vendor_id(self) -> int | None:
+        return self.vendor_membership.vendor_id if self.vendor_membership is not None else None
 
 
 class ErpUserRole(Base):
@@ -54,6 +65,19 @@ class ErpUserRole(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("erp_users.id", ondelete="CASCADE"), index=True)
     role_code: Mapped[str] = mapped_column(String(30))
     created_by_id: Mapped[int | None] = mapped_column(ForeignKey("erp_users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ErpVendorMember(Base):
+    """A vendor-side account's place in its vendor's team (vendor_owner or vendor_staff). One vendor per account."""
+
+    __tablename__ = "erp_vendor_members"
+    __table_args__ = (UniqueConstraint("user_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    vendor_id: Mapped[int] = mapped_column(ForeignKey("vendors.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("erp_users.id", ondelete="CASCADE"))
+    role_code: Mapped[str] = mapped_column(String(30))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
