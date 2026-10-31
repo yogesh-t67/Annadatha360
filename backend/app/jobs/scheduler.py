@@ -30,6 +30,9 @@ class Job:
     run: Callable[[], object]
     every: timedelta | None = None  # interval job…
     daily_at: tuple[int, int] | None = None  # …or daily at (hour, minute) IST
+    # Daily job that also runs when the process starts: for data that goes stale if a slot is missed
+    # (the server was down or asleep at that time), and is cheap to fetch again.
+    run_on_start: bool = False
     last_run: datetime | None = field(default=None, repr=False)
 
     def due(self, now: datetime) -> bool:
@@ -40,6 +43,8 @@ class Job:
         # Due once the slot has passed and we haven't run since it. A fresh process waits for the next slot
         # rather than firing immediately, so restarts don't trigger an off-schedule run.
         if self.last_run is None:
+            if self.run_on_start:
+                return True
             self.last_run = now if now >= today_slot else today_slot - timedelta(days=1)
             return False
         return now >= today_slot > self.last_run
@@ -63,7 +68,8 @@ def _sync_market(db):
 def default_jobs() -> list[Job]:
     return [
         Job("expire_unpaid_orders", _with_session(expire_unpaid_orders), every=timedelta(minutes=5)),
-        Job("sync_market_prices", _with_session(_sync_market), daily_at=(19, 30)),
+        # data.gov.in only serves the latest day, so a missed run leaves the app on old prices until the next one.
+        Job("sync_market_prices", _with_session(_sync_market), daily_at=(19, 30), run_on_start=True),
         Job("housekeeping", _with_session(prune), daily_at=(3, 0)),
     ]
 

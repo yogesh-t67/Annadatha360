@@ -54,6 +54,7 @@ const DEVICE_MIC_ERROR_KEYS: Record<SpeechInputError, string> = {
 const RECORDER_ERROR_KEYS: Record<RecorderError, string> = {
   'not-allowed': 'voice.micDenied',
   'too-short': 'voice.tooShort',
+  'no-speech': 'voice.noSpeech',
   failed: 'errors.generic',
 };
 

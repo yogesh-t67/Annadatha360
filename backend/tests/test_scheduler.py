@@ -36,6 +36,19 @@ def test_daily_job_started_before_slot_runs_today():
     assert run_due([job], at(16, 19, 30)) == ["daily"]
 
 
+def test_run_on_start_job_catches_up_then_keeps_its_slot():
+    calls = []
+    job = Job("prices", lambda: calls.append(1), daily_at=(19, 30), run_on_start=True)
+    assert run_due([job], at(31, 9, 0)) == ["prices"]  # restarted after missed slots: fetch now
+    assert run_due([job], at(31, 12, 0)) == []
+    assert run_due([job], at(31, 19, 30)) == ["prices"]
+    assert len(calls) == 2
+
+
+def test_market_sync_runs_on_start():
+    assert next(j for j in default_jobs() if j.name == "sync_market_prices").run_on_start
+
+
 def test_failing_job_does_not_stop_others_or_retry_every_tick():
     calls = []
 

@@ -28,7 +28,22 @@ const SILENCE_MS = 1500;
 const MAX_MS = 60_000;
 const MIN_MS = 700; // shorter taps are mistakes, not questions
 
-export type RecorderError = 'not-allowed' | 'too-short' | 'failed';
+/**
+ * Speaking makes the level jump well above the room's background; silence stays flat. Android boosts quiet
+ * input, so a silent room can read as loud as soft speech: compare against the background, not a fixed level.
+ */
+const SPEECH_JUMP_DB = 12;
+
+export function soundsSilent(levels: number[]): boolean {
+  const heard = levels.slice(3); // skip the mic warming up
+  if (heard.length < 5) return false; // too few levels to judge: let the AI listen
+  const sorted = [...heard].sort((a, b) => a - b);
+  const background = sorted[Math.floor(sorted.length * 0.2)];
+  const loudest = sorted[sorted.length - 1];
+  return loudest < SILENCE_DB || loudest - background < SPEECH_JUMP_DB;
+}
+
+export type RecorderError = 'not-allowed' | 'too-short' | 'no-speech' | 'failed';
 
 export function useVoiceRecorder(onRecorded: (uri: string) => void, { autoStopOnSilence = false } = {}) {
   const recorder = useAudioRecorder(OPTIONS);
@@ -38,11 +53,15 @@ export function useVoiceRecorder(onRecorded: (uri: string) => void, { autoStopOn
   const onRecordedRef = useRef(onRecorded);
   onRecordedRef.current = onRecorded;
   const heardSpeech = useRef(false);
+  /** Mic levels (dB) of this recording, about 10 a second; empty if the phone doesn't report levels. */
+  const levels = useRef<number[]>([]);
   const quietSince = useRef<number | null>(null);
   const stopping = useRef(false);
+  /** Between the tap and the mic actually running (permission, audio mode, prepare: up to ~2 s on slow phones). */
+  const starting = useRef(false);
 
   const stop = useCallback(async () => {
-    if (stopping.current) return;
+    if (stopping.current || starting.current) return;
     stopping.current = true;
     try {
       const duration = recorder.currentTime * 1000;
@@ -52,6 +71,11 @@ export function useVoiceRecorder(onRecorded: (uri: string) => void, { autoStopOn
       setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(() => undefined);
       if (duration < MIN_MS) {
         setError('too-short');
+        return;
+      }
+      // Nothing was said: don't upload it and wait ~10 s for the AI to say so.
+      if (soundsSilent(levels.current)) {
+        setError('no-speech');
         return;
       }
       if (recorder.uri) onRecordedRef.current(recorder.uri);
@@ -65,21 +89,28 @@ export function useVoiceRecorder(onRecorded: (uri: string) => void, { autoStopOn
   }, [recorder]);
 
   const start = useCallback(async () => {
+    if (starting.current || stopping.current || recorder.isRecording) return; // a second tap while starting
+    starting.current = true;
     setError(null);
-    const permission = await requestRecordingPermissionsAsync();
-    if (!permission.granted) {
-      setError('not-allowed');
-      return;
-    }
     try {
+      const permission = await requestRecordingPermissionsAsync();
+      if (!permission.granted) {
+        setError('not-allowed');
+        return;
+      }
+      // Show "listening" (red ring) straight away; the mic is ready a moment later.
+      setRecording(true);
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       heardSpeech.current = false;
+      levels.current = [];
       quietSince.current = null;
       recorder.record();
-      setRecording(true);
     } catch {
+      setRecording(false);
       setError('failed');
+    } finally {
+      starting.current = false;
     }
   }, [recorder]);
 
@@ -88,6 +119,9 @@ export function useVoiceRecorder(onRecorded: (uri: string) => void, { autoStopOn
   const db = state.metering;
   useEffect(() => {
     if (!recording) return;
+    if (db !== undefined && state.isRecording && !starting.current) {
+      if (db > -100 && levels.current.length < 1000) levels.current.push(db);
+    }
     if (state.durationMillis >= MAX_MS) {
       stop();
       return;
@@ -101,7 +135,7 @@ export function useVoiceRecorder(onRecorded: (uri: string) => void, { autoStopOn
     } else {
       quietSince.current = null;
     }
-  }, [db, state.durationMillis, recording, stop, autoStopOnSilence]);
+  }, [db, state.durationMillis, state.isRecording, recording, stop, autoStopOnSilence]);
 
   // Leaving the screen mid-recording: discard it.
   useEffect(

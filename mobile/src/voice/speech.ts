@@ -149,19 +149,55 @@ function speakOnPhone(text: string, language: string, finished: () => void, voic
   });
 }
 
-async function speakFromServer(text: string, mine: number, finished: () => void): Promise<boolean> {
-  try {
-    const { api } = await import('../api/client');
-    const { API_BASE_URL } = await import('../api/config');
-    const { audio_url } = await api<{ audio_url: string }>('/tts', {
-      method: 'POST',
-      body: { text, language: 'te' },
-      timeoutMs: 45_000,
-    });
-    if (mine !== seq) return true; // stopped or replaced meanwhile: stay quiet
-    await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false }).catch(() => undefined);
-    const origin = API_BASE_URL.replace(/\/api\/v1$/, '');
-    const p = createAudioPlayer({ uri: origin + audio_url, headers: { 'ngrok-skip-browser-warning': '1' } });
+/**
+ * The server makes the voice for the whole text before it can be played (~1 s per 45 characters of Telugu).
+ * Split it: a short first part that is ready in ~3 s, then parts of up to ~300 characters, all requested at once.
+ * The first part plays while the rest are still being made, so the voice starts soon after the text appears.
+ */
+export function splitForSpeech(text: string): string[] {
+  const sentences = (text.match(/[^.!?।\n]+[.!?।]*[\s]*/g) ?? [text]).map((s) => s.trim()).filter(Boolean);
+  // A long first sentence: break it at a comma so the first part is still quick to make.
+  const first = sentences[0] ?? '';
+  const comma = first.length > 120 ? first.indexOf(', ', 30) : -1;
+  if (comma > 0 && comma < 110) sentences.splice(0, 1, first.slice(0, comma + 1), first.slice(comma + 2));
+  const parts: string[] = [];
+  let current = '';
+  for (const s of sentences) {
+    const limit = parts.length === 0 ? 60 : 300; // first part: just over one short sentence
+    if (current && (current.length >= limit || current.length + s.length > 300)) {
+      parts.push(current);
+      current = s;
+    } else {
+      current = current ? `${current} ${s}` : s;
+    }
+  }
+  if (current) {
+    // A tiny tail isn't worth its own request: join it to the part before.
+    if (parts.length > 1 && current.length < 40) parts[parts.length - 1] += ` ${current}`;
+    else parts.push(current);
+  }
+  return parts.length ? parts : [text];
+}
+
+async function fetchServerAudio(text: string): Promise<string> {
+  const { api } = await import('../api/client');
+  const { API_BASE_URL } = await import('../api/config');
+  const { audio_url } = await api<{ audio_url: string }>('/tts', {
+    method: 'POST',
+    body: { text, language: 'te' },
+    timeoutMs: 45_000,
+  });
+  return API_BASE_URL.replace(/\/api\/v1$/, '') + audio_url;
+}
+
+let abortPlayback: (() => void) | null = null;
+
+/** Play one audio file; resolves true when it finished, false if it was stopped or replaced. */
+function playUrl(uri: string, mine: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    releasePlayer();
+    abortPlayback = () => resolve(false);
+    const p = createAudioPlayer({ uri, headers: { 'ngrok-skip-browser-warning': '1' } });
     player = p;
     peak = 0.05;
     try {
@@ -175,19 +211,51 @@ async function speakFromServer(text: string, mine: number, finished: () => void)
       // no sampling (e.g. mic permission not granted yet): the avatar uses its speech rhythm instead
     }
     p.addListener('playbackStatusUpdate', (status) => {
-      if (mine !== seq) return;
+      if (mine !== seq) return resolve(false);
       if (status.playing) setPhase('playing');
       if (status.didJustFinish) {
         releasePlayer();
-        finished();
+        abortPlayback = null;
+        resolve(true);
       }
     });
     p.play();
-    return true;
+  });
+}
+
+async function speakFromServer(text: string, language: string, mine: number, finished: () => void): Promise<boolean> {
+  const parts = splitForSpeech(text);
+  const ready = parts.map(() => false);
+  const audio = parts.map((part, i) => {
+    const request = fetchServerAudio(part);
+    request.then(
+      () => (ready[i] = true),
+      () => undefined, // handled where it's awaited
+    );
+    return request;
+  });
+  try {
+    await audio[0];
   } catch (e) {
     console.warn('Server voice unavailable, using the phone voice', e);
     return false;
   }
+  if (mine !== seq) return true; // stopped or replaced meanwhile: stay quiet
+  await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false }).catch(() => undefined);
+  for (let i = 0; i < parts.length; i++) {
+    if (!ready[i]) setPhase('preparing'); // the avatar thinks (mouth still) while the next part is made
+    let uri: string;
+    try {
+      uri = await audio[i];
+    } catch {
+      // A later part failed: say the rest with the phone voice rather than stopping mid-answer.
+      if (mine === seq) speakOnPhone(parts.slice(i).join(' '), language, finished);
+      return true;
+    }
+    if (mine !== seq || !(await playUrl(uri, mine))) return true;
+  }
+  finished();
+  return true;
 }
 
 /**
@@ -210,7 +278,7 @@ export function speak(text: string, language: string, onDone?: () => void, voice
     return;
   }
   setPhase('preparing');
-  speakFromServer(text, mine, finished).then((ok) => {
+  speakFromServer(text, language, mine, finished).then((ok) => {
     if (!ok && mine === seq) speakOnPhone(text, language, finished);
   });
 }
@@ -219,6 +287,8 @@ export function stopSpeaking(): void {
   seq++;
   Speech.stop();
   releasePlayer();
+  abortPlayback?.();
+  abortPlayback = null;
   setPhase('idle');
   const done = pendingDone;
   pendingDone = undefined;
