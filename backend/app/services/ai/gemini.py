@@ -62,7 +62,9 @@ class GeminiClient:
     # Per model. Answers take 2-15 s; a model still silent after this is stuck, and the next one is tried.
     MODEL_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 
-    def __init__(self, api_key: str, model: str | list[str] | tuple[str, ...], base_url: str, http: httpx.Client | None = None):
+    def __init__(
+        self, api_key: str, model: str | list[str] | tuple[str, ...], base_url: str, http: httpx.Client | None = None
+    ):
         self.models = [model] if isinstance(model, str) else list(dict.fromkeys(model))
         self.model = self.models[0]
         self.url = base_url.rstrip("/") + "/chat/completions"
@@ -132,7 +134,8 @@ class GeminiClient:
 
         body = {
             "contents": [
-                {"role": "model" if m["role"] == "assistant" else "user", "parts": parts(m["content"])} for m in messages
+                {"role": "model" if m["role"] == "assistant" else "user", "parts": parts(m["content"])}
+                for m in messages
             ],
             "generationConfig": {"maxOutputTokens": max_tokens},
         }

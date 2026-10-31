@@ -124,7 +124,9 @@ def create_guest(db: Session, language: str) -> Farmer:
     if not settings.guest_login_enabled or settings.is_production:
         raise AppError(403, "guest_login_disabled", "Guest login is not enabled on this server")
     for _ in range(5):
-        farmer = Farmer(phone="+0" + "".join(secrets.choice("0123456789") for _ in range(14)), preferred_language=language)
+        farmer = Farmer(
+            phone="+0" + "".join(secrets.choice("0123456789") for _ in range(14)), preferred_language=language
+        )
         db.add(farmer)
         try:
             db.commit()

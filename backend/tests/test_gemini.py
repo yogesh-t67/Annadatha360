@@ -87,9 +87,16 @@ def test_falls_back_to_next_model_when_quota_runs_out():
         asked.append(model)
         return httpx.Response(429, text="quota") if model == "gemini-a" else _ok("from b")
 
-    g = GeminiClient("k", ["gemini-a", "gemini-b"], "https://gemini.test/v1beta/openai/", http=httpx.Client(transport=httpx.MockTransport(handler)))
+    g = GeminiClient(
+        "k",
+        ["gemini-a", "gemini-b"],
+        "https://gemini.test/v1beta/openai/",
+        http=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
     res = g.beta.messages.create(max_tokens=10, messages=[{"role": "user", "content": "hi"}])
-    assert res.content[0].text == "from b" and res.model == "gemini-b"  # usage is logged against the model that answered
+    assert (
+        res.content[0].text == "from b" and res.model == "gemini-b"
+    )  # usage is logged against the model that answered
     g.beta.messages.create(max_tokens=10, messages=[{"role": "user", "content": "again"}])
     assert asked == ["gemini-a", "gemini-b", "gemini-b"]  # exhausted model skipped for a while
 
@@ -100,7 +107,12 @@ def test_falls_back_to_next_model_when_one_hangs():
             raise httpx.ReadTimeout("timed out", request=request)
         return _ok("from b")
 
-    g = GeminiClient("k", ["gemini-a", "gemini-b"], "https://gemini.test/v1beta/openai/", http=httpx.Client(transport=httpx.MockTransport(handler)))
+    g = GeminiClient(
+        "k",
+        ["gemini-a", "gemini-b"],
+        "https://gemini.test/v1beta/openai/",
+        http=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
     res = g.beta.messages.create(max_tokens=10, messages=[{"role": "user", "content": "hi"}])
     assert res.content[0].text == "from b"
 
@@ -221,7 +233,9 @@ def test_voice_no_speech(login, client, monkeypatch):
     empty = {"candidates": [{"content": {"parts": [{"text": '{"transcript":"","answer":""}'}]}}], "usageMetadata": {}}
     monkeypatch.setattr(claude, "_gemini_for", lambda *a: _gemini(lambda r: httpx.Response(200, json=empty)))
     headers, _ = login()
-    res = client.post("/api/v1/assistant/voice", headers=headers, files={"audio": ("q.m4a", io.BytesIO(b"\x00"), "audio/mp4")})
+    res = client.post(
+        "/api/v1/assistant/voice", headers=headers, files={"audio": ("q.m4a", io.BytesIO(b"\x00"), "audio/mp4")}
+    )
     assert res.status_code == 422 and res.json()["error"]["code"] == "no_speech"
 
 
@@ -229,7 +243,9 @@ def test_voice_needs_gemini(login, client, monkeypatch):
     monkeypatch.setattr(get_settings(), "ai_provider", "anthropic")
     monkeypatch.setattr(get_settings(), "anthropic_api_key", "k")
     headers, _ = login()
-    res = client.post("/api/v1/assistant/voice", headers=headers, files={"audio": ("q.m4a", io.BytesIO(b"\x00"), "audio/mp4")})
+    res = client.post(
+        "/api/v1/assistant/voice", headers=headers, files={"audio": ("q.m4a", io.BytesIO(b"\x00"), "audio/mp4")}
+    )
     assert res.status_code == 422 and res.json()["error"]["code"] == "voice_not_supported"
 
 
