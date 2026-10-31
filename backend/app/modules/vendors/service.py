@@ -5,7 +5,7 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.crypto import encrypt
+from app.core.crypto import decrypt, encrypt
 from app.core.errors import AppError
 from app.core.security import utcnow
 from app.modules.documents.models import ErpDocument
@@ -22,8 +22,10 @@ from app.modules.vendors.models import (
     VendorLicence,
     VendorServiceArea,
     VendorStatusHistory,
+    VendorVerification,
 )
 from app.modules.vendors.schemas import BankIn, CapabilitiesIn, LicenceIn, MissingItem, ProfileIn, RegisterIn
+from app.modules.vendors.verification import CheckResult, IfscInfo, KycVerifier, Lookups
 
 
 def set_status(db: Session, vendor: Vendor, to: str, actor_id: int | None, reason: str | None = None) -> None:
@@ -87,7 +89,25 @@ def _attach(db, principal, vendor, public_id: str | None, kind: str) -> int | No
     return attach_to_vendor(db, principal, public_id, kind, vendor.id).id
 
 
-def update_profile(db: Session, principal: Principal, vendor: Vendor, body: ProfileIn) -> None:
+def _check_pincode(lookups: Lookups, pincode: str, state: str | None, errors: dict[str, str]) -> str | None:
+    """Looks the pincode up in India Post data. Returns its postal district(s) for the reviewer, or None if the
+    service couldn't answer (the vendor is never blocked by an outage)."""
+    found = lookups.pincode(pincode)
+    if found is False:
+        return None
+    if found is None:
+        errors["pincode"] = "This pincode doesn't exist. Check for typing mistakes."
+    elif found.state is None:
+        errors["pincode"] = f"This pincode is in {found.state_name}, not Andhra Pradesh or Telangana"
+    elif state is not None and found.state != state:
+        place = "Telangana" if found.state == "TG" else "Andhra Pradesh"
+        errors["pincode"] = f"This pincode is in {place}, but the district you chose isn't"
+    else:
+        return ", ".join(found.districts)[:200] or None
+    return None
+
+
+def update_profile(db: Session, principal: Principal, vendor: Vendor, body: ProfileIn, lookups: Lookups) -> None:
     errors: dict[str, str] = {}
     state = None
     if body.district_code is not None:
@@ -111,8 +131,12 @@ def update_profile(db: Session, principal: Principal, vendor: Vendor, body: Prof
             errors["pan"] = "PAN doesn't match the PAN inside the GSTIN"
     if body.business_type is not None and body.business_type not in rules.BUSINESS_TYPES:
         errors["business_type"] = "Unknown business type"
-    if body.pincode is not None and not rules.valid_pincode(body.pincode):
-        errors["pincode"] = "Enter a 6-digit Andhra Pradesh or Telangana pincode"
+    postal_district = vendor.postal_district if body.pincode == vendor.pincode else None
+    if body.pincode is not None:
+        if not rules.valid_pincode(body.pincode):
+            errors["pincode"] = "Enter a 6-digit Andhra Pradesh or Telangana pincode"
+        elif body.pincode != vendor.pincode or vendor.postal_district is None:  # look up only when it changes
+            postal_district = _check_pincode(lookups, body.pincode, state, errors)
     if errors:
         raise AppError(422, "invalid_vendor_details", "Some details need fixing", errors)
     if body.gstin is not None:
@@ -134,6 +158,7 @@ def update_profile(db: Session, principal: Principal, vendor: Vendor, body: Prof
     vendor.district_code = body.district_code
     vendor.state = state
     vendor.pincode = body.pincode
+    vendor.postal_district = postal_district
     vendor.contact_phone = body.contact_phone
     vendor.contact_email = body.contact_email
     # A document left out keeps the one already attached: documents can be replaced, never dropped by accident.
@@ -171,11 +196,16 @@ def update_service_areas(db: Session, principal: Principal, vendor: Vendor, code
     vendor.updated_by_id = principal.user.id
 
 
-def update_bank(db: Session, principal: Principal, vendor: Vendor, body: BankIn) -> None:
+def update_bank(db: Session, principal: Principal, vendor: Vendor, body: BankIn, lookups: Lookups) -> None:
     number = body.account_number.strip()
     errors = {}
+    branch = None
     if not rules.valid_ifsc(body.ifsc):
         errors["ifsc"] = "IFSC should look like SBIN0001234"
+    else:
+        branch = lookups.ifsc(body.ifsc)
+        if branch is None:
+            errors["ifsc"] = "No bank branch has this IFSC. Check it on your cheque book or passbook."
     if not rules.valid_account_number(number):
         errors["account_number"] = "Account number should be 9 to 18 digits"
     if errors:
@@ -184,6 +214,9 @@ def update_bank(db: Session, principal: Principal, vendor: Vendor, body: BankIn)
     bank = vendor.bank_account or VendorBankAccount()
     bank.holder_name = body.holder_name.strip()
     bank.ifsc = body.ifsc
+    found = branch if isinstance(branch, IfscInfo) else None  # False: directory was down, keep it unknown
+    bank.bank_name = found.bank[:120] if found else None
+    bank.branch = found.branch[:120] if found else None
     bank.account_number_enc = encrypt(number)
     bank.account_last4 = number[-4:]
     if cheque is not None:
@@ -282,6 +315,40 @@ def submit(db: Session, principal: Principal, vendor: Vendor) -> None:
     for cap in vendor.capabilities:  # a resubmitted application is reviewed afresh
         cap.status = "pending"
     set_status(db, vendor, "submitted", principal.user.id)
+
+
+def run_kyc_checks(db: Session, vendor: Vendor, verifier: KycVerifier) -> None:
+    """Asks the KYC provider about GSTIN, PAN and bank account and keeps the answers for the reviewer.
+    With KYC_PROVIDER=manual nothing is checked or stored. A provider failure never blocks the vendor."""
+    bank = vendor.bank_account
+    checks = []
+    if vendor.gstin:
+        checks.append(("gstin", lambda: verifier.verify_gstin(vendor.gstin, vendor.legal_name)))
+    if vendor.pan:
+        checks.append(("pan", lambda: verifier.verify_pan(vendor.pan, vendor.legal_name)))
+    if bank is not None:
+        checks.append(
+            (
+                "bank_account",
+                lambda: verifier.verify_bank_account(decrypt(bank.account_number_enc), bank.ifsc, bank.holder_name),
+            )
+        )
+    for check, run in checks:
+        try:
+            result = run()
+        except Exception as exc:  # the provider's problem, not the vendor's
+            result = CheckResult(check=check, status="error", summary=f"Check failed: {type(exc).__name__}")
+        if result is not None:
+            db.add(
+                VendorVerification(
+                    vendor_id=vendor.id,
+                    check=check,
+                    provider=verifier.name,
+                    status=result.status,
+                    summary=result.summary[:300],
+                    details=result.details,
+                )
+            )
 
 
 def documents_by_id(db: Session, vendor: Vendor) -> dict[int, ErpDocument]:

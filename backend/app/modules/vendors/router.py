@@ -27,11 +27,14 @@ from app.modules.vendors.schemas import (
     ServiceAreasIn,
     VendorOut,
 )
+from app.modules.vendors.verification import KycVerifier, Lookups, get_kyc_verifier, get_lookups
 
 router = APIRouter(prefix="/erp", tags=["erp-vendor"])
 
 Editor = Annotated[Principal, Depends(require(P.VENDOR_PROFILE_EDIT))]
 Submitter = Annotated[Principal, Depends(require(P.VENDOR_KYC_SUBMIT))]
+Lookup = Annotated[Lookups, Depends(get_lookups)]
+Verifier = Annotated[KycVerifier, Depends(get_kyc_verifier)]
 
 
 def vendor_out(db: Session, vendor: Vendor) -> VendorOut:
@@ -60,6 +63,7 @@ def vendor_out(db: Session, vendor: Vendor) -> VendorOut:
         state=vendor.state,
         district_code=vendor.district_code,
         pincode=vendor.pincode,
+        postal_district=vendor.postal_district,
         contact_phone=vendor.contact_phone,
         contact_email=vendor.contact_email,
         labour_team_size=vendor.labour_team_size,
@@ -80,6 +84,8 @@ def vendor_out(db: Session, vendor: Vendor) -> VendorOut:
             holder_name=bank.holder_name,
             ifsc=bank.ifsc,
             account_masked="XXXXXX" + bank.account_last4,
+            bank_name=bank.bank_name,
+            branch=bank.branch,
             cheque_document=ref(bank.cheque_doc_id),
             verified=bank.verified_at is not None,
         )
@@ -165,9 +171,9 @@ def get_my_vendor(principal: CurrentPrincipal, db: DbSession):
 
 
 @router.put("/vendor/profile", response_model=VendorOut)
-def put_profile(body: ProfileIn, principal: Editor, db: DbSession, request: Request):
+def put_profile(body: ProfileIn, principal: Editor, db: DbSession, request: Request, lookups: Lookup):
     vendor = service.editable_vendor(db, principal)
-    service.update_profile(db, principal, vendor, body)
+    service.update_profile(db, principal, vendor, body, lookups)
     return _saved(db, principal, vendor, request, "erp.vendor.profile.update")
 
 
@@ -186,9 +192,9 @@ def put_service_areas(body: ServiceAreasIn, principal: Editor, db: DbSession, re
 
 
 @router.put("/vendor/bank-account", response_model=VendorOut)
-def put_bank(body: BankIn, principal: Editor, db: DbSession, request: Request):
+def put_bank(body: BankIn, principal: Editor, db: DbSession, request: Request, lookups: Lookup):
     vendor = service.editable_vendor(db, principal)
-    service.update_bank(db, principal, vendor, body)
+    service.update_bank(db, principal, vendor, body, lookups)
     return _saved(db, principal, vendor, request, "erp.vendor.bank.update")  # never log the account number
 
 
@@ -215,9 +221,10 @@ def delete_licence(licence_id: str, principal: Editor, db: DbSession, request: R
 
 
 @router.post("/vendor/submit", response_model=VendorOut)
-def submit(principal: Submitter, db: DbSession, request: Request, mail: Email):
+def submit(principal: Submitter, db: DbSession, request: Request, mail: Email, verifier: Verifier):
     vendor = service.editable_vendor(db, principal)
     service.submit(db, principal, vendor)
+    service.run_kyc_checks(db, vendor, verifier)
     out = _saved(db, principal, vendor, request, "erp.vendor.submit")
     mail.send(
         principal.user.email,

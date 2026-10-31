@@ -92,6 +92,8 @@ class BankOut(BaseModel):
     holder_name: str
     ifsc: str
     account_masked: str  # "XXXXXX1234"
+    bank_name: str | None  # from the IFSC directory, so the vendor can see a wrong IFSC at once
+    branch: str | None
     cheque_document: DocumentRef | None
     verified: bool
 
@@ -130,6 +132,7 @@ class VendorOut(BaseModel):
     state: str | None
     district_code: str | None
     pincode: str | None
+    postal_district: str | None  # India Post's district for the pincode
     contact_phone: str | None
     contact_email: str | None
     labour_team_size: int | None

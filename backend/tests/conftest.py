@@ -20,9 +20,10 @@ from app.main import app
 from app.models import Crop, ProductCategory
 from app.modules.documents.storage import LocalEncryptedStorage, get_document_storage
 from app.modules.iam import service as iam_service
+from app.modules.vendors.verification import get_lookups
 from app.services.email import get_email_sender
 from app.services.sms import get_sms_sender
-from tests.erp_helpers import API, PASSWORD, Account, FakeEmail, headers
+from tests.erp_helpers import API, PASSWORD, Account, FakeEmail, FakeLookups, headers
 
 
 class FakeSms:
@@ -60,7 +61,13 @@ def db_session():
 
 
 @pytest.fixture
-def client(db_session, sms):
+def lookups():
+    """Stands in for the public IFSC and pincode services: tests never go to the internet."""
+    return FakeLookups()
+
+
+@pytest.fixture
+def client(db_session, sms, lookups):
     def _get_db():
         db = db_session()
         try:
@@ -70,6 +77,7 @@ def client(db_session, sms):
 
     app.dependency_overrides[get_db] = _get_db
     app.dependency_overrides[get_sms_sender] = lambda: sms
+    app.dependency_overrides[get_lookups] = lambda: lookups
     with TestClient(app, raise_server_exceptions=False) as c:
         yield c
     app.dependency_overrides.clear()

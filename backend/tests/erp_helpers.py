@@ -4,6 +4,8 @@ import re
 
 import pyotp
 
+from app.modules.vendors.verification import IfscInfo, PincodeInfo
+
 PASSWORD = "Kh@rif-season-2026"
 API = "/api/v1/erp"
 
@@ -54,3 +56,27 @@ class Account:
 
 def headers(session: dict) -> dict:
     return {"Authorization": f"Bearer {session['access_token']}"}
+
+
+class FakeLookups:
+    """IFSC and pincode answers for tests. Defaults: every IFSC is an SBI Guntur branch; pincodes starting 50 are in
+    Hyderabad (Telangana), others in Guntur (AP). Set answers to None ("doesn't exist") or False ("service down")."""
+
+    def __init__(self):
+        self.ifsc_answers: dict = {}
+        self.pincode_answers: dict = {}
+        self.calls: list[tuple[str, str]] = []
+
+    def ifsc(self, code: str):
+        self.calls.append(("ifsc", code))
+        if code in self.ifsc_answers:
+            return self.ifsc_answers[code]
+        return IfscInfo(bank="State Bank of India", branch="Guntur Main")
+
+    def pincode(self, code: str):
+        self.calls.append(("pincode", code))
+        if code in self.pincode_answers:
+            return self.pincode_answers[code]
+        if code.startswith("50"):
+            return PincodeInfo(state="TG", state_name="Telangana", districts=("Hyderabad",))
+        return PincodeInfo(state="AP", state_name="Andhra Pradesh", districts=("Guntur",))

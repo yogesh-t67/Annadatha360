@@ -8,13 +8,21 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, or_, select
 
 from app.api.deps import DbSession
+from app.core.config import get_settings
 from app.modules.audit.service import record
 from app.modules.iam.deps import Principal, require
 from app.modules.iam.models import ErpUser, ErpVendorMember
 from app.modules.iam.permissions import P
 from app.modules.iam.router import Email
 from app.modules.vendors import review, rules
-from app.modules.vendors.models import VENDOR_STATUSES, Vendor, VendorCapability, VendorNote, VendorServiceArea
+from app.modules.vendors.models import (
+    VENDOR_STATUSES,
+    Vendor,
+    VendorCapability,
+    VendorNote,
+    VendorServiceArea,
+    VendorVerification,
+)
 from app.modules.vendors.models import VendorStatusHistory as History
 from app.modules.vendors.router import vendor_out
 from app.modules.vendors.schemas import VendorOut
@@ -60,10 +68,20 @@ class NoteOut(BaseModel):
     at: datetime
 
 
+class CheckOut(BaseModel):
+    check: str  # gstin | pan | bank_account
+    status: str  # verified | mismatch | invalid | error
+    summary: str
+    provider: str
+    at: datetime
+
+
 class AdminVendorOut(VendorOut):
     members: list[MemberOut]
     history: list[HistoryOut]
     notes: list[NoteOut]
+    kyc_provider: str  # "manual": nothing is checked automatically; the reviewer checks by hand
+    checks: list[CheckOut]  # latest automatic result per check
 
 
 class ApproveIn(BaseModel):
@@ -94,6 +112,11 @@ def _admin_out(db, vendor: Vendor) -> AdminVendorOut:
     ).all()
     history = db.scalars(select(History).where(History.vendor_id == vendor.id).order_by(History.id)).all()
     notes = db.scalars(select(VendorNote).where(VendorNote.vendor_id == vendor.id).order_by(VendorNote.id)).all()
+    latest: dict[str, VendorVerification] = {}
+    for c in db.scalars(
+        select(VendorVerification).where(VendorVerification.vendor_id == vendor.id).order_by(VendorVerification.id)
+    ):
+        latest[c.check] = c  # later runs replace earlier ones
     people = {h.actor_id for h in history} | {n.author_id for n in notes}
     people.discard(None)
     emails = dict(db.execute(select(ErpUser.id, ErpUser.email).where(ErpUser.id.in_(people))).all()) if people else {}
@@ -114,6 +137,11 @@ def _admin_out(db, vendor: Vendor) -> AdminVendorOut:
             for h in history
         ],
         notes=[NoteOut(text=n.text, by=emails.get(n.author_id), at=n.created_at) for n in notes],
+        kyc_provider=get_settings().kyc_provider,
+        checks=[
+            CheckOut(check=c.check, status=c.status, summary=c.summary, provider=c.provider, at=c.created_at)
+            for c in latest.values()
+        ],
     )
 
 

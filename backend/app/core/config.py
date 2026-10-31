@@ -103,6 +103,12 @@ class Settings(BaseSettings):
     document_daily_upload_limit: int = 50  # per ERP account
     document_link_ttl_seconds: int = 300  # view links stop working after 5 minutes
 
+    # --- Vendor checks ---
+    kyc_provider: str = "manual"  # paid GSTIN/PAN/bank verification; "manual" = Super Admin checks by hand
+    ifsc_lookup_url: str = "https://ifsc.razorpay.com"  # free
+    pincode_lookup_url: str = "https://api.postalpincode.in"  # free (India Post data)
+    lookup_timeout_seconds: float = 5.0
+
     # --- Vendor catalog ---
     catalog_requires_approval: bool = False  # true: new and edited listings wait for Annadata before going live
     media_dir: str = "storage/media"  # public product photos; a Docker volume in the compose files

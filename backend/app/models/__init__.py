@@ -30,6 +30,7 @@ from app.modules.vendors.models import (  # noqa: F401
     VendorNote,
     VendorServiceArea,
     VendorStatusHistory,
+    VendorVerification,
 )
 
 __all__ = [

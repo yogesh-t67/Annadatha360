@@ -5,7 +5,7 @@ from datetime import date, datetime
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base, TimestampMixin
+from app.db.base import Base, JSONType, TimestampMixin
 from app.modules.iam.models import new_public_id
 
 # draft → submitted → under_review → approved | rejected (→ edit → submitted again); approved → suspended → approved
@@ -34,6 +34,7 @@ class Vendor(TimestampMixin, Base):
     state: Mapped[str | None] = mapped_column(String(2))  # "AP" | "TG"
     district_code: Mapped[str | None] = mapped_column(String(60))  # rules.DISTRICT_CODES
     pincode: Mapped[str | None] = mapped_column(String(6))
+    postal_district: Mapped[str | None] = mapped_column(String(200))  # from India Post, for the reviewer to compare
     contact_phone: Mapped[str | None] = mapped_column(String(16))
     contact_email: Mapped[str | None] = mapped_column(String(254))
     labour_team_size: Mapped[int | None] = mapped_column(Integer)  # labour contractors only
@@ -109,6 +110,8 @@ class VendorBankAccount(TimestampMixin, Base):
     vendor_id: Mapped[int] = mapped_column(ForeignKey("vendors.id", ondelete="CASCADE"), unique=True)
     holder_name: Mapped[str] = mapped_column(String(160))
     ifsc: Mapped[str] = mapped_column(String(11))
+    bank_name: Mapped[str | None] = mapped_column(String(120))  # from the IFSC directory; None if it was down
+    branch: Mapped[str | None] = mapped_column(String(120))
     account_number_enc: Mapped[str] = mapped_column(String(255))
     account_last4: Mapped[str] = mapped_column(String(4))
     cheque_doc_id: Mapped[int | None] = mapped_column(ForeignKey("erp_documents.id", ondelete="SET NULL"))
@@ -136,4 +139,19 @@ class VendorNote(Base):
     vendor_id: Mapped[int] = mapped_column(ForeignKey("vendors.id", ondelete="CASCADE"), index=True)
     author_id: Mapped[int | None] = mapped_column(ForeignKey("erp_users.id", ondelete="SET NULL"))
     text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class VendorVerification(Base):
+    """Result of an automatic check by a KYC provider (GSTIN, PAN, bank account). One row per check run."""
+
+    __tablename__ = "vendor_verifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    vendor_id: Mapped[int] = mapped_column(ForeignKey("vendors.id", ondelete="CASCADE"), index=True)
+    check: Mapped[str] = mapped_column(String(20))  # gstin | pan | bank_account
+    provider: Mapped[str] = mapped_column(String(30))
+    status: Mapped[str] = mapped_column(String(10))  # verified | mismatch | invalid | error
+    summary: Mapped[str] = mapped_column(String(300))
+    details: Mapped[dict] = mapped_column(JSONType, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
