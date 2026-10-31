@@ -29,6 +29,10 @@ class FakeProvider:
         self.calls.append((lat, lng, days))
         return self.raw
 
+    def fetch_daily_many(self, coords, days):
+        self.calls.append(("many", len(coords), days))
+        return [self.raw for _ in coords]
+
 
 @pytest.fixture
 def provider():

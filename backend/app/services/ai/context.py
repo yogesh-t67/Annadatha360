@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.i18n import resolve
 from app.models import Crop, Farmer, Field, Scheme
 from app.services.market import latest_with_trend
-from app.services.weather import WeatherProvider, get_forecast
+from app.services.weather import WeatherProvider, get_district_forecasts, get_forecast
 
 log = logging.getLogger("annadata.ai")
 
@@ -64,6 +64,28 @@ def _weather_lines(provider: WeatherProvider | None, lat: float | None, lng: flo
         )
     for a in forecast.alerts:
         lines.append(f"ALERT {a.date.isoformat()}: {a.type.replace('_', ' ')} ({a.severity})")
+    return lines
+
+
+def _district_weather_lines(provider: WeatherProvider | None) -> list[str]:
+    """Short forecast for every AP/TG district, so questions about another district's weather get real data."""
+    if provider is None:
+        return []
+    try:
+        districts = get_district_forecasts(provider)
+    except Exception as exc:  # nice-to-have context; never fail the chat over it
+        log.warning("Skipping district weather context: %s", exc)
+        return []
+    if not districts:
+        return []
+    lines = ["Weather in every district (district headquarters; date: condition, min-max °C, rain mm and chance):"]
+    for name, state, forecast in districts:
+        days = [
+            f"{d.date:%d %b} {d.condition.replace('_', ' ')} {d.temp_min_c}-{d.temp_max_c}°C "
+            f"{d.precipitation_mm}mm {d.precipitation_probability}%"
+            for d in forecast.days[:3]
+        ]
+        lines.append(f"- {name} ({state}): " + "; ".join(days))
     return lines
 
 
@@ -179,6 +201,7 @@ def farmer_context(
     if weather_lines:
         lines.append("Weather forecast for their location (Open-Meteo; alerts are computed from IMD thresholds):")
         lines.extend(f"- {line}" for line in weather_lines)
+    lines.extend(_district_weather_lines(weather))
 
     lines.extend(_market_lines(db, farmer, today))
     lines.extend(_scheme_lines(db))

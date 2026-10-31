@@ -275,9 +275,24 @@ def test_weather_failure_does_not_break_chat(client, farmer, claude):
         def fetch_daily(self, *a):
             raise RuntimeError("down")
 
+        def fetch_daily_many(self, *a):
+            raise RuntimeError("down")
+
     app.dependency_overrides[get_weather_provider] = lambda: Down()
     assert client.post("/api/v1/assistant/messages", headers=headers, json={"message": "Q"}).status_code == 200
-    assert "Weather forecast" not in claude.requests[0]["system"][1]["text"]
+    system = claude.requests[0]["system"][1]["text"]
+    assert "Weather forecast" not in system and "Weather in every district" not in system
+
+
+def test_context_has_weather_for_other_districts(client, farmer, claude):
+    """A Guntur farmer asking about Kakinada or Khammam must get those districts' forecast, not their own."""
+    headers, _ = farmer
+    assert client.post("/api/v1/assistant/messages", headers=headers, json={"message": "Kakinada weather?"}).status_code == 200
+    system = claude.requests[0]["system"][1]["text"]
+    assert "Weather in every district" in system
+    assert "- Kakinada (AP): 16 Oct clear 24.0-33.0°C 0.0mm 10%" in system
+    assert "- Khammam (TG):" in system
+    assert system.count("(AP): ") + system.count("(TG): ") >= 62
 
 
 def test_validation(client, farmer, claude):

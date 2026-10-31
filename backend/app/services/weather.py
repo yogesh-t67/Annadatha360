@@ -91,6 +91,26 @@ class OpenMeteoProvider:
             log.error("Open-Meteo request failed: %s", exc)
             raise AppError(503, "weather_unavailable", "Weather data is unavailable right now") from exc
 
+    def fetch_daily_many(self, coords: list[tuple[float, float]], days: int) -> list[dict]:
+        """Several places in one request (Open-Meteo returns one result per place, in order)."""
+        params = {
+            "latitude": ",".join(str(lat) for lat, _ in coords),
+            "longitude": ",".join(str(lng) for _, lng in coords),
+            "daily": ",".join(DAILY_VARS),
+            "timezone": "Asia/Kolkata",
+            "forecast_days": days,
+        }
+        if self.api_key:
+            params["apikey"] = self.api_key
+        try:
+            res = self.http.get(f"{self.base_url}/v1/forecast", params=params)
+            res.raise_for_status()
+            data = res.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            log.error("Open-Meteo request failed: %s", exc)
+            raise AppError(503, "weather_unavailable", "Weather data is unavailable right now") from exc
+        return data if isinstance(data, list) else [data]
+
 
 @lru_cache  # one shared HTTP client (connection reuse); settings are fixed per process
 def get_weather_provider() -> WeatherProvider:
@@ -191,3 +211,21 @@ def get_forecast(provider: WeatherProvider, lat: float, lng: float, days: int = 
     forecast = build_forecast(provider.fetch_daily(key[0], key[1], days))
     forecast_cache.put(key, forecast)
     return forecast
+
+
+def get_district_forecasts(provider: WeatherProvider, days: int = 3) -> list[tuple[str, str, Forecast]]:
+    """Forecast for every AP/TG district headquarters, so the assistant can answer "weather in Kakinada?"
+    for any district. One request for all districts, cached like the single-place forecast."""
+    from app.services.districts import DISTRICTS
+
+    key = ("districts", days)
+    ttl = get_settings().weather_cache_ttl_seconds
+    cached = forecast_cache.get(key, ttl)
+    if cached is None:
+        fetch_many = getattr(provider, "fetch_daily_many", None)
+        if fetch_many is None:
+            return []
+        raws = fetch_many([(lat, lng) for _, _, lat, lng in DISTRICTS], days)
+        cached = [build_forecast(raw) for raw in raws]
+        forecast_cache.put(key, cached)
+    return [(name, state, f) for (name, state, _, _), f in zip(DISTRICTS, cached)]

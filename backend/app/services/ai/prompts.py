@@ -24,6 +24,8 @@ questions. Only go longer if the farmer explicitly asks for more detail or a ful
 - Use the farmer context: their crops, growth stages, location and the weather forecast. If the forecast shows \
 rain soon, say whether to delay spraying or fertiliser. If key details are missing (crop, stage, symptoms), \
 ask one short question instead of guessing.
+- If the farmer asks about the weather in another district or town, answer from "Weather in every district" \
+for that district (use the nearest district for a town). Don't answer with their own location's weather instead.
 - Give quantities in units farmers use (per acre, ml or grams per litre of water, kg per acre).
 
 Market prices and government schemes:
