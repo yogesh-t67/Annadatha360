@@ -18,6 +18,7 @@ from app.api.v1 import (
     weather,
 )
 from app.modules.audit import router as erp_audit
+from app.modules.documents import router as erp_documents
 from app.modules.iam import router as erp_iam
 
 api_router = APIRouter(prefix="/api/v1")
@@ -39,3 +40,4 @@ api_router.include_router(admin.router)
 # ERP (vendor portal + admin web app)
 api_router.include_router(erp_iam.router)
 api_router.include_router(erp_audit.router)
+api_router.include_router(erp_documents.router)

@@ -1,108 +1,14 @@
 import re
 from datetime import timedelta
 
-import pyotp
 import pytest
 from sqlalchemy import select
 
 from app.core.security import utcnow
 from app.jobs.create_erp_admin import create as create_super_admin
-from app.main import app
 from app.modules.iam import service
 from app.modules.iam.models import ErpSession
-from app.services.email import get_email_sender
-
-PASSWORD = "Kh@rif-season-2026"
-API = "/api/v1/erp"
-
-
-class FakeEmail:
-    def __init__(self):
-        self.sent: list[tuple[str, str, str]] = []
-
-    def send(self, to: str, subject: str, body: str) -> None:
-        self.sent.append((to, subject, body))
-
-    def last_token(self, to: str) -> str:
-        body = next(b for t, _, b in reversed(self.sent) if t == to)
-        return re.search(r"token=([\w-]+)", body).group(1)
-
-
-@pytest.fixture
-def mail(client):
-    m = FakeEmail()
-    app.dependency_overrides[get_email_sender] = lambda: m
-    return m
-
-
-@pytest.fixture
-def clock(monkeypatch):
-    """Authenticator codes depend on time; tests move this clock 30 s forward to get a fresh code."""
-    state = {"t": 1_800_000_000.0}
-    monkeypatch.setattr(service, "_now_ts", lambda: state["t"])
-    return state
-
-
-class Account:
-    def __init__(self, client, clock, email):
-        self.client, self.clock, self.email = client, clock, email
-        self.secret: str | None = None
-        self.backup_codes: list[str] = []
-
-    def code(self) -> str:
-        self.clock["t"] += 30
-        return pyotp.TOTP(self.secret).at(self.clock["t"])
-
-    def login(self, ip: str = "10.0.0.1") -> dict:
-        res = self.client.post(
-            f"{API}/auth/login", json={"email": self.email, "password": PASSWORD}, headers={"X-Real-IP": ip}
-        )
-        assert res.status_code == 200, res.text
-        token = res.json()["mfa_token"]
-        if res.json()["stage"] == "mfa_setup":
-            self.secret = self.client.post(f"{API}/auth/mfa/setup", json={"mfa_token": token}).json()["secret"]
-            res = self.client.post(
-                f"{API}/auth/mfa/activate", json={"mfa_token": token, "code": self.code()}, headers={"X-Real-IP": ip}
-            )
-            self.backup_codes = res.json()["backup_codes"]
-        else:
-            res = self.client.post(
-                f"{API}/auth/mfa/verify", json={"mfa_token": token, "code": self.code()}, headers={"X-Real-IP": ip}
-            )
-        assert res.status_code == 200, res.text
-        return res.json()
-
-
-def headers(session: dict) -> dict:
-    return {"Authorization": f"Bearer {session['access_token']}"}
-
-
-@pytest.fixture
-def super_admin(client, db_session, clock, mail):
-    with db_session() as db:
-        link = create_super_admin(db, "Root@Annadata.test", "Root Admin")
-    token = re.search(r"token=([\w-]+)", link).group(1)
-    assert client.post(f"{API}/auth/invite/accept", json={"token": token, "password": PASSWORD}).status_code == 204
-    return Account(client, clock, "root@annadata.test")
-
-
-@pytest.fixture
-def invite(client, mail, clock):
-    """Super Admin invites someone, who sets a password. Returns their Account (not logged in yet)."""
-
-    def _invite(admin_session: dict, email: str, role: str = "ops") -> Account:
-        res = client.post(
-            f"{API}/users",
-            headers=headers(admin_session),
-            json={"email": email, "full_name": "Ops Person", "role": role},
-        )
-        assert res.status_code == 201, res.text
-        token = mail.last_token(email)
-        assert client.post(f"{API}/auth/invite/accept", json={"token": token, "password": PASSWORD}).status_code == 204
-        return Account(client, clock, email)
-
-    return _invite
-
+from tests.erp_helpers import API, PASSWORD, headers
 
 # ---------- Login ----------
 

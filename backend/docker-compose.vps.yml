@@ -26,8 +26,10 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://annadata:${POSTGRES_PASSWORD}@db:5432/annadata
       TTS_CACHE_DIR: /data/tts
+      DOCUMENTS_DIR: /data/documents
     volumes:
       - tts:/data/tts  # generated voice files survive rebuilds
+      - documents:/data/documents  # private KYC files (encrypted)
     ports:
       - "127.0.0.1:${ANNADATA_API_PORT:-8020}:8000"
     depends_on:
@@ -52,3 +54,4 @@ services:
 volumes:
   pgdata:
   tts:
+  documents:

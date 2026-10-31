@@ -1,4 +1,5 @@
 import os
+import re
 
 os.environ["ANNADATA_ENV_FILE"] = ""  # never read a developer's backend/.env during tests
 os.environ.setdefault("DATABASE_URL", "sqlite://")
@@ -14,9 +15,13 @@ from app.db.base import Base
 from app.db.seed_crops import CROPS
 from app.db.seed_shop import CATEGORIES
 from app.db.session import get_db
+from app.jobs.create_erp_admin import create as create_super_admin
 from app.main import app
 from app.models import Crop, ProductCategory
+from app.modules.iam import service as iam_service
+from app.services.email import get_email_sender
 from app.services.sms import get_sms_sender
+from tests.erp_helpers import API, PASSWORD, Account, FakeEmail, headers
 
 
 class FakeSms:
@@ -82,3 +87,49 @@ def login(client, sms):
         return {"Authorization": f"Bearer {body['access_token']}"}, body
 
     return _login
+
+
+# ---------- ERP (vendor portal + admin) ----------
+
+
+@pytest.fixture
+def mail(client):
+    m = FakeEmail()
+    app.dependency_overrides[get_email_sender] = lambda: m
+    return m
+
+
+@pytest.fixture
+def clock(monkeypatch):
+    """Authenticator codes depend on time; tests move this clock 30 s forward to get a fresh code."""
+    state = {"t": 1_800_000_000.0}
+    monkeypatch.setattr(iam_service, "_now_ts", lambda: state["t"])
+    return state
+
+
+@pytest.fixture
+def super_admin(client, db_session, clock, mail):
+    """The first Super Admin, with a password set (logs in with .login())."""
+    with db_session() as db:
+        link = create_super_admin(db, "Root@Annadata.test", "Root Admin")
+    token = re.search(r"token=([\w-]+)", link).group(1)
+    assert client.post(f"{API}/auth/invite/accept", json={"token": token, "password": PASSWORD}).status_code == 204
+    return Account(client, clock, "root@annadata.test")
+
+
+@pytest.fixture
+def invite(client, mail, clock):
+    """Super Admin invites someone, who sets a password. Returns their Account (not logged in yet)."""
+
+    def _invite(admin_session: dict, email: str, role: str = "ops") -> Account:
+        res = client.post(
+            f"{API}/users",
+            headers=headers(admin_session),
+            json={"email": email, "full_name": "Ops Person", "role": role},
+        )
+        assert res.status_code == 201, res.text
+        token = mail.last_token(email)
+        assert client.post(f"{API}/auth/invite/accept", json={"token": token, "password": PASSWORD}).status_code == 204
+        return Account(client, clock, email)
+
+    return _invite

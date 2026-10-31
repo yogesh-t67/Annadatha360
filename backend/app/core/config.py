@@ -96,6 +96,13 @@ class Settings(BaseSettings):
     erp_login_lock_minutes: int = 15
     erp_login_max_attempts_per_ip: int = 30  # per lock window, across all emails
 
+    # --- KYC and other private documents ---
+    document_storage: str = "local"  # "local" (encrypted files on disk); "s3" is added with the AWS setup
+    documents_dir: str = "storage/documents"  # local storage root; a Docker volume in the compose files
+    document_max_mb: int = 10
+    document_daily_upload_limit: int = 50  # per ERP account
+    document_link_ttl_seconds: int = 300  # view links stop working after 5 minutes
+
     # --- Email ---
     email_provider: str = "console"  # "console" (dev: log only); a real provider is added before launch
 

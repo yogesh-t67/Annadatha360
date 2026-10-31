@@ -11,6 +11,7 @@ from app.models.scheme import Scheme
 from app.models.services import LabourRequirement, ServiceBooking, ServiceOffering, ServiceProvider
 from app.models.shop import CartItem, Order, OrderItem, Product, ProductCategory
 from app.models.staff import AuditLog, Staff
+from app.modules.documents.models import ErpDocument  # noqa: F401  (registered here like the ERP tables below)
 from app.modules.iam.models import (  # noqa: F401  (ERP tables, registered here so every table is on Base.metadata)
     ErpBackupCode,
     ErpLoginAttempt,
