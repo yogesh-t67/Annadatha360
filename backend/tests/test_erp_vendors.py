@@ -3,11 +3,9 @@ from datetime import date, timedelta
 import pytest
 from sqlalchemy import select
 
-from app.main import app
-from app.modules.documents.storage import LocalEncryptedStorage, get_document_storage
 from app.modules.vendors import rules
 from app.modules.vendors.models import VendorBankAccount
-from tests.erp_helpers import API, PASSWORD, Account, headers
+from tests.erp_helpers import API, headers
 
 PDF = b"%PDF-1.7\n%%EOF\n"
 PAN = "AAACK1234F"  # company PAN (4th letter C)
@@ -16,31 +14,8 @@ NEXT_YEAR = (date.today() + timedelta(days=365)).isoformat()
 
 
 @pytest.fixture(autouse=True)
-def storage(client, tmp_path):
-    s = LocalEncryptedStorage(tmp_path)
-    app.dependency_overrides[get_document_storage] = lambda: s
-    return s
-
-
-@pytest.fixture
-def register(client, mail, clock):
-    """Signs a vendor up, follows the email link to set a password, logs in. Returns (Account, session)."""
-
-    def _register(email="shop@vendor.test", kind="business", trade_name="Sri Lakshmi Agro"):
-        body = {
-            "email": email,
-            "full_name": "Ravi Kumar",
-            "phone": "9876543210",
-            "kind": kind,
-            "trade_name": trade_name,
-        }
-        assert client.post(f"{API}/vendors/register", json=body).status_code == 202
-        token = mail.last_token(email)
-        assert client.post(f"{API}/auth/invite/accept", json={"token": token, "password": PASSWORD}).status_code == 204
-        account = Account(client, clock, email)
-        return account, account.login()
-
-    return _register
+def _documents(storage):
+    """Every test here uploads documents."""
 
 
 def upload(client, session, kind):

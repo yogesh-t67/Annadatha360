@@ -125,3 +125,15 @@ class VendorStatusHistory(Base):
     reason: Mapped[str | None] = mapped_column(Text)
     actor_id: Mapped[int | None] = mapped_column(ForeignKey("erp_users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class VendorNote(Base):
+    """Internal review notes by Annadata staff. Never shown to the vendor."""
+
+    __tablename__ = "vendor_notes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    vendor_id: Mapped[int] = mapped_column(ForeignKey("vendors.id", ondelete="CASCADE"), index=True)
+    author_id: Mapped[int | None] = mapped_column(ForeignKey("erp_users.id", ondelete="SET NULL"))
+    text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

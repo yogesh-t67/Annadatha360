@@ -20,6 +20,7 @@ from app.api.v1 import (
 from app.modules.audit import router as erp_audit
 from app.modules.documents import router as erp_documents
 from app.modules.iam import router as erp_iam
+from app.modules.vendors import admin_router as erp_admin_vendors
 from app.modules.vendors import router as erp_vendors
 
 api_router = APIRouter(prefix="/api/v1")
@@ -43,3 +44,4 @@ api_router.include_router(erp_iam.router)
 api_router.include_router(erp_audit.router)
 api_router.include_router(erp_documents.router)
 api_router.include_router(erp_vendors.router)
+api_router.include_router(erp_admin_vendors.router)

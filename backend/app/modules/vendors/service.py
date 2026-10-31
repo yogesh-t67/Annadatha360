@@ -136,12 +136,15 @@ def update_profile(db: Session, principal: Principal, vendor: Vendor, body: Prof
     vendor.pincode = body.pincode
     vendor.contact_phone = body.contact_phone
     vendor.contact_email = body.contact_email
-    vendor.gst_certificate_doc_id = (
-        _attach(db, principal, vendor, body.gst_certificate_document_id, "gst_certificate")
-        if body.kind == "business"
-        else None
-    )
-    vendor.pan_card_doc_id = _attach(db, principal, vendor, body.pan_card_document_id, "pan_card")
+    # A document left out keeps the one already attached: documents can be replaced, never dropped by accident.
+    if body.kind != "business":
+        vendor.gst_certificate_doc_id = None
+    elif body.gst_certificate_document_id is not None:
+        vendor.gst_certificate_doc_id = _attach(
+            db, principal, vendor, body.gst_certificate_document_id, "gst_certificate"
+        )
+    if body.pan_card_document_id is not None:
+        vendor.pan_card_doc_id = _attach(db, principal, vendor, body.pan_card_document_id, "pan_card")
     vendor.updated_by_id = principal.user.id
 
 
@@ -177,13 +180,14 @@ def update_bank(db: Session, principal: Principal, vendor: Vendor, body: BankIn)
         errors["account_number"] = "Account number should be 9 to 18 digits"
     if errors:
         raise AppError(422, "invalid_bank_details", "Some details need fixing", errors)
-    cheque = _attach(db, principal, vendor, body.cheque_document_id, "cancelled_cheque")
+    cheque = _attach(db, principal, vendor, body.cheque_document_id, "cancelled_cheque")  # None: keep current
     bank = vendor.bank_account or VendorBankAccount()
     bank.holder_name = body.holder_name.strip()
     bank.ifsc = body.ifsc
     bank.account_number_enc = encrypt(number)
     bank.account_last4 = number[-4:]
-    bank.cheque_doc_id = cheque
+    if cheque is not None:
+        bank.cheque_doc_id = cheque
     bank.verified_at = None  # changed details must be verified again
     vendor.bank_account = bank
     vendor.updated_by_id = principal.user.id
@@ -205,7 +209,9 @@ def save_licence(
     licence.valid_from = body.valid_from
     licence.valid_until = body.valid_until
     # Licence types and their document kinds share names (documents.kinds).
-    licence.document_id = _attach(db, principal, vendor, body.document_id, body.licence_type)
+    document_id = _attach(db, principal, vendor, body.document_id, body.licence_type)
+    if document_id is not None:  # left out: keep the copy already attached
+        licence.document_id = document_id
     if licence not in vendor.licences:
         vendor.licences.append(licence)
     vendor.updated_by_id = principal.user.id
@@ -273,6 +279,8 @@ def submit(db: Session, principal: Principal, vendor: Vendor) -> None:
         )
     vendor.submitted_at = utcnow()
     vendor.rejection_reason = None
+    for cap in vendor.capabilities:  # a resubmitted application is reviewed afresh
+        cap.status = "pending"
     set_status(db, vendor, "submitted", principal.user.id)
 
 

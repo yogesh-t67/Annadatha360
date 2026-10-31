@@ -1,20 +1,12 @@
 import pytest
 
 from app.core.config import get_settings
-from app.main import app
 from app.modules.documents.service import safe_filename
-from app.modules.documents.storage import LocalEncryptedStorage, get_document_storage
+from app.modules.documents.storage import LocalEncryptedStorage
 from tests.erp_helpers import API, headers
 
 PDF = b"%PDF-1.7\n1 0 obj << /Type /Catalog >> endobj\n%%EOF\n"
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
-
-
-@pytest.fixture
-def storage(client, tmp_path):
-    s = LocalEncryptedStorage(tmp_path)
-    app.dependency_overrides[get_document_storage] = lambda: s
-    return s
 
 
 @pytest.fixture

@@ -26,6 +26,7 @@ from app.modules.vendors.models import (  # noqa: F401
     VendorBankAccount,
     VendorCapability,
     VendorLicence,
+    VendorNote,
     VendorServiceArea,
     VendorStatusHistory,
 )
