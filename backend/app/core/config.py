@@ -89,7 +89,7 @@ class Settings(BaseSettings):
         # the driver named explicitly.
         for prefix in ("postgres://", "postgresql://"):
             if url.startswith(prefix):
-                return "postgresql+psycopg://" + url[len(prefix):]
+                return "postgresql+psycopg://" + url[len(prefix) :]
         return url
 
     @property

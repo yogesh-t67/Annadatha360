@@ -116,13 +116,19 @@ def _market_lines(db: Session, farmer: Farmer, today: date) -> list[str]:
             trend = ""
             if prev is not None and prev.modal_price:
                 pct = (latest.modal_price - prev.modal_price) / prev.modal_price * 100
-                trend = f", {'up' if pct > 0 else 'down'} {abs(pct):.0f}% from {_rupees(prev.modal_price)} on {prev.arrival_date:%d %b}" if abs(pct) >= 1 else ", steady"
+                trend = (
+                    f", {'up' if pct > 0 else 'down'} {abs(pct):.0f}% "
+                    f"from {_rupees(prev.modal_price)} on {prev.arrival_date:%d %b}"
+                    if abs(pct) >= 1
+                    else ", steady"
+                )
             # Skip varieties that just repeat the crop ("Cotton (Unginned)" for Cotton).
             v = (latest.variety or "").strip()
             variety = f" {v}" if v and crop.lower().split()[0] not in v.lower() else ""
             mine.append(
                 f"- {crop}{variety} at {latest.market}: {_rupees(latest.modal_price)} "
-                f"(range {_rupees(latest.min_price or latest.modal_price)}–{_rupees(latest.max_price or latest.modal_price)}) "
+                f"(range {_rupees(latest.min_price or latest.modal_price)}–"
+                f"{_rupees(latest.max_price or latest.modal_price)}) "
                 f"on {latest.arrival_date:%d %b}{trend}"
             )
 
@@ -145,7 +151,9 @@ def _market_lines(db: Session, farmer: Farmer, today: date) -> list[str]:
 def _scheme_lines(db: Session) -> list[str]:
     """The government schemes shown in the app (checked content), so scheme questions get the app's facts."""
     try:
-        schemes = list(db.scalars(select(Scheme).where(Scheme.published.is_(True)).order_by(Scheme.authority, Scheme.slug)))
+        schemes = list(
+            db.scalars(select(Scheme).where(Scheme.published.is_(True)).order_by(Scheme.authority, Scheme.slug))
+        )
     except Exception as exc:
         log.warning("Skipping scheme context: %s", exc)
         return []
@@ -156,7 +164,9 @@ def _scheme_lines(db: Session) -> list[str]:
         who = "Central" if s.authority == "central" else STATE_NAMES.get(s.state or "", s.state or "State")
         te_name = (s.name or {}).get("te")
         parts = [
-            f"{resolve(s.name, 'en')}" + (f" / {te_name}" if te_name else "") + f" [{who}, checked {s.last_verified_on:%d %b %Y}]",
+            f"{resolve(s.name, 'en')}"
+            + (f" / {te_name}" if te_name else "")
+            + f" [{who}, checked {s.last_verified_on:%d %b %Y}]",
             resolve(s.benefits, "en") or resolve(s.summary, "en"),
         ]
         if s.eligibility:

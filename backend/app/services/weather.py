@@ -228,4 +228,4 @@ def get_district_forecasts(provider: WeatherProvider, days: int = 3) -> list[tup
         raws = fetch_many([(lat, lng) for _, _, lat, lng in DISTRICTS], days)
         cached = [build_forecast(raw) for raw in raws]
         forecast_cache.put(key, cached)
-    return [(name, state, f) for (name, state, _, _), f in zip(DISTRICTS, cached)]
+    return [(name, state, f) for (name, state, _, _), f in zip(DISTRICTS, cached, strict=False)]
