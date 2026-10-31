@@ -80,6 +80,25 @@ class Settings(BaseSettings):
     cod_enabled: bool = False  # cash on delivery
     cod_max_order_rupees: int = 5000  # COD orders above this must pay online
 
+    # --- ERP (vendor portal + admin web app) ---
+    # Fernet key for secrets stored in the database (authenticator keys, later bank account numbers). Generate with:
+    # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    # Empty = derived from JWT_SECRET (development only). Changing it makes stored secrets unreadable.
+    field_encryption_key: str = ""
+    erp_web_base_url: str = "http://localhost:3000"  # links in invite emails point here
+    erp_access_token_ttl_minutes: int = 10
+    erp_session_idle_minutes: int = 30  # logged out after this long without activity
+    erp_session_max_hours: int = 12  # and after this long in any case
+    erp_invite_ttl_hours: int = 72
+    erp_password_reset_ttl_minutes: int = 30
+    erp_password_reset_max_per_hour: int = 3  # reset emails per account
+    erp_login_max_failures: int = 5  # wrong passwords or codes for one email before it is locked
+    erp_login_lock_minutes: int = 15
+    erp_login_max_attempts_per_ip: int = 30  # per lock window, across all emails
+
+    # --- Email ---
+    email_provider: str = "console"  # "console" (dev: log only); a real provider is added before launch
+
     cors_origins: list[str] = ["*"]
 
     @field_validator("database_url")
@@ -107,6 +126,8 @@ def get_settings() -> Settings:
             raise RuntimeError("OTP_TEST_NUMBERS must be empty in production")
         if settings.guest_login_enabled:
             raise RuntimeError("GUEST_LOGIN_ENABLED must be false in production")
+        if not settings.field_encryption_key:
+            raise RuntimeError("FIELD_ENCRYPTION_KEY must be set in production")
         if settings.ai_provider in ("fake", "gemini"):
             raise RuntimeError(f"AI_PROVIDER={settings.ai_provider} is for testing only, not production")
     return settings

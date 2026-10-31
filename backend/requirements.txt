@@ -9,3 +9,6 @@ pyjwt>=2.15
 httpx>=0.28
 python-multipart>=0.0.32
 anthropic>=1.15,<2
+argon2-cffi>=23.1
+pyotp>=2.9
+cryptography>=44
