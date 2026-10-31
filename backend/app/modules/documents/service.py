@@ -90,8 +90,12 @@ def can_view(principal: Principal, doc: ErpDocument) -> bool:
         return True
     if doc.owner_type == "erp_user":
         return doc.owner_id == principal.user.id
-    if doc.owner_type == "vendor":  # the vendor's own team
-        return principal.vendor_id is not None and doc.owner_id == principal.vendor_id
+    if doc.owner_type == "vendor":  # the vendor's owner; staff accounts never see KYC papers
+        return (
+            principal.vendor_id is not None
+            and doc.owner_id == principal.vendor_id
+            and principal.has(P.VENDOR_PROFILE_EDIT)
+        )
     return False
 
 

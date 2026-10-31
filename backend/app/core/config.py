@@ -103,6 +103,11 @@ class Settings(BaseSettings):
     document_daily_upload_limit: int = 50  # per ERP account
     document_link_ttl_seconds: int = 300  # view links stop working after 5 minutes
 
+    # --- Vendor catalog ---
+    catalog_requires_approval: bool = False  # true: new and edited listings wait for Annadata before going live
+    media_dir: str = "storage/media"  # public product photos; a Docker volume in the compose files
+    media_max_mb: int = 5
+
     # --- Email ---
     email_provider: str = "console"  # "console" (dev: log only); a real provider is added before launch
 
