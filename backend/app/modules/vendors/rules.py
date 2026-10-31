@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from datetime import date
 
 from app.services.districts import DISTRICTS
 
@@ -102,3 +103,8 @@ def valid_account_number(number: str) -> bool:
 def valid_pincode(pincode: str) -> bool:
     # AP and Telangana pincodes start 50–53. Not split by state: some AP mandals (moved from Khammam) still use 50x.
     return len(pincode) == 6 and pincode.isdigit() and pincode[:2] in {"50", "51", "52", "53"}
+
+
+def today() -> date:
+    """Today's date for licence checks; one place, so tests can move the calendar."""
+    return date.today()

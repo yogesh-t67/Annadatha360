@@ -16,6 +16,8 @@ from zoneinfo import ZoneInfo
 from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.jobs.housekeeping import prune
+from app.modules.vendors.licences import send_reminders
+from app.services.email import get_email_sender
 from app.services.market import DataGovInClient, sync
 from app.services.shop import expire_unpaid_orders
 
@@ -65,12 +67,19 @@ def _sync_market(db):
     return sync(db, DataGovInClient(settings.data_gov_in_api_key), settings.market_states)
 
 
+def _licence_reminders(db):
+    return send_reminders(db, get_email_sender())
+
+
 def default_jobs() -> list[Job]:
     return [
         Job("expire_unpaid_orders", _with_session(expire_unpaid_orders), every=timedelta(minutes=5)),
         # data.gov.in only serves the latest day, so a missed run leaves the app on old prices until the next one.
         Job("sync_market_prices", _with_session(_sync_market), daily_at=(19, 30), run_on_start=True),
         Job("housekeeping", _with_session(prune), daily_at=(3, 0)),
+        # Vendor licence reminders (30/15/7/1 days) and expiry notices. Remembers what it sent, so a run after a
+        # restart only catches up; a missed day can't let an expiry go unannounced.
+        Job("licence_reminders", _with_session(_licence_reminders), daily_at=(9, 0), run_on_start=True),
     ]
 
 

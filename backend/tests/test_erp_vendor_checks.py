@@ -9,8 +9,7 @@ from app.modules.vendors.verification import (
     PublicLookups,
     get_kyc_verifier,
 )
-from tests.erp_helpers import API, headers
-from tests.test_erp_vendors import complete_application, profile
+from tests.erp_helpers import API, complete_application, headers, profile
 
 BANK = {"holder_name": "Sri Lakshmi Agro", "ifsc": "SBIN0001234", "account_number": "123456789012"}
 

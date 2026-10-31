@@ -108,6 +108,9 @@ class LicenceOut(BaseModel):
     valid_until: date
     expired: bool
     document: DocumentRef | None
+    status: str  # valid | pending_review (renewal being checked) | rejected | superseded
+    days_left: int  # negative once expired
+    review_reason: str | None  # why a renewal was refused
 
 
 class MissingItem(BaseModel):
@@ -143,3 +146,7 @@ class VendorOut(BaseModel):
     missing: list[MissingItem]  # empty = ready to submit
     submitted_at: datetime | None
     rejection_reason: str | None
+
+
+class RenewalIn(LicenceIn):
+    document_id: DocumentId  # a renewal must come with the new copy

@@ -65,7 +65,12 @@ def test_failing_job_does_not_stop_others_or_retry_every_tick():
 
 
 def test_default_jobs_are_wired():
-    assert {j.name for j in default_jobs()} == {"expire_unpaid_orders", "sync_market_prices", "housekeeping"}
+    assert {j.name for j in default_jobs()} == {
+        "expire_unpaid_orders",
+        "sync_market_prices",
+        "housekeeping",
+        "licence_reminders",
+    }
 
 
 def test_market_sync_is_skipped_without_key():

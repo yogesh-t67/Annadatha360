@@ -12,8 +12,9 @@ from app.modules.catalog import rules
 from app.modules.catalog.models import CatalogListing, CatalogListingArea, CatalogVariant
 from app.modules.catalog.schemas import ListingIn
 from app.modules.iam.deps import Principal
+from app.modules.vendors.licences import expired_licences_for
 from app.modules.vendors.models import Vendor
-from app.modules.vendors.rules import CAPABILITIES
+from app.modules.vendors.rules import CAPABILITIES, LICENCE_TYPES
 
 
 def selling_vendor(db: Session, principal: Principal) -> Vendor:
@@ -141,15 +142,29 @@ def save(
     return listing
 
 
+def hidden_reason(vendor: Vendor, listing: CatalogListing) -> str | None:
+    """Why farmers can't see this listing, or None when they can. Licences are checked every time, so a listing
+    hides itself the day a licence expires and comes back as soon as a renewal is approved."""
+    if listing.deleted_at is not None:
+        return "Deleted"
+    if listing.removed_at is not None:
+        return f"Taken down by Annadata: {listing.removed_reason}"
+    if vendor.status != "approved":
+        return "Your account is suspended" if vendor.status == "suspended" else "Your account isn't approved"
+    if listing.category not in approved_categories(vendor):
+        return "Your account isn't approved for this category"
+    expired = expired_licences_for(vendor, listing.category)
+    if expired:
+        return "Licence expired or missing: " + ", ".join(LICENCE_TYPES[t] for t in expired) + ". Upload the renewal."
+    if listing.approval_status != "live":
+        return "Waiting for Annadata's approval"
+    if not listing.active:
+        return "Hidden by you"
+    return None
+
+
 def is_visible(vendor: Vendor, listing: CatalogListing) -> bool:
-    return (
-        vendor.status == "approved"
-        and listing.category in approved_categories(vendor)
-        and listing.active
-        and listing.approval_status == "live"
-        and listing.removed_at is None
-        and listing.deleted_at is None
-    )
+    return hidden_reason(vendor, listing) is None
 
 
 def remove(listing: CatalogListing, actor_id: int, reason: str) -> None:

@@ -5,8 +5,7 @@ from sqlalchemy import select
 
 from app.models import AuditLog
 from app.modules.vendors.models import VendorLicence
-from tests.erp_helpers import API, headers
-from tests.test_erp_vendors import complete_application, profile
+from tests.erp_helpers import API, complete_application, headers, profile
 
 ADMIN = f"{API}/admin/vendors"
 CHECKED = {"gstin_checked": True, "documents_checked": True}

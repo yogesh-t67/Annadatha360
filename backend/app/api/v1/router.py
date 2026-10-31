@@ -22,6 +22,7 @@ from app.modules.catalog import router as erp_catalog
 from app.modules.documents import router as erp_documents
 from app.modules.iam import router as erp_iam
 from app.modules.vendors import admin_router as erp_admin_vendors
+from app.modules.vendors import licences_router as erp_licences
 from app.modules.vendors import router as erp_vendors
 from app.modules.vendors import team as erp_vendor_team
 
@@ -48,4 +49,5 @@ api_router.include_router(erp_documents.router)
 api_router.include_router(erp_vendors.router)
 api_router.include_router(erp_admin_vendors.router)
 api_router.include_router(erp_vendor_team.router)
+api_router.include_router(erp_licences.router)
 api_router.include_router(erp_catalog.router)

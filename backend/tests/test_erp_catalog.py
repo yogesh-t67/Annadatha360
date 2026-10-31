@@ -1,10 +1,7 @@
 import pytest
 
 from app.core.config import get_settings
-from app.main import app
-from app.modules.catalog.media import LocalMedia, get_media
 from tests.erp_helpers import API, PASSWORD, Account, headers
-from tests.test_erp_vendors import complete_application
 
 CAT = f"{API}/catalog/listings"
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
@@ -27,30 +24,6 @@ DRONE = {
     "district_codes": ["ap-guntur"],
     "variants": [{"label": "Per acre", "unit": "acre", "price_paise": 50000, "daily_capacity": 30}],
 }
-
-
-@pytest.fixture
-def media(client, tmp_path):
-    m = LocalMedia(tmp_path)
-    app.dependency_overrides[get_media] = lambda: m
-    return m
-
-
-@pytest.fixture
-def shop(client, super_admin, register, storage, media):
-    """An approved vendor (seeds + drone spraying, Guntur + Krishna) and a Super Admin. Returns (vendor, admin)."""
-    admin = super_admin.login()
-    _, vendor = register()
-    complete_application(client, vendor)
-    client.post(f"{API}/vendor/submit", headers=headers(vendor))
-    vendor_id = client.get(f"{API}/vendor", headers=headers(vendor)).json()["id"]
-    res = client.post(
-        f"{API}/admin/vendors/{vendor_id}/approve",
-        headers=headers(admin),
-        json={"gstin_checked": True, "documents_checked": True},
-    )
-    assert res.status_code == 200, res.text
-    return vendor, admin
 
 
 def test_listing_goes_live_at_once(client, shop):

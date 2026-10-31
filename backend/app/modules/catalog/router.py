@@ -72,6 +72,7 @@ def listing_out(vendor: Vendor, listing: CatalogListing) -> ListingOut:
         removed=listing.removed_at is not None,
         removed_reason=listing.removed_reason,
         visible_to_farmers=service.is_visible(vendor, listing),
+        hidden_reason=service.hidden_reason(vendor, listing),
         created_at=listing.created_at,
         updated_at=listing.updated_at,
     )

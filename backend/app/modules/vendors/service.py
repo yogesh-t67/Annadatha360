@@ -1,7 +1,5 @@
 """Vendor sign-up and the KYC application (draft → submitted). Review (approve / reject) is in the admin module."""
 
-from datetime import date
-
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -83,7 +81,7 @@ def editable_vendor(db: Session, principal: Principal) -> Vendor:
     return vendor
 
 
-def _attach(db, principal, vendor, public_id: str | None, kind: str) -> int | None:
+def attach_document(db, principal, vendor, public_id: str | None, kind: str) -> int | None:
     if public_id is None:
         return None
     return attach_to_vendor(db, principal, public_id, kind, vendor.id).id
@@ -165,11 +163,11 @@ def update_profile(db: Session, principal: Principal, vendor: Vendor, body: Prof
     if body.kind != "business":
         vendor.gst_certificate_doc_id = None
     elif body.gst_certificate_document_id is not None:
-        vendor.gst_certificate_doc_id = _attach(
+        vendor.gst_certificate_doc_id = attach_document(
             db, principal, vendor, body.gst_certificate_document_id, "gst_certificate"
         )
     if body.pan_card_document_id is not None:
-        vendor.pan_card_doc_id = _attach(db, principal, vendor, body.pan_card_document_id, "pan_card")
+        vendor.pan_card_doc_id = attach_document(db, principal, vendor, body.pan_card_document_id, "pan_card")
     vendor.updated_by_id = principal.user.id
 
 
@@ -210,7 +208,7 @@ def update_bank(db: Session, principal: Principal, vendor: Vendor, body: BankIn,
         errors["account_number"] = "Account number should be 9 to 18 digits"
     if errors:
         raise AppError(422, "invalid_bank_details", "Some details need fixing", errors)
-    cheque = _attach(db, principal, vendor, body.cheque_document_id, "cancelled_cheque")  # None: keep current
+    cheque = attach_document(db, principal, vendor, body.cheque_document_id, "cancelled_cheque")  # None: keep current
     bank = vendor.bank_account or VendorBankAccount()
     bank.holder_name = body.holder_name.strip()
     bank.ifsc = body.ifsc
@@ -231,7 +229,7 @@ def save_licence(
 ) -> VendorLicence:
     if body.licence_type not in rules.LICENCE_TYPES:
         raise AppError(422, "unknown_licence_type", f"Unknown licence type: {body.licence_type}")
-    if body.valid_until <= date.today():
+    if body.valid_until <= rules.today():
         raise AppError(422, "licence_expired", "This licence has already expired. Renew it first.")
     if body.valid_from is not None and body.valid_from > body.valid_until:
         raise AppError(422, "invalid_dates", "'Valid from' is after 'valid until'")
@@ -242,7 +240,7 @@ def save_licence(
     licence.valid_from = body.valid_from
     licence.valid_until = body.valid_until
     # Licence types and their document kinds share names (documents.kinds).
-    document_id = _attach(db, principal, vendor, body.document_id, body.licence_type)
+    document_id = attach_document(db, principal, vendor, body.document_id, body.licence_type)
     if document_id is not None:  # left out: keep the copy already attached
         licence.document_id = document_id
     if licence not in vendor.licences:
@@ -284,8 +282,8 @@ def missing_items(vendor: Vendor) -> list[MissingItem]:
     need(bank, "bank_account", "Bank account for payments")
     need(bank and bank.cheque_doc_id, "cancelled_cheque", "Cancelled cheque or bank proof (upload)")
 
-    today = date.today()
-    valid = {lic.licence_type: lic for lic in vendor.licences if lic.valid_until > today}
+    today = rules.today()
+    valid = {lic.licence_type: lic for lic in vendor.licences if lic.status == "valid" and lic.valid_until > today}
     required: dict[str, str] = {}
     for cap in vendor.capabilities:
         for licence_type in rules.CAPABILITIES[cap.code].licences:

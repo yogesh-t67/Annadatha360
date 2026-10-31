@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, status
@@ -45,7 +44,7 @@ def vendor_out(db: Session, vendor: Vendor) -> VendorOut:
         return DocumentRef(id=doc.public_id, kind=doc.kind, filename=doc.original_filename) if doc else None
 
     bank = vendor.bank_account
-    today = date.today()
+    today = rules.today()
     return VendorOut(
         id=vendor.public_id,
         kind=vendor.kind,
@@ -102,6 +101,9 @@ def vendor_out(db: Session, vendor: Vendor) -> VendorOut:
                 valid_until=lic.valid_until,
                 expired=lic.valid_until <= today,
                 document=ref(lic.document_id),
+                status=lic.status,
+                days_left=(lic.valid_until - today).days,
+                review_reason=lic.review_reason,
             )
             for lic in vendor.licences
         ],
@@ -111,7 +113,7 @@ def vendor_out(db: Session, vendor: Vendor) -> VendorOut:
     )
 
 
-def _saved(db, principal: Principal, vendor: Vendor, request: Request, action: str, **detail) -> VendorOut:
+def saved(db, principal: Principal, vendor: Vendor, request: Request, action: str, **detail) -> VendorOut:
     record(db, action, "vendor", vendor.id, actor_id=principal.user.id, request=request, **detail)
     db.commit()
     db.refresh(vendor)
@@ -174,42 +176,42 @@ def get_my_vendor(principal: CurrentPrincipal, db: DbSession):
 def put_profile(body: ProfileIn, principal: Editor, db: DbSession, request: Request, lookups: Lookup):
     vendor = service.editable_vendor(db, principal)
     service.update_profile(db, principal, vendor, body, lookups)
-    return _saved(db, principal, vendor, request, "erp.vendor.profile.update")
+    return saved(db, principal, vendor, request, "erp.vendor.profile.update")
 
 
 @router.put("/vendor/capabilities", response_model=VendorOut)
 def put_capabilities(body: CapabilitiesIn, principal: Editor, db: DbSession, request: Request):
     vendor = service.editable_vendor(db, principal)
     service.update_capabilities(db, principal, vendor, body)
-    return _saved(db, principal, vendor, request, "erp.vendor.capabilities.update", codes=sorted(set(body.codes)))
+    return saved(db, principal, vendor, request, "erp.vendor.capabilities.update", codes=sorted(set(body.codes)))
 
 
 @router.put("/vendor/service-areas", response_model=VendorOut)
 def put_service_areas(body: ServiceAreasIn, principal: Editor, db: DbSession, request: Request):
     vendor = service.editable_vendor(db, principal)
     service.update_service_areas(db, principal, vendor, body.district_codes)
-    return _saved(db, principal, vendor, request, "erp.vendor.areas.update", count=len(set(body.district_codes)))
+    return saved(db, principal, vendor, request, "erp.vendor.areas.update", count=len(set(body.district_codes)))
 
 
 @router.put("/vendor/bank-account", response_model=VendorOut)
 def put_bank(body: BankIn, principal: Editor, db: DbSession, request: Request, lookups: Lookup):
     vendor = service.editable_vendor(db, principal)
     service.update_bank(db, principal, vendor, body, lookups)
-    return _saved(db, principal, vendor, request, "erp.vendor.bank.update")  # never log the account number
+    return saved(db, principal, vendor, request, "erp.vendor.bank.update")  # never log the account number
 
 
 @router.post("/vendor/licences", response_model=VendorOut, status_code=status.HTTP_201_CREATED)
 def add_licence(body: LicenceIn, principal: Editor, db: DbSession, request: Request):
     vendor = service.editable_vendor(db, principal)
     service.save_licence(db, principal, vendor, body)
-    return _saved(db, principal, vendor, request, "erp.vendor.licence.add", licence_type=body.licence_type)
+    return saved(db, principal, vendor, request, "erp.vendor.licence.add", licence_type=body.licence_type)
 
 
 @router.put("/vendor/licences/{licence_id}", response_model=VendorOut)
 def update_licence(licence_id: str, body: LicenceIn, principal: Editor, db: DbSession, request: Request):
     vendor = service.editable_vendor(db, principal)
     service.save_licence(db, principal, vendor, body, service.get_licence(vendor, licence_id))
-    return _saved(db, principal, vendor, request, "erp.vendor.licence.update", licence_type=body.licence_type)
+    return saved(db, principal, vendor, request, "erp.vendor.licence.update", licence_type=body.licence_type)
 
 
 @router.delete("/vendor/licences/{licence_id}", response_model=VendorOut)
@@ -217,7 +219,7 @@ def delete_licence(licence_id: str, principal: Editor, db: DbSession, request: R
     vendor = service.editable_vendor(db, principal)
     licence = service.get_licence(vendor, licence_id)
     vendor.licences.remove(licence)
-    return _saved(db, principal, vendor, request, "erp.vendor.licence.delete", licence_type=licence.licence_type)
+    return saved(db, principal, vendor, request, "erp.vendor.licence.delete", licence_type=licence.licence_type)
 
 
 @router.post("/vendor/submit", response_model=VendorOut)
@@ -225,7 +227,7 @@ def submit(principal: Submitter, db: DbSession, request: Request, mail: Email, v
     vendor = service.editable_vendor(db, principal)
     service.submit(db, principal, vendor)
     service.run_kyc_checks(db, vendor, verifier)
-    out = _saved(db, principal, vendor, request, "erp.vendor.submit")
+    out = saved(db, principal, vendor, request, "erp.vendor.submit")
     mail.send(
         principal.user.email,
         "Annadata 360: application received",

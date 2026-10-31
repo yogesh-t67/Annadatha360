@@ -75,7 +75,10 @@ class ListingOut(BaseModel):
     approval_status: str
     removed: bool
     removed_reason: str | None
-    visible_to_farmers: bool  # everything allows it: vendor approved, offering approved, switched on, not removed
+    visible_to_farmers: (
+        bool  # everything allows it: vendor approved, offering approved, licences valid, on, not removed
+    )
+    hidden_reason: str | None  # why not, in words for the vendor
     created_at: datetime
     updated_at: datetime
 

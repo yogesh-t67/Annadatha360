@@ -18,12 +18,13 @@ from app.db.session import get_db
 from app.jobs.create_erp_admin import create as create_super_admin
 from app.main import app
 from app.models import Crop, ProductCategory
+from app.modules.catalog.media import LocalMedia, get_media
 from app.modules.documents.storage import LocalEncryptedStorage, get_document_storage
 from app.modules.iam import service as iam_service
 from app.modules.vendors.verification import get_lookups
 from app.services.email import get_email_sender
 from app.services.sms import get_sms_sender
-from tests.erp_helpers import API, PASSWORD, Account, FakeEmail, FakeLookups, headers
+from tests.erp_helpers import API, PASSWORD, Account, FakeEmail, FakeLookups, complete_application, headers
 
 
 class FakeSms:
@@ -171,3 +172,27 @@ def register(client, mail, clock):
         return account, account.login()
 
     return _register
+
+
+@pytest.fixture
+def media(client, tmp_path):
+    m = LocalMedia(tmp_path)
+    app.dependency_overrides[get_media] = lambda: m
+    return m
+
+
+@pytest.fixture
+def shop(client, super_admin, register, storage, media):
+    """An approved vendor (seeds + drone spraying, Guntur + Krishna) and a Super Admin. Returns (vendor, admin)."""
+    admin = super_admin.login()
+    _, vendor = register()
+    complete_application(client, vendor)
+    client.post(f"{API}/vendor/submit", headers=headers(vendor))
+    vendor_id = client.get(f"{API}/vendor", headers=headers(vendor)).json()["id"]
+    res = client.post(
+        f"{API}/admin/vendors/{vendor_id}/approve",
+        headers=headers(admin),
+        json={"gstin_checked": True, "documents_checked": True},
+    )
+    assert res.status_code == 200, res.text
+    return vendor, admin

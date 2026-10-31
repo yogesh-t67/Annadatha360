@@ -100,6 +100,17 @@ class VendorLicence(TimestampMixin, Base):
     valid_until: Mapped[date] = mapped_column(Date, index=True)  # expiry reminders and auto-suspension use this
     document_id: Mapped[int | None] = mapped_column(ForeignKey("erp_documents.id", ondelete="SET NULL"))
 
+    # valid: counts (licences in an application are checked when the application is reviewed)
+    # pending_review: a renewal uploaded after approval, waiting for Super Admin · rejected: renewal refused
+    # superseded: replaced by an approved renewal
+    status: Mapped[str] = mapped_column(String(15), default="valid", server_default="valid")
+    renews_id: Mapped[int | None] = mapped_column(ForeignKey("vendor_licences.id", ondelete="SET NULL"))
+    review_reason: Mapped[str | None] = mapped_column(Text)  # why a renewal was refused
+    reviewed_by_id: Mapped[int | None] = mapped_column(ForeignKey("erp_users.id", ondelete="SET NULL"))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_reminder_days: Mapped[int | None] = mapped_column(Integer)  # 30, 15, 7 or 1: the last reminder sent
+    expired_notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
 
 class VendorBankAccount(TimestampMixin, Base):
     """Where payouts go. The account number is encrypted; only the last 4 digits are ever shown."""
