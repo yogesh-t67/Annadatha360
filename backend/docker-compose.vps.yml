@@ -1,0 +1,54 @@
+# Test server (shared VPS): run with
+#   docker compose -p annadata -f docker-compose.vps.yml up -d --build
+# Kept apart from other projects on the machine: its own project name, network and database volume,
+# nothing published to the internet. The host's nginx proxies HTTPS to the API on 127.0.0.1:${ANNADATA_API_PORT}.
+# .env holds the keys plus POSTGRES_PASSWORD (generated on the server, never committed).
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: annadata
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: annadata
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U annadata"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build: .
+    env_file:
+      - .env.example
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://annadata:${POSTGRES_PASSWORD}@db:5432/annadata
+      TTS_CACHE_DIR: /data/tts
+    volumes:
+      - tts:/data/tts  # generated voice files survive rebuilds
+    ports:
+      - "127.0.0.1:${ANNADATA_API_PORT:-8020}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Background jobs (order expiry, mandi price import, housekeeping). Exactly one.
+  scheduler:
+    build: .
+    command: ["python", "-m", "app.jobs.scheduler"]
+    env_file:
+      - .env.example
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://annadata:${POSTGRES_PASSWORD}@db:5432/annadata
+    depends_on:
+      api:
+        condition: service_started  # the api container runs migrations on start
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  tts:
