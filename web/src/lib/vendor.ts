@@ -73,3 +73,9 @@ export function stepOf(code: string): string {
   if (code.startsWith("licence")) return "licences";
   return "business";
 }
+
+/** Backend media URLs (/api/v1/media/...) are served through the web app at /api/media/... */
+export const mediaUrl = (url: string) => url.replace(/^\/api\/v1\/media\//, "/api/media/");
+
+export const rupees = (paise: number | null | undefined) =>
+  paise == null ? "" : `₹${(paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;

@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { ClipboardList, LayoutDashboard, LogOut, Menu, Store, UserCog, X, type LucideIcon } from "lucide-react";
+import { ClipboardList, LayoutDashboard, LogOut, Menu, Package, Store, UserCog, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, type ReactNode, useContext, useState } from "react";
@@ -18,10 +18,12 @@ type NavItem = { href: string; label: string; icon: LucideIcon; permission?: str
 const ADMIN_NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/vendors", label: "Vendors", icon: Store, permission: "vendors.view" },
+  { href: "/admin/listings", label: "Listings", icon: Package, permission: "catalog.review" },
 ];
 const VENDOR_NAV: NavItem[] = [
   { href: "/vendor", label: "Overview", icon: LayoutDashboard },
   { href: "/vendor/application", label: "Application", icon: ClipboardList, permission: "vendor.profile.edit" },
+  { href: "/vendor/listings", label: "Listings", icon: Package, permission: "vendor.catalog.edit" },
 ];
 const COMMON_NAV: NavItem[] = [{ href: "/account", label: "My account", icon: UserCog }];
 
