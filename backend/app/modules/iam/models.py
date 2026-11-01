@@ -92,6 +92,7 @@ class ErpSession(Base):
     refresh_hash: Mapped[str] = mapped_column(String(64), unique=True)
     # The refresh token before the last rotation. If it is ever presented again it was stolen: end the session.
     previous_refresh_hash: Mapped[str | None] = mapped_column(String(64), index=True)
+    refreshed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))  # last rotation
     ip: Mapped[str | None] = mapped_column(String(45))
     user_agent: Mapped[str | None] = mapped_column(String(300))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

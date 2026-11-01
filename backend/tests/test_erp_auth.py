@@ -136,11 +136,19 @@ def test_change_password_ends_other_sessions(client, super_admin):
 # ---------- Sessions ----------
 
 
-def test_refresh_rotates_and_a_reused_refresh_token_ends_the_session(client, super_admin):
+def test_refresh_rotates_and_a_reused_refresh_token_ends_the_session(client, super_admin, db_session):
     first = super_admin.login()
     second = client.post(f"{API}/auth/refresh", json={"refresh_token": first["refresh_token"]})
     assert second.status_code == 200
-    # The old refresh token shows up again: someone copied it. End the session for both.
+    # Right after the rotation, the old token is a race between two tabs: refused, session kept.
+    race = client.post(f"{API}/auth/refresh", json={"refresh_token": first["refresh_token"]})
+    assert race.status_code == 409 and race.json()["error"]["code"] == "refresh_superseded"
+    assert client.get(f"{API}/me", headers=headers(second.json())).status_code == 200
+    # A minute later the old token shows up again: someone copied it. End the session for both.
+    with db_session() as db:
+        for s in db.scalars(select(ErpSession)):
+            s.refreshed_at = utcnow() - timedelta(seconds=61)
+        db.commit()
     assert client.post(f"{API}/auth/refresh", json={"refresh_token": first["refresh_token"]}).status_code == 401
     assert client.post(f"{API}/auth/refresh", json={"refresh_token": second.json()["refresh_token"]}).status_code == 401
     assert client.get(f"{API}/me", headers=headers(second.json())).status_code == 401

@@ -27,6 +27,7 @@ AUDIENCE = "erp"
 MFA_TOKEN_TTL = timedelta(minutes=5)
 TOTP_ISSUER = "Annadata 360"
 BACKUP_CODE_COUNT = 10
+REFRESH_RACE = timedelta(seconds=60)  # an old refresh token seen this soon after rotation is a race, not theft
 
 _hasher = PasswordHasher()
 # Checked against when the email is unknown, so a wrong email takes as long as a wrong password.
@@ -377,6 +378,11 @@ def rotate_refresh(db: Session, refresh: str) -> tuple[ErpUser, ErpSession, str]
     if session is None:
         reused = db.scalar(select(ErpSession).where(ErpSession.previous_refresh_hash == token_hash))
         if reused is not None and reused.revoked_at is None:
+            # Two browser tabs (or two requests of one page) renewing at the same moment both send the old token.
+            # Moments after a rotation that's a race, not theft: refuse this one, keep the session. Later, it's theft.
+            just_rotated = reused.refreshed_at is not None and utcnow() - _as_utc(reused.refreshed_at) < REFRESH_RACE
+            if just_rotated:
+                raise AppError(409, "refresh_superseded", "Already renewed by another request. Retry.")
             reused.revoked_at, reused.revoke_reason = utcnow(), "refresh_reuse"
             db.commit()
         raise AppError(401, "invalid_refresh_token", "Session ended. Log in again.")
@@ -386,7 +392,7 @@ def rotate_refresh(db: Session, refresh: str) -> tuple[ErpUser, ErpSession, str]
     new_refresh = secrets.token_urlsafe(48)
     session.previous_refresh_hash = session.refresh_hash
     session.refresh_hash = hash_secret(new_refresh)
-    session.last_seen_at = utcnow()
+    session.last_seen_at = session.refreshed_at = utcnow()
     db.commit()
     return user, session, new_refresh
 

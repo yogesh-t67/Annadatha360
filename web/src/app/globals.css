@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/* Annadata 360 ERP: neutral surfaces, one green accent (farming). */
+@theme {
+  --color-brand-50: #eef8f1;
+  --color-brand-100: #d5eedd;
+  --color-brand-600: #1f7a43;
+  --color-brand-700: #186437;
+  --color-brand-800: #134f2c;
+
+  --color-ink: #1c2321; /* text */
+  --color-muted: #5d6763; /* secondary text */
+  --color-line: #e2e6e4; /* borders */
+  --color-canvas: #f6f7f6; /* page background */
+  --color-surface: #ffffff; /* cards */
+
+  --color-danger: #b42318;
+  --color-danger-bg: #fef3f2;
+  --color-warning: #b54708;
+  --color-warning-bg: #fffaeb;
+  --color-success: #067647;
+  --color-success-bg: #ecfdf3;
+
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
