@@ -5,7 +5,7 @@ import { MailCheck } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, useCallback, useState } from "react";
 
-import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/turnstile";
+import { Turnstile, useTurnstileSiteKey } from "@/components/turnstile";
 import { Alert, Button, Card, Field } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 
@@ -23,6 +23,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const onToken = useCallback((t: string | null) => setCaptcha(t), []);
+  const siteKey = useTurnstileSiteKey();
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value });
 
   async function submit(e: FormEvent) {
@@ -88,11 +89,11 @@ export default function RegisterPage() {
         <Field label="Your full name" autoComplete="name" value={form.full_name} onChange={set("full_name")} error={errors.full_name} />
         <Field label="Mobile number" type="tel" inputMode="tel" autoComplete="tel" placeholder="98765 43210" value={form.phone} onChange={set("phone")} error={errors.phone} />
         <Field label="Email" type="email" autoComplete="email" hint="You'll log in with this email" value={form.email} onChange={set("email")} error={errors.email} />
-        <Turnstile onToken={onToken} resetKey={resetCaptcha} />
+        {siteKey && <Turnstile siteKey={siteKey} onToken={onToken} resetKey={resetCaptcha} />}
         <Button
           type="submit"
           loading={loading}
-          disabled={!form.email || !form.full_name || !form.phone || !form.trade_name || (!!TURNSTILE_SITE_KEY && !captcha)}
+          disabled={!form.email || !form.full_name || !form.phone || !form.trade_name || siteKey === undefined || (!!siteKey && !captcha)}
           className="w-full"
         >
           Register

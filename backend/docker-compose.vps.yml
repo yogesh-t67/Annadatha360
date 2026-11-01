@@ -1,7 +1,8 @@
 # Test server (shared VPS): run with
 #   docker compose -p annadata -f docker-compose.vps.yml up -d --build
 # Kept apart from other projects on the machine: its own project name, network and database volume,
-# nothing published to the internet. The host's nginx proxies HTTPS to the API on 127.0.0.1:${ANNADATA_API_PORT}.
+# nothing published to the internet. The host's nginx proxies HTTPS to the API (127.0.0.1:${ANNADATA_API_PORT}) and the
+# ERP web app (127.0.0.1:${ANNADATA_WEB_PORT}).
 # .env holds the keys plus POSTGRES_PASSWORD (generated on the server, never committed).
 services:
   db:
@@ -28,6 +29,7 @@ services:
       TTS_CACHE_DIR: /data/tts
       DOCUMENTS_DIR: /data/documents
       MEDIA_DIR: /data/media
+      ERP_WEB_BASE_URL: ${ERP_WEB_BASE_URL:-https://erp.187.127.186.5.sslip.io}  # links in ERP emails
     volumes:
       - tts:/data/tts  # generated voice files survive rebuilds
       - documents:/data/documents  # private KYC files (encrypted)
@@ -37,6 +39,19 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    restart: unless-stopped
+
+  # ERP web app (vendor portal + admin). Talks to the API over the project network; nginx proxies HTTPS to it.
+  # Gets only the settings it needs, never the backend's secrets.
+  web:
+    build: ../web
+    environment:
+      ERP_API_URL: http://api:8000/api/v1
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+    ports:
+      - "127.0.0.1:${ANNADATA_WEB_PORT:-3020}:3000"
+    depends_on:
+      - api
     restart: unless-stopped
 
   # Background jobs (order expiry, mandi price import, housekeeping). Exactly one.
