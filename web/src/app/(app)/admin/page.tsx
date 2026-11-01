@@ -23,6 +23,10 @@ export default function AdminHome() {
   const me = useMe();
   const { data: counts } = useSWR<Record<string, number>>(can(me, "vendors.view") ? "/admin/vendors/counts" : null, fetcher);
   const waiting = counts ? counts.submitted + counts.under_review : undefined;
+  const { data: licences } = useSWR<{ renewals_to_check: number; expiring_30_days: number; expired: number }>(
+    can(me, "vendors.view") ? "/admin/licences/summary" : null,
+    fetcher,
+  );
 
   return (
     <>
@@ -37,6 +41,18 @@ export default function AdminHome() {
             <Stat label="Approved" value={counts?.approved} href="/admin/vendors" />
             <Stat label="Drafts (not submitted)" value={counts?.draft} href="/admin/vendors" />
             <Stat label="Suspended" value={counts?.suspended} href="/admin/vendors" />
+          </div>
+        </section>
+      )}
+      {can(me, "vendors.view") && (
+        <section aria-labelledby="licences-heading" className="mt-8">
+          <h2 id="licences-heading" className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
+            Licences
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Stat label="Renewals to check" value={licences?.renewals_to_check} href="/admin/licences" highlight />
+            <Stat label="Expiring in 30 days" value={licences?.expiring_30_days} href="/admin/licences" />
+            <Stat label="Expired (listings hidden)" value={licences?.expired} href="/admin/licences" />
           </div>
         </section>
       )}

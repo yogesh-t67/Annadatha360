@@ -1,7 +1,20 @@
 "use client";
 
 import clsx from "clsx";
-import { ClipboardList, LayoutDashboard, LogOut, Menu, Package, Store, UserCog, X, type LucideIcon } from "lucide-react";
+import {
+  BadgeCheck,
+  ClipboardList,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Package,
+  ScrollText,
+  Store,
+  UserCog,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, type ReactNode, useContext, useState } from "react";
@@ -19,11 +32,16 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/vendors", label: "Vendors", icon: Store, permission: "vendors.view" },
   { href: "/admin/listings", label: "Listings", icon: Package, permission: "catalog.review" },
+  { href: "/admin/licences", label: "Licences", icon: BadgeCheck, permission: "vendors.view" },
+  { href: "/admin/users", label: "Staff users", icon: Users, permission: "users.manage" },
+  { href: "/admin/audit", label: "Audit log", icon: ScrollText, permission: "audit.view" },
 ];
 const VENDOR_NAV: NavItem[] = [
   { href: "/vendor", label: "Overview", icon: LayoutDashboard },
   { href: "/vendor/application", label: "Application", icon: ClipboardList, permission: "vendor.profile.edit" },
   { href: "/vendor/listings", label: "Listings", icon: Package, permission: "vendor.catalog.edit" },
+  { href: "/vendor/licences", label: "Licences", icon: BadgeCheck, permission: "vendor.profile.edit" },
+  { href: "/vendor/team", label: "Team", icon: Users, permission: "vendor.team.manage" },
 ];
 const COMMON_NAV: NavItem[] = [{ href: "/account", label: "My account", icon: UserCog }];
 
