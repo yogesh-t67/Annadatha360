@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { ClipboardList, LayoutDashboard, LogOut, Menu, UserCog, X, type LucideIcon } from "lucide-react";
+import { ClipboardList, LayoutDashboard, LogOut, Menu, Store, UserCog, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, type ReactNode, useContext, useState } from "react";
@@ -15,7 +15,10 @@ export type Me = Schemas["MeOut"];
 type NavItem = { href: string; label: string; icon: LucideIcon; permission?: string };
 
 // Menu items are added here as each part of the ERP is built.
-const ADMIN_NAV: NavItem[] = [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }];
+const ADMIN_NAV: NavItem[] = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/vendors", label: "Vendors", icon: Store, permission: "vendors.view" },
+];
 const VENDOR_NAV: NavItem[] = [
   { href: "/vendor", label: "Overview", icon: LayoutDashboard },
   { href: "/vendor/application", label: "Application", icon: ClipboardList, permission: "vendor.profile.edit" },

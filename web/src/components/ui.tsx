@@ -177,3 +177,28 @@ export function Badge({ tone = "neutral", children }: { tone?: "neutral" | "succ
     </span>
   );
 }
+
+type TextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string; hint?: ReactNode };
+
+export function TextAreaField({ label, error, hint, className, id, ...rest }: TextAreaProps) {
+  const autoId = useId();
+  const areaId = id ?? autoId;
+  return (
+    <div className={clsx("space-y-1.5", className)}>
+      <label htmlFor={areaId} className="block text-sm font-medium">
+        {label}
+      </label>
+      <textarea
+        id={areaId}
+        rows={4}
+        aria-invalid={error ? true : undefined}
+        className={clsx(
+          "block w-full rounded-md border bg-surface px-3 py-2 text-sm",
+          error ? "border-danger" : "border-line focus:border-brand-600",
+        )}
+        {...rest}
+      />
+      {error ? <p className="text-sm text-danger">{error}</p> : hint ? <p className="text-sm text-muted">{hint}</p> : null}
+    </div>
+  );
+}
