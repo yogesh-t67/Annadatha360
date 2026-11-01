@@ -3913,6 +3913,8 @@ export interface components {
             kind: "business" | "individual";
             /** Trade Name */
             trade_name: string;
+            /** Captcha Token */
+            captcha_token?: string | null;
         };
         /** RemoveIn */
         RemoveIn: {

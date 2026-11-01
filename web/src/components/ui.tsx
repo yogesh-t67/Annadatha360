@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { AlertCircle, CheckCircle2, Info, Loader2, TriangleAlert } from "lucide-react";
+import type React from "react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 import { forwardRef, useId } from "react";
 
@@ -120,5 +121,59 @@ export function PageTitle({ title, subtitle, actions }: { title: string; subtitl
       </div>
       {actions}
     </div>
+  );
+}
+
+type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
+  label: string;
+  error?: string;
+  hint?: ReactNode;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+};
+
+export function SelectField({ label, error, hint, options, placeholder, className, id, ...rest }: SelectProps) {
+  const autoId = useId();
+  const selectId = id ?? autoId;
+  return (
+    <div className={clsx("space-y-1.5", className)}>
+      <label htmlFor={selectId} className="block text-sm font-medium">
+        {label}
+      </label>
+      <select
+        id={selectId}
+        aria-invalid={error ? true : undefined}
+        className={clsx(
+          "block h-10 w-full rounded-md border bg-surface px-3 text-sm",
+          error ? "border-danger" : "border-line focus:border-brand-600",
+        )}
+        {...rest}
+      >
+        {placeholder !== undefined && <option value="">{placeholder}</option>}
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      {error ? <p className="text-sm text-danger">{error}</p> : hint ? <p className="text-sm text-muted">{hint}</p> : null}
+    </div>
+  );
+}
+
+export function Badge({ tone = "neutral", children }: { tone?: "neutral" | "success" | "warning" | "danger" | "brand"; children: ReactNode }) {
+  return (
+    <span
+      className={clsx(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+        tone === "neutral" && "bg-canvas text-muted",
+        tone === "success" && "bg-success-bg text-success",
+        tone === "warning" && "bg-warning-bg text-warning",
+        tone === "danger" && "bg-danger-bg text-danger",
+        tone === "brand" && "bg-brand-50 text-brand-800",
+      )}
+    >
+      {children}
+    </span>
   );
 }

@@ -14165,6 +14165,18 @@
             "maxLength": 160,
             "minLength": 2,
             "title": "Trade Name"
+          },
+          "captcha_token": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captcha Token"
           }
         },
         "type": "object",

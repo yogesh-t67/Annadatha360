@@ -103,6 +103,9 @@ class Settings(BaseSettings):
     document_daily_upload_limit: int = 50  # per ERP account
     document_link_ttl_seconds: int = 300  # view links stop working after 5 minutes
 
+    # --- Bot check on vendor sign-up (Cloudflare Turnstile); empty = off (laptop only) ---
+    turnstile_secret_key: str = ""
+
     # --- Vendor checks ---
     kyc_provider: str = "manual"  # paid GSTIN/PAN/bank verification; "manual" = Super Admin checks by hand
     ifsc_lookup_url: str = "https://ifsc.razorpay.com"  # free
@@ -146,6 +149,8 @@ def get_settings() -> Settings:
             raise RuntimeError("GUEST_LOGIN_ENABLED must be false in production")
         if not settings.field_encryption_key:
             raise RuntimeError("FIELD_ENCRYPTION_KEY must be set in production")
+        if not settings.turnstile_secret_key:
+            raise RuntimeError("TURNSTILE_SECRET_KEY must be set in production (bot check on vendor sign-up)")
         if settings.ai_provider in ("fake", "gemini"):
             raise RuntimeError(f"AI_PROVIDER={settings.ai_provider} is for testing only, not production")
     return settings

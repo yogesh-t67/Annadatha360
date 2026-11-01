@@ -22,6 +22,7 @@ class RegisterIn(BaseModel):
     phone: PhoneNumber
     kind: VendorKind
     trade_name: str = Field(min_length=2, max_length=160)  # shop / business name farmers will see
+    captcha_token: str | None = Field(default=None, max_length=4000)  # from the Turnstile widget
 
 
 class ProfileIn(BaseModel):

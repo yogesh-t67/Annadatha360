@@ -27,6 +27,7 @@ from app.modules.vendors.schemas import (
     VendorOut,
 )
 from app.modules.vendors.verification import KycVerifier, Lookups, get_kyc_verifier, get_lookups
+from app.services.captcha import Captcha, get_captcha
 
 router = APIRouter(prefix="/erp", tags=["erp-vendor"])
 
@@ -139,8 +140,11 @@ def vendor_options():
 
 
 @router.post("/vendors/register", status_code=status.HTTP_202_ACCEPTED)
-def register(body: RegisterIn, db: DbSession, request: Request, mail: Email):
+def register(
+    body: RegisterIn, db: DbSession, request: Request, mail: Email, captcha: Annotated[Captcha, Depends(get_captcha)]
+):
     """Always the same answer, so the form can't be used to find out which emails have accounts."""
+    captcha.verify(body.captcha_token, client_ip(request))
     created = service.register(db, body, client_ip(request))
     if created is None:
         db.commit()
