@@ -28,7 +28,7 @@ export function Hero({ icon: Icon, style, children }: { icon?: LucideIcon; style
           style={{
             width: 72,
             height: 72,
-            borderRadius: 36,
+            borderRadius: theme.radius.full,
             alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: theme.color.surface.base,
@@ -49,7 +49,7 @@ export function Pill({ icon: Icon, children }: { icon?: LucideIcon; children: Re
         alignSelf: 'flex-start',
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: theme.spacing.xs,
         paddingHorizontal: theme.spacing.sm,
         paddingVertical: theme.spacing.xxs,
         borderRadius: theme.radius.full,
@@ -58,8 +58,8 @@ export function Pill({ icon: Icon, children }: { icon?: LucideIcon; children: Re
         backgroundColor: theme.color.surface.base,
       }}
     >
-      {Icon ? <Icon size={14} color={theme.color.text.secondary} strokeWidth={2.25} /> : null}
-      <Text variant="caption" weight="medium" color={theme.color.text.secondary}>
+      {Icon ? <Icon size={theme.iconSize.inline} color={theme.color.text.secondary} strokeWidth={2.25} /> : null}
+      <Text variant="body" weight="medium" color={theme.color.text.secondary}>
         {children}
       </Text>
     </View>
@@ -73,14 +73,14 @@ export function StepProgress({ step, total = 3 }: { step: number; total?: number
       <Text variant="caption" color={theme.color.text.muted}>
         {step} / {total}
       </Text>
-      <View style={{ flexDirection: 'row', gap: 6 }}>
+      <View style={{ flexDirection: 'row', gap: theme.spacing.xs }}>
         {Array.from({ length: total }, (_, i) => (
           <View
             key={i}
             style={{
               flex: 1,
-              height: 6,
-              borderRadius: 3,
+              height: theme.spacing.xs,
+              borderRadius: theme.radius.full,
               backgroundColor: i < step ? theme.color.surface.brand : theme.color.border.default,
             }}
           />
@@ -93,8 +93,10 @@ export function StepProgress({ step, total = 3 }: { step: number; total?: number
 export function ScreenTitle({ icon: Icon, children }: { icon?: LucideIcon; children: React.ReactNode }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
-      {Icon ? <Icon size={24} color={theme.color.text.primary} strokeWidth={2.25} /> : null}
-      <Text variant="h1">{children}</Text>
+      {Icon ? <Icon size={theme.iconSize.hero} color={theme.color.text.primary} strokeWidth={2.25} /> : null}
+      <Text variant="h1" style={{ flexShrink: 1 }}>
+        {children}
+      </Text>
     </View>
   );
 }

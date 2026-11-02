@@ -1,106 +1,155 @@
-import React, { useState } from 'react';
-import { View } from 'react-native';
+import React from 'react';
+import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useFocusEffect } from '@react-navigation/native';
-import { Camera, Check, CircleCheck, MapPin } from 'lucide-react-native';
+import { CircleCheck, Pencil, Plus } from 'lucide-react-native';
 
 import { theme } from '../../theme';
-import { Button, Card, Text, TextField } from '../../components/primitives';
+import { Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
-import { SelectField } from '../../components/SelectField';
 import { CropImage } from '../../components/CropImage';
-import { cropImages, crops, stages } from '../../data/farm';
-import { FarmProfile, useFarmStore } from '../../store/farmStore';
+import { Farm, farmName, useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
-import { hasSession } from '../../api/tokens';
-import { syncProfile } from '../../api/syncProfile';
 
-type Draft = Pick<FarmProfile, 'crop' | 'acres' | 'stage'>;
-
+/**
+ * The farmer's farms. Tap a card to choose the farm every screen is about; "Edit" and "Add new farm" open
+ * FarmEditScreen, so choosing, editing and adding never share one form.
+ */
 export function MyFarmScreen() {
-  const { t, i18n } = useTranslation();
-  const { open } = useAppNavigation();
-  const saved = useFarmStore();
-  const [draft, setDraft] = useState<Draft>({ crop: saved.crop, acres: saved.acres, stage: saved.stage });
-  const [justSaved, setJustSaved] = useState(false);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      const s = useFarmStore.getState();
-      setDraft({ crop: s.crop, acres: s.acres, stage: s.stage });
-      setJustSaved(false);
-    }, []),
-  );
-
-  function change(patch: Partial<Draft>) {
-    setDraft((d) => ({ ...d, ...patch }));
-    setJustSaved(false);
-  }
+  const { t } = useTranslation();
+  const { navigation } = useAppNavigation();
+  const farms = useFarmStore((s) => s.farms);
+  const activeFarmId = useFarmStore((s) => s.activeFarmId);
+  const selectFarm = useFarmStore((s) => s.selectFarm);
 
   return (
     <ScreenContainer>
-      <Text variant="h1">{t('farm.title')}</Text>
-
-      <Card tone="brand">
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-          <CropImage code={saved.crop} size={64} />
-          <View style={{ flex: 1, gap: 2 }}>
-            <Text variant="h1" color={theme.color.text.inverse}>
-              {t(`crops.${saved.crop}`)}
-            </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <MapPin size={14} color={theme.color.text.inverseMuted} strokeWidth={2.25} />
-              <Text variant="body" color={theme.color.text.inverseMuted}>
-                {`${t(`districts.${saved.district}`)} · ${t('home.acresValue', { acres: saved.acres })}`}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </Card>
-
-      <SelectField
-        label={t('farm.crop')}
-        value={draft.crop}
-        options={crops.map((c) => ({ value: c.code, label: t(`crops.${c.code}`), image: cropImages[c.code] }))}
-        onChange={(v) => change({ crop: v })}
-      />
-      <TextField
-        label={t('farm.area')}
-        value={draft.acres}
-        onChangeText={(v) => change({ acres: v.replace(/[^\d.]/g, '') })}
-        keyboardType="decimal-pad"
-      />
-      <SelectField
-        label={t('farm.stage')}
-        value={draft.stage}
-        options={stages.map((s) => ({ value: s, label: t(`stages.${s}`) }))}
-        onChange={(v) => change({ stage: v })}
-      />
-
-      <Button
-        label={t('farm.save')}
-        icon={Check}
-        onPress={() => {
-          saved.update(draft);
-          setJustSaved(true);
-          // Best effort: keep the backend profile (AI context, prices, weather) in step. Never blocks.
-          hasSession()
-            .then((signedIn) => (signedIn ? syncProfile(useFarmStore.getState(), i18n.language) : undefined))
-            .catch((e) => console.warn('Profile sync failed', e));
-        }}
-      />
-      {justSaved ? (
-        <View
-          accessibilityLiveRegion="polite"
-          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-        >
-          <CircleCheck size={18} color={theme.color.status.successText} strokeWidth={2.25} />
-          <Text variant="bodyStrong" color={theme.color.status.successText}>
-            {t('farm.saved')}
+      <View style={{ gap: theme.spacing.xxs }}>
+        <Text variant="h1">{t('farm.title')}</Text>
+        {farms.length > 1 ? (
+          <Text variant="body" color={theme.color.text.muted}>
+            {t('farm.tapToChoose')}
           </Text>
-        </View>
-      ) : null}
-      <Button label={t('farm.diagnosis')} variant="secondary" icon={Camera} onPress={() => open('Diagnosis')} />
+        ) : null}
+      </View>
+
+      <View style={{ gap: theme.spacing.sm }}>
+        {farms.map((farm) => (
+          <FarmCard
+            key={farm.id}
+            farm={farm}
+            name={farmName(farms, farm, t)}
+            active={farm.id === activeFarmId}
+            onSelect={() => selectFarm(farm.id)}
+            onEdit={() => navigation.navigate('FarmEdit', { farmId: farm.id })}
+          />
+        ))}
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('farm.addFarm')}
+          onPress={() => navigation.navigate('FarmEdit', {})}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: theme.spacing.xs,
+            minHeight: theme.touchTarget.row,
+            borderRadius: theme.radius.lg,
+            borderWidth: 2,
+            borderStyle: 'dashed',
+            borderColor: theme.color.surface.brand,
+            backgroundColor: pressed ? theme.color.surface.brandSoft : theme.color.surface.base,
+          })}
+        >
+          <Plus size={theme.iconSize.row} color={theme.color.surface.brandDeep} strokeWidth={2.5} />
+          <Text variant="label" weight="bold" color={theme.color.surface.brandDeep}>
+            {t('farm.addFarm')}
+          </Text>
+        </Pressable>
+      </View>
     </ScreenContainer>
+  );
+}
+
+function FarmCard({
+  farm,
+  name,
+  active,
+  onSelect,
+  onEdit,
+}: {
+  farm: Farm;
+  name: string;
+  active: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+}) {
+  const { t } = useTranslation();
+  const district = useFarmStore((s) => s.district);
+
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ selected: active }}
+      accessibilityLabel={`${name}, ${t(`crops.${farm.crop}`)}, ${t('home.acresValue', { acres: farm.acres })}`}
+      onPress={onSelect}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: theme.spacing.sm,
+        padding: theme.spacing.sm,
+        borderRadius: theme.radius.lg,
+        borderWidth: 2,
+        borderColor: active ? theme.color.surface.brand : theme.color.border.default,
+        backgroundColor: active ? theme.color.surface.brandSoft : pressed ? theme.color.surface.sunken : theme.color.surface.base,
+        ...theme.elevation.level1,
+      })}
+    >
+      <CropImage code={farm.crop} size={72} />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text variant="label" weight="bold" numberOfLines={1}>
+          {name}
+        </Text>
+        <Text variant="body" color={theme.color.text.secondary} numberOfLines={1}>
+          {`${t(`crops.${farm.crop}`)} · ${t('home.acresValue', { acres: farm.acres })}`}
+        </Text>
+        <Text variant="body" color={theme.color.text.muted} numberOfLines={1}>
+          {`${t(`stages.${farm.stage}`)} · ${t(`districts.${district}`)}`}
+        </Text>
+      </View>
+      <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', alignSelf: 'stretch' }}>
+        {active ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xxs }}>
+            <CircleCheck size={theme.iconSize.inline} color={theme.color.surface.brandDeep} strokeWidth={2.5} />
+            <Text variant="caption" weight="bold" color={theme.color.surface.brandDeep}>
+              {t('farm.selected')}
+            </Text>
+          </View>
+        ) : (
+          <View />
+        )}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${t('farm.edit')}: ${name}`}
+          onPress={onEdit}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: theme.spacing.xxs,
+            minHeight: theme.touchTarget.minimum,
+            paddingHorizontal: theme.spacing.sm,
+            borderRadius: theme.radius.md,
+            borderWidth: 1,
+            borderColor: theme.color.border.brand,
+            backgroundColor: pressed ? theme.color.surface.brandMid : theme.color.surface.base,
+          })}
+        >
+          <Pencil size={theme.iconSize.inline} color={theme.color.surface.brandDeep} strokeWidth={2.25} />
+          <Text variant="bodyStrong" color={theme.color.surface.brandDeep}>
+            {t('farm.edit')}
+          </Text>
+        </Pressable>
+      </View>
+    </Pressable>
   );
 }

@@ -4,7 +4,6 @@
  *
  * Colours, spacing, radius, font sizes and line heights come from design/tokens.json (shared with the ERP
  * website) through tokens.generated.ts. Change them there and run: node design/build-tokens.mjs
- * (Display-font line heights are ~1.5x the size so Baloo Tammudu 2 glyph tops are not clipped on Android.)
  */
 import { color } from './tokens.generated';
 
@@ -81,4 +80,20 @@ export const breakpoint = {
 export const touchTarget = {
   /** Minimum hit-area side length; below this, low-literacy/outdoor users mis-tap. */
   minimum: 48,
+  /** Full-size button. */
+  button: 56,
+  /** Text and select fields (room for Telugu's tall letters, same height in both languages). */
+  field: 60,
+  /** Tappable list rows. */
+  row: 64,
+} as const;
+
+/** Icon sizes, so icons beside the same kind of text match across screens. */
+export const iconSize = {
+  /** Beside body/caption text and inside buttons. */
+  inline: 20,
+  /** In list rows, chips and beside headings. */
+  row: 24,
+  /** Status/hero icons. */
+  hero: 32,
 } as const;

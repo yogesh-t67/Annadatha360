@@ -52,6 +52,7 @@ export const getFields = () => api<FieldOut[]>('/fields');
 export const createField = (field: FieldIn) => api<FieldOut>('/fields', { method: 'POST', body: field });
 export const updateField = (id: number, patch: Partial<FieldIn>) =>
   api<FieldOut>(`/fields/${id}`, { method: 'PATCH', body: patch });
+export const deleteField = (id: number) => api<void>(`/fields/${id}`, { method: 'DELETE' });
 
 // ---- Weather (docs/api/weather.md) ----
 
@@ -124,11 +125,15 @@ export const getHome = () => api<HomeOut>('/home');
 
 // ---- Crop diagnosis (docs/api/diagnosis.md) ----
 
-export function createDiagnosis(photo: { uri: string }, opts: { cropCode?: string; notes?: string } = {}) {
+export function createDiagnosis(
+  photo: { uri: string },
+  opts: { cropCode?: string; notes?: string; fieldId?: number } = {},
+) {
   const form = new FormData();
   // React Native's FormData takes {uri, name, type} for files; the server sniffs the real type from the bytes.
   form.append('image', { uri: photo.uri, name: 'crop.jpg', type: 'image/jpeg' } as unknown as Blob);
   if (opts.cropCode) form.append('crop_code', opts.cropCode);
+  if (opts.fieldId !== undefined) form.append('field_id', String(opts.fieldId));
   if (opts.notes?.trim()) form.append('notes', opts.notes.trim().slice(0, 500));
   return api<DiagnosisOut>('/diagnoses', { method: 'POST', body: form, timeoutMs: AI_TIMEOUT_MS });
 }
@@ -136,10 +141,11 @@ export function createDiagnosis(photo: { uri: string }, opts: { cropCode?: strin
 // ---- AI assistant (docs/api/assistant.md) ----
 
 /** Spoken question: the AI hears the recording; `message.content` is what it heard, `reply` the answer. */
-export function askAssistantVoice(recordingUri: string, threadId?: number) {
+export function askAssistantVoice(recordingUri: string, threadId?: number, fieldId?: number) {
   const form = new FormData();
   form.append('audio', { uri: recordingUri, name: 'question.m4a', type: 'audio/mp4' } as unknown as Blob);
   if (threadId) form.append('thread_id', String(threadId));
+  else if (fieldId !== undefined) form.append('field_id', String(fieldId));
   return api<AskOut>('/assistant/voice', { method: 'POST', body: form, timeoutMs: AI_TIMEOUT_MS });
 }
 

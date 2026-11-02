@@ -57,24 +57,26 @@ export const radius = {
 } as const;
 
 export const fontSize = {
-  micro: 12,
-  caption: 14,
-  body: 16,
-  label: 17,
-  h2: 20,
-  h1: 26,
-  display: 30,
+  micro: 13,
+  caption: 15,
+  body: 17,
+  label: 18,
+  title: 24,
+  h2: 22,
+  h1: 28,
+  display: 32,
   hero: 54
 } as const;
 
 export const lineHeight = {
-  micro: 16,
-  caption: 20,
-  body: 24,
-  label: 24,
-  h2: 32,
-  h1: 40,
-  display: 46,
+  micro: 18,
+  caption: 22,
+  body: 26,
+  label: 26,
+  title: 30,
+  h2: 34,
+  h1: 42,
+  display: 48,
   hero: 78
 } as const;
 

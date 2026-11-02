@@ -142,7 +142,7 @@ export function MarketPricesScreen() {
       />
 
       {signedIn === false ? (
-        <Card tone="soft" style={{ gap: theme.spacing.sm }}>
+        <Card tone="soft">
           <Text variant="body">{t('voice.signInNeeded')}</Text>
           <Button
             label={t('voice.verifyNow')}
@@ -158,10 +158,10 @@ export function MarketPricesScreen() {
       ) : errorKey ? (
         <Notice icon={TriangleAlert} message={t(errorKey)} />
       ) : !prices || prices.length === 0 ? (
-        <Card style={{ gap: theme.spacing.sm }}>
+        <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-            <CropImage code={crop} size={56} />
-            <Text variant="h2" style={{ flex: 1 }}>
+            <CropImage code={crop} size={72} />
+            <Text variant="label" weight="bold" style={{ flex: 1 }}>
               {`${t(`crops.${crop}`)} · ${marketLabel}`}
             </Text>
           </View>
@@ -185,12 +185,12 @@ export function MarketPricesScreen() {
             </Text>
           ) : null}
           {prices.map((p, i) => (
-            <Card key={`${p.market}-${p.variety}-${i}`} style={{ gap: theme.spacing.xs }}>
+            <Card key={`${p.market}-${p.variety}-${i}`}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-                <CropImage code={crop} size={44} />
+                <CropImage code={crop} size={48} />
                 <View style={{ flex: 1 }}>
                   <Text variant="bodyStrong">{`${marketName(p.market, lang)}, ${feedDistrict(p.district)}`}</Text>
-                  <Text variant="caption" color={theme.color.text.muted}>
+                  <Text variant="body" color={theme.color.text.muted}>
                     {[
                       t(`crops.${crop}`),
                       // Skip a variety that only repeats the crop ("Paddy", "Tomato").
@@ -205,7 +205,7 @@ export function MarketPricesScreen() {
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: theme.spacing.xs }}>
                 <Text variant="h2">{`₹${p.modal_price.toLocaleString('en-IN')}`}</Text>
-                <Text variant="caption" color={theme.color.text.muted}>
+                <Text variant="body" color={theme.color.text.muted}>
                   {t('market.perQuintal')}
                 </Text>
                 {p.trend
@@ -213,9 +213,9 @@ export function MarketPricesScreen() {
                       const TrendIcon = trendIcon[p.trend];
                       return (
                         <View
-                          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 'auto' }}
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xxs, marginLeft: 'auto' }}
                         >
-                          <TrendIcon size={16} color={trendColor[p.trend]} strokeWidth={2.5} />
+                          <TrendIcon size={theme.iconSize.inline} color={trendColor[p.trend]} strokeWidth={2.5} />
                           <Text variant="bodyStrong" color={trendColor[p.trend]}>
                             {p.change_pct != null ? `${Math.abs(p.change_pct).toFixed(1)}%` : ''}
                           </Text>

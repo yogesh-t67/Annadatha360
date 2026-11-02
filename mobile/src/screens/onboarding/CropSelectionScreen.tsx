@@ -47,7 +47,7 @@ export function CropSelectionScreen() {
                 width: tile,
                 overflow: 'hidden',
                 borderRadius: theme.radius.lg,
-                borderWidth: selected ? 2.5 : 1,
+                borderWidth: selected ? 2 : 1,
                 borderColor: selected ? theme.color.surface.brand : theme.color.border.default,
                 backgroundColor: selected ? theme.color.surface.brandSoft : theme.color.surface.base,
                 transform: [{ scale: pressed ? 0.98 : 1 }],
@@ -60,8 +60,8 @@ export function CropSelectionScreen() {
                 resizeMode="cover"
                 style={{ width: tile, height: tile, backgroundColor: theme.color.surface.sunken }}
               />
-              <View style={{ paddingHorizontal: theme.spacing.xs, paddingVertical: theme.spacing.xs, minHeight: 44, justifyContent: 'center' }}>
-                <Text variant="caption" weight="bold" align="center" numberOfLines={2}>
+              <View style={{ paddingHorizontal: theme.spacing.xs, paddingVertical: theme.spacing.xs, minHeight: theme.touchTarget.minimum, justifyContent: 'center' }}>
+                <Text variant="bodyStrong" align="center" numberOfLines={2}>
                   {t(`crops.${c.code}`)}
                 </Text>
               </View>

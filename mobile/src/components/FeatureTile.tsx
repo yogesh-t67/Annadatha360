@@ -28,7 +28,7 @@ export function FeatureTile({ icon, label, tint, onPress, selected = false, show
         {
           flexBasis: '46%',
           flexGrow: 1,
-          minHeight: 122,
+          minHeight: 128,
           padding: theme.spacing.md,
           gap: theme.spacing.sm,
           borderRadius: theme.radius.lg,
@@ -45,8 +45,8 @@ export function FeatureTile({ icon, label, tint, onPress, selected = false, show
         {label}
       </Text>
       {showArrow ? (
-        <View style={{ position: 'absolute', top: 14, right: 16 }}>
-          <ArrowUpRight size={18} color={theme.color.text.muted} strokeWidth={2.25} />
+        <View style={{ position: 'absolute', top: theme.spacing.md, right: theme.spacing.md }}>
+          <ArrowUpRight size={theme.iconSize.inline} color={theme.color.text.muted} strokeWidth={2.25} />
         </View>
       ) : null}
       {selected ? <SelectedBadge /> : null}
@@ -59,17 +59,17 @@ export function SelectedBadge() {
     <View
       style={{
         position: 'absolute',
-        top: 8,
-        right: 8,
-        width: 24,
-        height: 24,
-        borderRadius: 12,
+        top: theme.spacing.xs,
+        right: theme.spacing.xs,
+        width: theme.iconSize.row,
+        height: theme.iconSize.row,
+        borderRadius: theme.radius.full,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: theme.color.surface.brand,
       }}
     >
-      <Check size={15} color={theme.color.text.inverse} strokeWidth={3} />
+      <Check size={16} color={theme.color.text.inverse} strokeWidth={3} />
     </View>
   );
 }

@@ -12,22 +12,15 @@ export interface TextProps extends RNTextProps {
   children: React.ReactNode;
 }
 
-const TELUGU = /[ఀ-౿]/;
-
-function hasTelugu(node: React.ReactNode): boolean {
-  if (typeof node === 'string') return TELUGU.test(node);
-  if (Array.isArray(node)) return node.some(hasTelugu);
-  return false;
-}
-
 /**
  * Telugu stacks vowel signs above and conjuncts below the base letter, so its glyphs are much taller
- * than Latin at the same size. Android clips anything outside the line box, so Telugu text gets a
- * taller line (~1.8x font size). Applied by language and by content, because Telugu also appears
- * inside the English UI (language names, district names).
+ * than Latin at the same size. Android clips anything outside the line box, so text gets a taller line
+ * (1.7x font size: Noto Sans Telugu's tallest glyphs measure 1.48em, and Android puts ~64% of the line above
+ * the baseline, so ~1.57x is the minimum; 1.7x leaves room for stacked marks). Applied in every language, not only Telugu, so cards and rows keep the same size
+ * when the farmer switches language.
  */
 function teluguLineHeight(fontSize: number, base: number): number {
-  return Math.max(base, Math.round(fontSize * 1.8));
+  return Math.max(base, Math.round(fontSize * 1.7));
 }
 
 /**
@@ -40,15 +33,17 @@ export function Text({ variant = 'body', weight, color, align, style, children, 
   const variantConfig = theme.typography[variant];
   const resolvedWeight = weight ?? variantConfig.weight;
   const fontFamily = resolveFontFamily(i18n.language, resolvedWeight, variantConfig.display);
-  const telugu = variant !== 'hero' && (i18n.language === 'te' || hasTelugu(children));
-  // Headings (display font, Baloo Tammudu 2) draw Telugu vowel signs above the font's declared ascent, and
-  // Android clips anything outside a fixed line box no matter how tall we make it. So for Telugu headings
-  // set no lineHeight at all: Android then sizes the line from the real glyph bounds (font padding on).
-  const lineHeight = telugu
-    ? variantConfig.display
-      ? undefined
-      : teluguLineHeight(variantConfig.fontSize, variantConfig.lineHeight)
-    : variantConfig.lineHeight;
+  // Line heights are the same in Telugu and English (see teluguLineHeight), so layouts don't jump on a
+  // language switch. Headings (display font, Baloo Tammudu 2) draw Telugu vowel signs above the font's
+  // declared ascent, and Android clips anything outside a fixed line box no matter how tall we make it.
+  // So headings set no lineHeight at all: Android sizes the line from the font's real bounds (font padding
+  // on), and Baloo covers both scripts with one set of metrics, so both languages get the same height.
+  const lineHeight =
+    variant === 'hero'
+      ? variantConfig.lineHeight
+      : variantConfig.display
+        ? undefined
+        : teluguLineHeight(variantConfig.fontSize, variantConfig.lineHeight);
 
   return (
     <RNText

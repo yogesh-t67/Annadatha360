@@ -27,7 +27,8 @@ export type FeatureScreen = keyof FeatureStackParamList;
 export type HomeStackParamList = { Home: undefined } & FeatureStackParamList;
 /** `listen`: a fresh timestamp asks the Voice screen to start recording immediately (tap on Home's avatar). */
 export type AskStackParamList = { Voice: { question?: string; listen?: number } | undefined } & FeatureStackParamList;
-export type FarmStackParamList = { MyFarm: undefined } & FeatureStackParamList;
+/** FarmEdit: `farmId` edits that farm; without it, adds a new farm. */
+export type FarmStackParamList = { MyFarm: undefined; FarmEdit: { farmId?: string } | undefined } & FeatureStackParamList;
 export type ServicesStackParamList = { Services: undefined } & FeatureStackParamList;
 
 export type MainTabParamList = {

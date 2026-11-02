@@ -35,7 +35,7 @@ const tones: Record<CardTone, object> = {
 
 export function Card({ onPress, tone = 'default', padding = 'md', style, children, ...rest }: CardProps) {
   const base = [
-    { borderRadius: theme.radius.lg, padding: theme.spacing[padding], gap: theme.spacing.xs },
+    { borderRadius: theme.radius.lg, padding: theme.spacing[padding], gap: theme.spacing.sm },
     tones[tone],
     style,
   ];

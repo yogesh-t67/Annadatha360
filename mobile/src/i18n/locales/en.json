@@ -1,5 +1,6 @@
 {
   "common": {
+    "brandName": "FarmersAgriMart",
     "next": "Next",
     "continue": "Continue",
     "getStarted": "Get Started",
@@ -143,8 +144,6 @@
     "yadadri_bhuvanagiri": "Yadadri Bhuvanagiri"
   },
   "home": {
-    "hello": "Hello",
-    "helloName": "Hello, {{name}}",
     "myCrop": "MY CROP",
     "acresValue": "{{acres}} acres",
     "manageCrop": "Manage crop",
@@ -383,13 +382,30 @@
     "available": "Available after live integrations."
   },
   "farm": {
-    "title": "My Farm",
+    "title": "My Farms",
+    "tapToChoose": "Tap a farm to see its details on every screen.",
+    "selected": "Selected",
+    "edit": "Edit",
+    "addFarm": "Add new farm",
+    "addTitle": "Add farm",
+    "editTitle": "Edit farm",
+    "name": "Farm name (optional)",
+    "namePlaceholder": "e.g. Near the canal",
+    "defaultName": "Farm {{n}}",
     "crop": "Crop",
-    "area": "Area in acres",
+    "chooseCrop": "Choose crop",
+    "searchCrop": "Search crop",
+    "area": "Area",
+    "acresUnit": "acres",
+    "moreAcres": "Half acre more",
+    "lessAcres": "Half acre less",
     "stage": "Crop stage",
-    "save": "Save Changes",
-    "saved": "Saved on this phone",
-    "diagnosis": "Crop Diagnosis"
+    "save": "Save farm",
+    "fillToSave": "Choose the crop, area and stage to save.",
+    "cancel": "Cancel",
+    "remove": "Remove this farm",
+    "removeTitle": "Remove {{name}}?",
+    "removeBody": "Its crop details will be deleted."
   },
   "services": {
     "title": "Farmer Services",
@@ -448,5 +464,31 @@
     "otpTooMany": "Too many attempts. Please wait and try again.",
     "generic": "Something went wrong. Please try again.",
     "badPhoto": "This photo could not be used. Take a new JPG photo and try again."
-  }
+  },
+  "ads": {
+      "sponsored": "Ad",
+      "position": "Ad {{current}} of {{total}}",
+      "items": {
+        "dripSubsidy": {
+          "title": "Drip irrigation at 90% subsidy",
+          "body": "Save water and get more yield. Apply before the end of this month.",
+          "cta": "Check eligibility"
+        },
+        "soilTest": {
+          "title": "Soil test for just ₹99",
+          "body": "Know what your soil needs before you buy fertiliser.",
+          "cta": "Book a test"
+        },
+        "mandiPrice": {
+          "title": "Get the best price for your crop",
+          "body": "Compare today's rates at mandis near you.",
+          "cta": "See prices"
+        },
+        "cropInsurance": {
+          "title": "Insure your crop this season",
+          "body": "Protect your crop from rain, drought and pests.",
+          "cta": "Know more"
+        }
+      }
+    }
 }

@@ -34,7 +34,8 @@ import { ScreenContainer } from '../../components/ScreenContainer';
 import { Hero } from '../../components/Blocks';
 import { CropImage } from '../../components/CropImage';
 import { Notice } from '../../components/Notice';
-import { useFarmStore } from '../../store/farmStore';
+import { SectionTitle } from '../../components/SectionTitle';
+import { activeFarm, useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { createDiagnosis } from '../../api/endpoints';
 import { errorMessageKey } from '../../api/errorMessage';
@@ -100,6 +101,7 @@ export function CropDiagnosisScreen() {
   const { t, i18n } = useTranslation();
   const { navigation, open } = useAppNavigation();
   const crop = useFarmStore((s) => s.crop);
+  const fieldId = useFarmStore((s) => activeFarm(s).serverId);
   const voiceEnabled = useFarmStore((s) => s.voiceEnabled);
 
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
@@ -165,7 +167,7 @@ export function CropDiagnosisScreen() {
     try {
       // Notes go to the AI in English-or-Telugu as the farmer sees them.
       const notes = picked.map((k) => t(`diagnosis.symptoms.${k}`)).join(', ');
-      const result = await createDiagnosis({ uri: photoUri }, { cropCode: crop, notes });
+      const result = await createDiagnosis({ uri: photoUri }, { cropCode: crop, notes, fieldId });
       setDiagnosis(result);
       // Read the answer aloud straight away (unless the farmer turned voice off in Settings).
       if (voiceEnabled) {
@@ -206,7 +208,7 @@ export function CropDiagnosisScreen() {
     return (
       <ScreenContainer showBack>
         <Text variant="h1">{t('diagnosis.title')}</Text>
-        <Card tone="soft" style={{ gap: theme.spacing.sm }}>
+        <Card tone="soft">
           <Text variant="body">{t('diagnosis.signInNeeded')}</Text>
           <Button
             label={t('voice.verifyNow')}
@@ -242,7 +244,6 @@ export function CropDiagnosisScreen() {
             <Button
               label={photoUri ? t('diagnosis.retake') : t('diagnosis.openCamera')}
               icon={Camera}
-              compact
               disabled={busy}
               onPress={() => getPhoto('camera')}
             />
@@ -252,14 +253,13 @@ export function CropDiagnosisScreen() {
               label={t('diagnosis.gallery')}
               icon={Images}
               variant="secondary"
-              compact
               disabled={busy}
               onPress={() => getPhoto('gallery')}
             />
           </View>
         </View>
         {!photoUri ? (
-          <Text variant="caption" align="center" color={theme.color.text.muted}>
+          <Text variant="body" align="center" color={theme.color.text.muted}>
             {t('diagnosis.photoTip')}
           </Text>
         ) : null}
@@ -270,12 +270,12 @@ export function CropDiagnosisScreen() {
       {photoUri && !diagnosis ? (
         <>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-            <CropImage code={crop} size={44} />
+            <CropImage code={crop} size={48} />
             <Text variant="bodyStrong" style={{ flex: 1 }}>
               {t('diagnosis.forCrop', { crop: t(`crops.${crop}`) })}
             </Text>
           </View>
-          <Text variant="h2">{t('diagnosis.chooseSymptom')}</Text>
+          <SectionTitle>{t('diagnosis.chooseSymptom')}</SectionTitle>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
             {symptoms.map((s) => {
               const on = picked.includes(s.key);
@@ -290,8 +290,8 @@ export function CropDiagnosisScreen() {
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    gap: 6,
-                    minHeight: 48,
+                    gap: theme.spacing.xs,
+                    minHeight: theme.touchTarget.minimum,
                     paddingHorizontal: theme.spacing.sm,
                     borderRadius: theme.radius.full,
                     borderWidth: on ? 2 : 1,
@@ -299,21 +299,21 @@ export function CropDiagnosisScreen() {
                     backgroundColor: on ? theme.color.surface.brandSoft : theme.color.tint[s.tint].bg,
                   }}
                 >
-                  <Icon size={18} color={theme.color.surface.brandDeep} strokeWidth={2.25} />
+                  <Icon size={theme.iconSize.row} color={theme.color.surface.brandDeep} strokeWidth={2.25} />
                   <Text variant="bodyStrong">{t(`diagnosis.symptoms.${s.key}`)}</Text>
-                  {on ? <CircleCheck size={18} color={theme.color.surface.brand} strokeWidth={2.5} /> : null}
+                  {on ? <CircleCheck size={theme.iconSize.row} color={theme.color.surface.brand} strokeWidth={2.5} /> : null}
                 </Pressable>
               );
             })}
           </View>
 
           {busy ? (
-            <Card style={{ alignItems: 'center', gap: theme.spacing.sm, paddingVertical: theme.spacing.lg }}>
+            <Card style={{ alignItems: 'center', paddingVertical: theme.spacing.lg }}>
               <ActivityIndicator size="large" color={theme.color.surface.brand} />
               <Text variant="bodyStrong" align="center">
                 {t('diagnosis.checking')}
               </Text>
-              <Text variant="caption" align="center" color={theme.color.text.muted}>
+              <Text variant="body" align="center" color={theme.color.text.muted}>
                 {t('diagnosis.checkingHint')}
               </Text>
             </Card>
@@ -393,14 +393,14 @@ function DiagnosisResultView({
             {check.text}
           </Text>
           {check.ok ? (
-            <CircleCheck size={26} color={theme.color.status.successText} strokeWidth={2.5} />
+            <CircleCheck size={theme.iconSize.hero} color={theme.color.status.successText} strokeWidth={2.5} />
           ) : (
-            <TriangleAlert size={26} color={theme.color.status.warningText} strokeWidth={2.5} />
+            <TriangleAlert size={theme.iconSize.hero} color={theme.color.status.warningText} strokeWidth={2.5} />
           )}
         </View>
       ) : null}
 
-      <Card style={{ gap: theme.spacing.sm }}>
+      <Card>
         <View
           style={{
             flexDirection: 'row',
@@ -408,21 +408,21 @@ function DiagnosisResultView({
             gap: theme.spacing.xs,
             alignSelf: 'flex-start',
             paddingHorizontal: theme.spacing.sm,
-            paddingVertical: 4,
+            paddingVertical: theme.spacing.xxs,
             borderRadius: theme.radius.full,
             backgroundColor: status.bg,
           }}
         >
-          <StatusIcon size={18} color={status.fg} strokeWidth={2.5} />
+          <StatusIcon size={theme.iconSize.row} color={status.fg} strokeWidth={2.5} />
           <Text variant="bodyStrong" color={status.fg}>
             {status.label}
           </Text>
         </View>
 
         {!badPhoto && r.issue.category !== 'none' ? (
-          <View style={{ gap: 2 }}>
+          <View style={{ gap: theme.spacing.xxs }}>
             <Text variant="h2">{r.issue.name}</Text>
-            <Text variant="caption" color={theme.color.text.muted}>
+            <Text variant="body" color={theme.color.text.muted}>
               {`${t(`diagnosis.category.${r.issue.category}`)} · ${t(`diagnosis.confidence.${r.issue.confidence}`)}`}
             </Text>
           </View>
@@ -440,8 +440,8 @@ function DiagnosisResultView({
       </Card>
 
       {!badPhoto && r.actions.length > 0 ? (
-        <Card style={{ gap: theme.spacing.sm }}>
-          <Text variant="h2">{t('diagnosis.whatToDo')}</Text>
+        <Card>
+          <Text variant="label" weight="bold">{t('diagnosis.whatToDo')}</Text>
           {r.actions.map((a, i) => {
             const Icon = ACTION_ICON[a.type];
             const chemical = a.type === 'chemical';
@@ -449,22 +449,22 @@ function DiagnosisResultView({
               <View key={i} style={{ flexDirection: 'row', gap: theme.spacing.sm, alignItems: 'flex-start' }}>
                 <View
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
+                    width: 44,
+                    height: 44,
+                    borderRadius: theme.radius.full,
                     alignItems: 'center',
                     justifyContent: 'center',
                     backgroundColor: chemical ? theme.color.status.warningBg : theme.color.surface.brandSoft,
                   }}
                 >
                   <Icon
-                    size={18}
+                    size={theme.iconSize.row}
                     color={chemical ? theme.color.status.warningText : theme.color.surface.brandDeep}
                     strokeWidth={2.25}
                   />
                 </View>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Text variant="caption" weight="bold" color={theme.color.text.muted}>
+                <View style={{ flex: 1, gap: theme.spacing.xxs }}>
+                  <Text variant="bodyStrong" color={theme.color.text.muted}>
                     {t(`diagnosis.actionType.${a.type}`)}
                   </Text>
                   <Text variant="body">{a.step}</Text>
@@ -486,7 +486,7 @@ function DiagnosisResultView({
       ) : null}
 
       {r.consult_expert ? (
-        <Card tone="soft" style={{ gap: theme.spacing.sm }}>
+        <Card tone="soft">
           <Text variant="bodyStrong">{t('diagnosis.consultExpert')}</Text>
           <Button label={t('services.expert')} icon={Phone} compact onPress={onExpert} />
         </Card>
@@ -501,7 +501,7 @@ function DiagnosisResultView({
 function BulletCard({ title, items }: { title: string; items: string[] }) {
   return (
     <Card style={{ gap: theme.spacing.xs }}>
-      <Text variant="h2">{title}</Text>
+      <Text variant="label" weight="bold">{title}</Text>
       {items.map((s, i) => (
         <View key={i} style={{ flexDirection: 'row', gap: theme.spacing.xs }}>
           <Text variant="body" color={theme.color.surface.brand}>

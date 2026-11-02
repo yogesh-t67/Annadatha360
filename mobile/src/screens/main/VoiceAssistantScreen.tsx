@@ -25,7 +25,7 @@ type MicState = 'idle' | 'listening' | 'thinking' | 'speaking';
 import { Notice } from '../../components/Notice';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { AskStackParamList } from '../../navigation/types';
-import { useFarmStore } from '../../store/farmStore';
+import { activeFarm, useFarmStore } from '../../store/farmStore';
 import { askAssistant, askAssistantVoice } from '../../api/endpoints';
 import { ApiError } from '../../api/client';
 import { errorMessageKey } from '../../api/errorMessage';
@@ -33,6 +33,9 @@ import { hasSession } from '../../api/tokens';
 import type { AskOut } from '../../api/types';
 import { speak, stopSpeaking, useVoicePhase } from '../../voice/speech';
 import { AvatarMood, AvatarState, FarmerAvatar } from '../../components/FarmerAvatar';
+import { AdCarousel } from '../../components/AdCarousel';
+import { SectionTitle } from '../../components/SectionTitle';
+import { ADS } from '../../data/ads';
 import { SpeechInputError, useSpeechInput } from '../../voice/useSpeechInput';
 import { RecorderError, useVoiceRecorder } from '../../voice/useVoiceRecorder';
 
@@ -69,6 +72,10 @@ export function VoiceAssistantScreen() {
   const [asked, setAsked] = useState<string | null>(null);
   const [answer, setAnswer] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<number | undefined>();
+  // Questions are about the selected farm; a new chat starts when the farmer switches farm.
+  const fieldId = useFarmStore((s) => activeFarm(s).serverId);
+  const activeFarmId = useFarmStore((s) => s.activeFarmId);
+  useEffect(() => setThreadId(undefined), [activeFarmId]);
   const [asking, setAsking] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [errorKey, setErrorKey] = useState<string | null>(null);
@@ -134,9 +141,9 @@ export function VoiceAssistantScreen() {
       const q = text.trim();
       if (!q || asking) return;
       setAsked(q);
-      return run(() => askAssistant(q, opts.newThread ? undefined : threadId));
+      return run(() => askAssistant(q, opts.newThread ? undefined : threadId, fieldId));
     },
-    [asking, threadId, run],
+    [asking, threadId, fieldId, run],
   );
 
   // Main path: record → the AI hears the audio directly (one step, good with Telugu).
@@ -144,7 +151,7 @@ export function VoiceAssistantScreen() {
     setAsked(null);
     setQuestion('');
     setChipKey(null);
-    run(() => askAssistantVoice(uri, threadId));
+    run(() => askAssistantVoice(uri, threadId, fieldId));
   });
 
   // Fallback path: on-device speech-to-text, then a typed question.
@@ -253,18 +260,20 @@ export function VoiceAssistantScreen() {
 
   return (
     <ScreenContainer>
+      <AdCarousel ads={ADS} onPress={(ad) => open(ad.target)} />
+
       <Text variant="h1">{t('voice.title')}</Text>
 
       {/* The farmer is the voice button: green ring = tap to talk, red = listening (tap again to send). */}
-      <FarmerAvatar
-        state={avatarState}
-        mood={avatarMood}
-        size={150}
-        onPress={onMicPress}
-        disabled={asking}
-        accessibilityLabel={status}
-      />
-      <View style={{ alignItems: 'center', gap: 2, marginTop: -theme.spacing.sm }} accessibilityLiveRegion="polite">
+      <View style={{ alignItems: 'center', gap: theme.spacing.xs }} accessibilityLiveRegion="polite">
+        <FarmerAvatar
+          state={avatarState}
+          mood={avatarMood}
+          size={120}
+          onPress={onMicPress}
+          disabled={asking}
+          accessibilityLabel={status}
+        />
         <Text
           variant="h2"
           align="center"
@@ -300,10 +309,10 @@ export function VoiceAssistantScreen() {
 
       {/* What was asked + the answer, right under the mic so the farmer sees it without scrolling. */}
       {asked && (asking || answer) ? (
-        <View style={{ flexDirection: 'row', gap: theme.spacing.xs, alignItems: 'flex-start' }}>
-          <UserRound size={18} color={theme.color.text.muted} strokeWidth={2.25} style={{ marginTop: 3 }} />
+        <View style={{ flexDirection: 'row', gap: theme.spacing.sm, alignItems: 'center' }}>
+          <UserRound size={theme.iconSize.row} color={theme.color.text.muted} strokeWidth={2.25} />
           <View style={{ flex: 1 }}>
-            <Text variant="caption" color={theme.color.text.muted}>
+            <Text variant="body" color={theme.color.text.muted}>
               {t('voice.youAsked')}
             </Text>
             <Text variant="bodyStrong">{asked}</Text>
@@ -312,10 +321,12 @@ export function VoiceAssistantScreen() {
       ) : null}
 
       {answer ? (
-        <Card tone="soft" style={{ gap: theme.spacing.sm }}>
+        <Card tone="soft">
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
-            <MessageCircle size={20} color={theme.color.surface.brandDeep} strokeWidth={2.25} />
-            <Text variant="h2">{t('voice.answerTitle')}</Text>
+            <MessageCircle size={theme.iconSize.row} color={theme.color.surface.brandDeep} strokeWidth={2.25} />
+            <Text variant="label" weight="bold">
+              {t('voice.answerTitle')}
+            </Text>
           </View>
           <Text variant="body" color={theme.color.text.secondary}>
             {answer}
@@ -339,9 +350,7 @@ export function VoiceAssistantScreen() {
       ) : null}
 
       {/* Typing is the secondary way in. */}
-      <Text variant="h2" style={{ marginTop: theme.spacing.sm }}>
-        {t('voice.orType')}
-      </Text>
+      <SectionTitle>{t('voice.orType')}</SectionTitle>
       <TextField
         value={question}
         onChangeText={(v) => {
@@ -359,7 +368,7 @@ export function VoiceAssistantScreen() {
         onPress={() => ask(question)}
       />
 
-      <Text variant="h2">{t('voice.commonQuestions')}</Text>
+      <SectionTitle>{t('voice.commonQuestions')}</SectionTitle>
       <View style={{ gap: theme.spacing.xs }}>
         {commonQuestions.map((q) => (
           <Pressable
@@ -376,16 +385,16 @@ export function VoiceAssistantScreen() {
               flexDirection: 'row',
               alignItems: 'center',
               gap: theme.spacing.sm,
-              minHeight: 54,
+              minHeight: theme.touchTarget.row,
               paddingHorizontal: theme.spacing.md,
               paddingVertical: theme.spacing.xs,
-              borderRadius: theme.radius.md,
+              borderRadius: theme.radius.lg,
               borderWidth: 1,
               borderColor: theme.color.border.default,
               backgroundColor: pressed ? theme.color.surface.brandSoft : theme.color.surface.base,
             })}
           >
-            <q.icon size={20} color={theme.color.surface.brandDeep} strokeWidth={2} />
+            <q.icon size={theme.iconSize.row} color={theme.color.surface.brandDeep} strokeWidth={2} />
             <Text variant="bodyStrong" color={theme.color.text.secondary} style={{ flex: 1 }}>
               {t(`voice.questions.${q.key}`)}
             </Text>

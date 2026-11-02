@@ -22,7 +22,7 @@ export function WelcomeScreen() {
           source={require('../../../assets/logo.jpg')}
           accessibilityIgnoresInvertColors
           accessibilityLabel="Annadata 360"
-          style={{ width: 168, height: 168, borderRadius: 36, marginBottom: theme.spacing.xs }}
+          style={{ width: 168, height: 168, borderRadius: theme.radius.xl, marginBottom: theme.spacing.xs }}
         />
         <Text variant="display" align="center">
           {t('welcome.title')}
@@ -39,7 +39,7 @@ export function WelcomeScreen() {
             style={{
               width: 60,
               height: 60,
-              borderRadius: 18,
+              borderRadius: theme.radius.md,
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: theme.color.surface.base,
@@ -48,7 +48,7 @@ export function WelcomeScreen() {
               ...theme.elevation.level1,
             }}
           >
-            <Icon size={26} color={theme.color.surface.brandDeep} strokeWidth={2} />
+            <Icon size={theme.iconSize.row} color={theme.color.surface.brandDeep} strokeWidth={2} />
           </View>
         ))}
       </View>

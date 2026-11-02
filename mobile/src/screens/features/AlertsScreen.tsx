@@ -28,7 +28,7 @@ export function AlertsScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
             <IconChip icon={a.icon} tint={a.tint} />
             <View style={{ flex: 1 }}>
-              <Text variant="h2">{t(`alerts.${a.key}`)}</Text>
+              <Text variant="label" weight="bold">{t(`alerts.${a.key}`)}</Text>
               <Text variant="body" color={theme.color.text.muted}>
                 {t('alerts.available')}
               </Text>
