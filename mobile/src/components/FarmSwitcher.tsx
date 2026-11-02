@@ -1,7 +1,6 @@
 import React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react-native';
 
 import { theme } from '../theme';
 import { farmName, useFarmStore } from '../store/farmStore';
@@ -11,11 +10,11 @@ import { CropImage } from './CropImage';
 const CHIP_HEIGHT = 64;
 
 /**
- * Row of the farmer's farms; tap one to make it the farm every screen is about. Scrolls sideways when there
- * are many. With `onAdd`, ends with an "Add farm" chip. Must be a direct child of ScreenContainer (it reaches
- * past the side padding so the row scrolls from edge to edge).
+ * Row of the farmer's farms (Home); tap one to make it the farm every screen is about. Scrolls sideways when
+ * there are many. Must be a direct child of ScreenContainer (it reaches past the side padding so the row
+ * scrolls from edge to edge). Adding and editing farms lives on the My Farms tab.
  */
-export function FarmSwitcher({ onAdd, onSelect }: { onAdd?: () => void; onSelect?: (id: string) => void }) {
+export function FarmSwitcher() {
   const { t } = useTranslation();
   const farms = useFarmStore((s) => s.farms);
   const activeFarmId = useFarmStore((s) => s.activeFarmId);
@@ -37,10 +36,7 @@ export function FarmSwitcher({ onAdd, onSelect }: { onAdd?: () => void; onSelect
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             accessibilityLabel={`${name}, ${t(`crops.${farm.crop}`)}`}
-            onPress={() => {
-              selectFarm(farm.id);
-              onSelect?.(farm.id);
-            }}
+            onPress={() => selectFarm(farm.id)}
             style={({ pressed }) => ({
               flexDirection: 'row',
               alignItems: 'center',
@@ -66,30 +62,6 @@ export function FarmSwitcher({ onAdd, onSelect }: { onAdd?: () => void; onSelect
           </Pressable>
         );
       })}
-      {onAdd ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('farm.addFarm')}
-          onPress={onAdd}
-          style={({ pressed }) => ({
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: theme.spacing.xs,
-            height: CHIP_HEIGHT,
-            paddingHorizontal: theme.spacing.md,
-            borderRadius: theme.radius.lg,
-            borderWidth: 2,
-            borderStyle: 'dashed',
-            borderColor: theme.color.border.brand,
-            backgroundColor: pressed ? theme.color.surface.brandSoft : theme.color.surface.base,
-          })}
-        >
-          <Plus size={24} color={theme.color.surface.brandDeep} strokeWidth={2.5} />
-          <Text variant="bodyStrong" color={theme.color.surface.brandDeep}>
-            {t('farm.addFarm')}
-          </Text>
-        </Pressable>
-      ) : null}
     </ScrollView>
   );
 }

@@ -11,6 +11,7 @@ import { resolveFontFamily, theme } from '../theme';
 import { HomeScreen } from '../screens/main/HomeScreen';
 import { VoiceAssistantScreen } from '../screens/main/VoiceAssistantScreen';
 import { MyFarmScreen } from '../screens/main/MyFarmScreen';
+import { FarmEditScreen } from '../screens/main/FarmEditScreen';
 import { ServicesScreen } from '../screens/main/ServicesScreen';
 import { CropDiagnosisScreen } from '../screens/features/CropDiagnosisScreen';
 import { WeatherScreen } from '../screens/features/WeatherScreen';
@@ -76,6 +77,7 @@ function FarmStackNavigator() {
   return (
     <FarmStack.Navigator screenOptions={stackOptions}>
       <FarmStack.Screen name="MyFarm" component={MyFarmScreen} />
+      <FarmStack.Screen name="FarmEdit" component={FarmEditScreen} />
       {featureRoutes(FarmStack as unknown as AnyStack)}
     </FarmStack.Navigator>
   );

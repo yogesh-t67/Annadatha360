@@ -37,7 +37,8 @@ function OptionLeading<T extends string>({ option, size }: { option: SelectOptio
 
 export interface SelectFieldProps<T extends string> {
   label: string;
-  value: T;
+  /** `null`: nothing chosen yet; the field shows `placeholder`. */
+  value: T | null;
   options: readonly SelectOption<T>[];
   onChange: (value: T) => void;
   /** Show a search box at the top of the sheet (long lists like districts). */
@@ -45,6 +46,8 @@ export interface SelectFieldProps<T extends string> {
   searchPlaceholder?: string;
   /** Shown when the search matches nothing. */
   noResultsText?: string;
+  /** Shown while `value` is null. */
+  placeholder?: string;
 }
 
 /** Dropdown that opens a bottom sheet of large, easy-to-tap rows. */
@@ -56,12 +59,13 @@ export function SelectField<T extends string>({
   searchable = false,
   searchPlaceholder,
   noResultsText,
+  placeholder,
 }: SelectFieldProps<T>) {
   const { t, i18n } = useTranslation();
   const [open, setOpenState] = useState(false);
   const [query, setQuery] = useState('');
   const insets = useSafeAreaInsets();
-  const current = options.find((o) => o.value === value) ?? options[0];
+  const current = value === null ? undefined : (options.find((o) => o.value === value) ?? options[0]);
 
   const setOpen = (o: boolean) => {
     setOpenState(o);
@@ -80,7 +84,7 @@ export function SelectField<T extends string>({
       </Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${label}: ${current?.label ?? ''}`}
+        accessibilityLabel={`${label}: ${current?.label ?? placeholder ?? ''}`}
         onPress={() => setOpen(true)}
         style={({ pressed }) => ({
           flexDirection: 'row',
@@ -95,8 +99,13 @@ export function SelectField<T extends string>({
         })}
       >
         {current ? <OptionLeading option={current} size={40} /> : null}
-        <Text variant="label" weight="medium" style={{ flex: 1 }}>
-          {current?.label}
+        <Text
+          variant="label"
+          weight="medium"
+          color={current ? undefined : theme.color.text.tertiary}
+          style={{ flex: 1 }}
+        >
+          {current?.label ?? placeholder}
         </Text>
         <ChevronDown size={22} color={theme.color.surface.brand} strokeWidth={2.5} />
       </Pressable>
