@@ -382,13 +382,23 @@
     "available": "Available after live integrations."
   },
   "farm": {
-    "title": "My Farm",
+    "title": "My Farms",
     "crop": "Crop",
     "area": "Area in acres",
     "stage": "Crop stage",
     "save": "Save Changes",
     "saved": "Saved on this phone",
-    "diagnosis": "Crop Diagnosis"
+    "diagnosis": "Crop Diagnosis",
+    "name": "Farm name",
+    "namePlaceholder": "e.g. Near the canal",
+    "defaultName": "Farm {{n}}",
+    "addFarm": "Add farm",
+    "newFarm": "New farm",
+    "addThisFarm": "Save new farm",
+    "cancel": "Cancel",
+    "remove": "Remove this farm",
+    "removeTitle": "Remove {{name}}?",
+    "removeBody": "Its crop details will be deleted from this phone."
   },
   "services": {
     "title": "Farmer Services",

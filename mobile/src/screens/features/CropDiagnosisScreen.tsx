@@ -35,7 +35,7 @@ import { Hero } from '../../components/Blocks';
 import { CropImage } from '../../components/CropImage';
 import { Notice } from '../../components/Notice';
 import { SectionTitle } from '../../components/SectionTitle';
-import { useFarmStore } from '../../store/farmStore';
+import { activeFarm, useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { createDiagnosis } from '../../api/endpoints';
 import { errorMessageKey } from '../../api/errorMessage';
@@ -101,6 +101,7 @@ export function CropDiagnosisScreen() {
   const { t, i18n } = useTranslation();
   const { navigation, open } = useAppNavigation();
   const crop = useFarmStore((s) => s.crop);
+  const fieldId = useFarmStore((s) => activeFarm(s).serverId);
   const voiceEnabled = useFarmStore((s) => s.voiceEnabled);
 
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
@@ -166,7 +167,7 @@ export function CropDiagnosisScreen() {
     try {
       // Notes go to the AI in English-or-Telugu as the farmer sees them.
       const notes = picked.map((k) => t(`diagnosis.symptoms.${k}`)).join(', ');
-      const result = await createDiagnosis({ uri: photoUri }, { cropCode: crop, notes });
+      const result = await createDiagnosis({ uri: photoUri }, { cropCode: crop, notes, fieldId });
       setDiagnosis(result);
       // Read the answer aloud straight away (unless the farmer turned voice off in Settings).
       if (voiceEnabled) {

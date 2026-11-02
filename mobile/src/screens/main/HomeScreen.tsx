@@ -10,7 +10,8 @@ import { ScreenContainer } from '../../components/ScreenContainer';
 import { FeatureTile, TileGrid } from '../../components/FeatureTile';
 import { CropImage } from '../../components/CropImage';
 import { CONDITION_ICON } from '../../data/weatherIcons';
-import { useFarmStore } from '../../store/farmStore';
+import { activeFarm, farmName, useFarmStore } from '../../store/farmStore';
+import { FarmSwitcher } from '../../components/FarmSwitcher';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { getHome } from '../../api/endpoints';
 import { hasSession } from '../../api/tokens';
@@ -26,7 +27,9 @@ let greetedThisLaunch = false;
 export function HomeScreen() {
   const { t, i18n } = useTranslation();
   const { open, tab, talk } = useAppNavigation();
-  const { crop, stage, acres } = useFarmStore();
+  const { crop, stage, acres, farms, activeFarmId } = useFarmStore();
+  const farm = activeFarm({ farms, activeFarmId });
+  const farmCount = farms.length;
   const [home, setHome] = useState<HomeOut | null>(null);
 
   useFocusEffect(
@@ -106,9 +109,11 @@ export function HomeScreen() {
         </View>
       ) : null}
 
+      {farmCount > 1 ? <FarmSwitcher /> : null}
+
       <Card tone="brand" style={{ gap: theme.spacing.sm }}>
         <Text variant="caption" weight="bold" color={theme.color.text.inverseMuted} numberOfLines={1}>
-          {t('home.myCrop')}
+          {farmCount > 1 ? farmName(farms, farm, t) : t('home.myCrop')}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
           <CropImage code={crop} size={72} />

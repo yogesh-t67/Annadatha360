@@ -25,7 +25,7 @@ type MicState = 'idle' | 'listening' | 'thinking' | 'speaking';
 import { Notice } from '../../components/Notice';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { AskStackParamList } from '../../navigation/types';
-import { useFarmStore } from '../../store/farmStore';
+import { activeFarm, useFarmStore } from '../../store/farmStore';
 import { askAssistant, askAssistantVoice } from '../../api/endpoints';
 import { ApiError } from '../../api/client';
 import { errorMessageKey } from '../../api/errorMessage';
@@ -72,6 +72,10 @@ export function VoiceAssistantScreen() {
   const [asked, setAsked] = useState<string | null>(null);
   const [answer, setAnswer] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<number | undefined>();
+  // Questions are about the selected farm; a new chat starts when the farmer switches farm.
+  const fieldId = useFarmStore((s) => activeFarm(s).serverId);
+  const activeFarmId = useFarmStore((s) => s.activeFarmId);
+  useEffect(() => setThreadId(undefined), [activeFarmId]);
   const [asking, setAsking] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [errorKey, setErrorKey] = useState<string | null>(null);
@@ -137,9 +141,9 @@ export function VoiceAssistantScreen() {
       const q = text.trim();
       if (!q || asking) return;
       setAsked(q);
-      return run(() => askAssistant(q, opts.newThread ? undefined : threadId));
+      return run(() => askAssistant(q, opts.newThread ? undefined : threadId, fieldId));
     },
-    [asking, threadId, run],
+    [asking, threadId, fieldId, run],
   );
 
   // Main path: record → the AI hears the audio directly (one step, good with Telugu).
@@ -147,7 +151,7 @@ export function VoiceAssistantScreen() {
     setAsked(null);
     setQuestion('');
     setChipKey(null);
-    run(() => askAssistantVoice(uri, threadId));
+    run(() => askAssistantVoice(uri, threadId, fieldId));
   });
 
   // Fallback path: on-device speech-to-text, then a typed question.
