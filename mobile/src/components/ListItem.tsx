@@ -27,10 +27,10 @@ export function ListItem({
         flexDirection: 'row',
         alignItems: 'center',
         gap: theme.spacing.sm,
-        minHeight: 68,
+        minHeight: theme.touchTarget.row,
         paddingVertical: theme.spacing.xs,
-        paddingLeft: theme.spacing.xs + 2,
-        paddingRight: theme.spacing.sm,
+        paddingLeft: theme.spacing.sm,
+        paddingRight: theme.spacing.md,
         borderRadius: theme.radius.lg,
         borderWidth: 1,
         borderColor: theme.color.border.default,
@@ -38,11 +38,11 @@ export function ListItem({
         ...theme.elevation.level1,
       })}
     >
-      <IconChip icon={icon} tint={tint} size={46} />
+      <IconChip icon={icon} tint={tint} />
       <Text variant="label" weight="bold" style={{ flex: 1 }}>
         {label}
       </Text>
-      <ChevronRight size={24} color={theme.color.text.muted} strokeWidth={2.25} />
+      <ChevronRight size={theme.iconSize.row} color={theme.color.text.muted} strokeWidth={2.25} />
     </Pressable>
   );
 }

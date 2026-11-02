@@ -35,7 +35,7 @@ export function LanguageScreen() {
               minHeight: 72,
               paddingHorizontal: theme.spacing.md,
               borderRadius: theme.radius.lg,
-              borderWidth: selected ? 2 : 1.5,
+              borderWidth: selected ? 2 : 1,
               borderColor: selected ? theme.color.surface.brandDeep : theme.color.border.brand,
               backgroundColor: selected ? theme.color.surface.brand : pressed ? theme.color.surface.sunken : theme.color.surface.base,
             })}
@@ -44,7 +44,7 @@ export function LanguageScreen() {
               style={{
                 width: 44,
                 height: 44,
-                borderRadius: 12,
+                borderRadius: theme.radius.sm,
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: selected ? theme.color.surface.onBrandGlass : theme.color.surface.brandSoft,
@@ -57,7 +57,7 @@ export function LanguageScreen() {
             <Text variant="h2" color={selected ? theme.color.text.inverse : theme.color.text.primary} style={{ flex: 1 }}>
               {t(`languageName.${code}`)}
             </Text>
-            {selected ? <Check size={24} color={theme.color.text.inverse} strokeWidth={3} /> : null}
+            {selected ? <Check size={theme.iconSize.row} color={theme.color.text.inverse} strokeWidth={3} /> : null}
           </Pressable>
         );
       })}

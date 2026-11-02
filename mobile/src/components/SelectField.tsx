@@ -86,7 +86,7 @@ export function SelectField<T extends string>({
           flexDirection: 'row',
           alignItems: 'center',
           gap: theme.spacing.xs,
-          minHeight: 56,
+          height: theme.touchTarget.field,
           paddingHorizontal: theme.spacing.md,
           borderRadius: theme.radius.md,
           borderWidth: 1.5,
@@ -94,7 +94,7 @@ export function SelectField<T extends string>({
           backgroundColor: pressed ? theme.color.surface.sunken : theme.color.surface.base,
         })}
       >
-        {current ? <OptionLeading option={current} size={32} /> : null}
+        {current ? <OptionLeading option={current} size={40} /> : null}
         <Text variant="label" weight="medium" style={{ flex: 1 }}>
           {current?.label}
         </Text>
@@ -125,8 +125,8 @@ export function SelectField<T extends string>({
             style={{
               alignSelf: 'center',
               width: 44,
-              height: 5,
-              borderRadius: 3,
+              height: theme.spacing.xxs,
+              borderRadius: theme.radius.full,
               backgroundColor: theme.color.border.strong,
               marginBottom: theme.spacing.sm,
             }}
@@ -142,7 +142,7 @@ export function SelectField<T extends string>({
                 gap: theme.spacing.xs,
                 marginHorizontal: theme.spacing.md,
                 marginBottom: theme.spacing.sm,
-                minHeight: 52,
+                height: theme.touchTarget.field,
                 paddingHorizontal: theme.spacing.sm,
                 borderRadius: theme.radius.md,
                 borderWidth: 1.5,
@@ -169,8 +169,13 @@ export function SelectField<T extends string>({
                 }}
               />
               {query ? (
-                <Pressable accessibilityRole="button" accessibilityLabel={t('common.clear')} hitSlop={10} onPress={() => setQuery('')}>
-                  <X size={20} color={theme.color.text.muted} strokeWidth={2.25} />
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.clear')}
+                  onPress={() => setQuery('')}
+                  style={{ width: theme.touchTarget.minimum, height: theme.touchTarget.minimum, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <X size={theme.iconSize.row} color={theme.color.text.muted} strokeWidth={2.25} />
                 </Pressable>
               ) : null}
             </View>
@@ -199,9 +204,9 @@ export function SelectField<T extends string>({
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: theme.spacing.sm,
-                    minHeight: 56,
+                    minHeight: theme.touchTarget.row,
                     paddingHorizontal: theme.spacing.md,
-                    borderRadius: theme.radius.md,
+                    borderRadius: theme.radius.lg,
                     borderWidth: selected ? 2 : 1,
                     borderColor: selected ? theme.color.surface.brand : theme.color.border.default,
                     backgroundColor: selected || pressed ? theme.color.surface.brandSoft : theme.color.surface.base,
@@ -211,7 +216,7 @@ export function SelectField<T extends string>({
                   <Text variant="label" weight={selected ? 'bold' : 'medium'} style={{ flex: 1 }}>
                     {option.label}
                   </Text>
-                  {selected ? <Check size={20} color={theme.color.surface.brand} strokeWidth={3} /> : null}
+                  {selected ? <Check size={theme.iconSize.row} color={theme.color.surface.brand} strokeWidth={3} /> : null}
                 </Pressable>
               );
             })}

@@ -2,13 +2,11 @@ import React, { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
-import { CloudSun, Droplet, Leaf, MapPin, Thermometer, TrendingUp, Wrench } from 'lucide-react-native';
+import { CloudSun, Droplet, Leaf, Thermometer, TrendingUp, Wrench } from 'lucide-react-native';
 
 import { theme } from '../../theme';
-import { displayName } from '../../i18n/transliterate';
 import { Button, Card, Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
-import { Pill } from '../../components/Blocks';
 import { FeatureTile, TileGrid } from '../../components/FeatureTile';
 import { CropImage } from '../../components/CropImage';
 import { CONDITION_ICON } from '../../data/weatherIcons';
@@ -19,6 +17,8 @@ import { hasSession } from '../../api/tokens';
 import type { HomeOut } from '../../api/types';
 import { speak, stopSpeaking, useVoicePhase } from '../../voice/speech';
 import { FarmerAvatar } from '../../components/FarmerAvatar';
+import { AdCarousel } from '../../components/AdCarousel';
+import { ADS } from '../../data/ads';
 
 /** The welcome is spoken once per app launch, not every time the farmer comes back to Home. */
 let greetedThisLaunch = false;
@@ -26,7 +26,7 @@ let greetedThisLaunch = false;
 export function HomeScreen() {
   const { t, i18n } = useTranslation();
   const { open, tab, talk } = useAppNavigation();
-  const { name, village, district, region, crop, stage, acres } = useFarmStore();
+  const { crop, stage, acres } = useFarmStore();
   const [home, setHome] = useState<HomeOut | null>(null);
 
   useFocusEffect(
@@ -55,32 +55,25 @@ export function HomeScreen() {
     }, [voiceEnabled, t, i18n.language]),
   );
 
-  const nameTe = useFarmStore((s) => s.nameTe);
-  // In the Telugu app, show the name in Telugu letters (farmer's own spelling, else automatic).
-  const trimmedName = displayName(name, nameTe, i18n.language);
-  const location = [village.trim(), t(`districts.${district}`)].filter(Boolean).join(', ');
   const today = home?.weather?.today;
   const TodayIcon = today ? CONDITION_ICON[today.condition] : Thermometer;
 
   return (
     <ScreenContainer>
-      <View style={{ gap: theme.spacing.xs }}>
-        <Text variant="h1">{trimmedName ? t('home.helloName', { name: trimmedName }) : t('home.hello')}</Text>
-        <Pill icon={MapPin}>{`${location} · ${t(`states.${region}`)}`}</Pill>
-      </View>
+      <AdCarousel ads={ADS} onPress={(ad) => open(ad.target)} />
 
       {/* The farmer is the voice button: talks during the welcome; tap opens Ask already listening. */}
-      <FarmerAvatar
-        state={voicePhase === 'playing' ? 'speaking' : voicePhase === 'preparing' ? 'thinking' : 'idle'}
-        mood="happy"
-        size={150}
-        onPress={() => {
-          stopSpeaking();
-          talk();
-        }}
-        accessibilityLabel={t('nav.ask')}
-      />
-      <View style={{ gap: theme.spacing.xxs, marginTop: -theme.spacing.xs }}>
+      <View style={{ gap: theme.spacing.xs }}>
+        <FarmerAvatar
+          state={voicePhase === 'playing' ? 'speaking' : voicePhase === 'preparing' ? 'thinking' : 'idle'}
+          mood="happy"
+          size={150}
+          onPress={() => {
+            stopSpeaking();
+            talk();
+          }}
+          accessibilityLabel={t('nav.ask')}
+        />
         <Text variant="h2" align="center">
           {t('home.askTitle')}
         </Text>
@@ -92,17 +85,17 @@ export function HomeScreen() {
       {today || home?.latest_advisory ? (
         <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
           {today ? (
-            <Card style={{ flex: 1, alignItems: 'center', gap: 2 }} onPress={() => open('Weather')}>
-              <TodayIcon size={28} color={theme.color.status.infoText} strokeWidth={1.75} />
+            <Card style={{ flex: 1, alignItems: 'center', gap: theme.spacing.xxs }} onPress={() => open('Weather')}>
+              <TodayIcon size={32} color={theme.color.status.infoText} strokeWidth={1.75} />
               <Text variant="h2">{today.temp_max_c != null ? `${Math.round(today.temp_max_c)}°C` : '—'}</Text>
-              <Text variant="caption" color={theme.color.text.muted}>
+              <Text variant="body" color={theme.color.text.muted} align="center">
                 {t('home.todayWeather')}
               </Text>
             </Card>
           ) : null}
           {home?.latest_advisory ? (
-            <Card style={{ flex: 2, gap: 2, justifyContent: 'center' }}>
-              <Text variant="caption" weight="semibold" color={theme.color.text.muted}>
+            <Card style={{ flex: 2, gap: theme.spacing.xxs, justifyContent: 'center' }}>
+              <Text variant="body" weight="semibold" color={theme.color.text.muted}>
                 {t('home.latestAdvisory')}
               </Text>
               <Text variant="bodyStrong" numberOfLines={2}>
@@ -114,11 +107,11 @@ export function HomeScreen() {
       ) : null}
 
       <Card tone="brand" style={{ gap: theme.spacing.sm }}>
-        <Text variant="micro" weight="bold" color={theme.color.text.inverseMuted} style={{ letterSpacing: 1.2 }}>
+        <Text variant="caption" weight="bold" color={theme.color.text.inverseMuted} numberOfLines={1}>
           {t('home.myCrop')}
         </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-          <CropImage code={crop} size={64} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
+          <CropImage code={crop} size={72} />
           <View style={{ flex: 1 }}>
             <Text variant="h1" color={theme.color.text.inverse}>
               {t(`crops.${crop}`)}
@@ -128,7 +121,7 @@ export function HomeScreen() {
             </Text>
           </View>
         </View>
-        <Button label={t('home.manageCrop')} variant="onBrand" compact onPress={() => tab('FarmTab')} />
+        <Button label={t('home.manageCrop')} variant="onBrand" onPress={() => tab('FarmTab')} />
       </Card>
 
       <TileGrid>

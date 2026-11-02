@@ -100,7 +100,7 @@ export function VerifyPhoneScreen() {
 
       {codeSent ? (
         <>
-          <Text variant="caption" color={theme.color.text.muted}>
+          <Text variant="body" color={theme.color.text.muted}>
             {t('verifyPhone.sentTo', { phone })}
           </Text>
           <TextField
@@ -117,7 +117,6 @@ export function VerifyPhoneScreen() {
           <Button
             label={cooldown > 0 ? t('verifyPhone.resendIn', { seconds: cooldown }) : t('verifyPhone.resend')}
             variant="secondary"
-            compact
             disabled={cooldown > 0 || busy}
             onPress={sendCode}
           />
@@ -128,7 +127,7 @@ export function VerifyPhoneScreen() {
 
       {errorKey ? <Notice icon={TriangleAlert} message={t(errorKey)} /> : null}
 
-      <Button label={t('verifyPhone.skip')} variant="soft" compact disabled={busy} onPress={proceed} />
+      <Button label={t('verifyPhone.skip')} variant="soft" disabled={busy} onPress={proceed} />
     </ScreenContainer>
   );
 }

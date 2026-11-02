@@ -20,6 +20,7 @@ import { Button, Card, Text } from '../../components/primitives';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { Hero, Pill } from '../../components/Blocks';
 import { Notice } from '../../components/Notice';
+import { SectionTitle } from '../../components/SectionTitle';
 import { useFarmStore } from '../../store/farmStore';
 import { useAppNavigation } from '../../navigation/useAppNavigation';
 import { getWeatherForecast } from '../../api/endpoints';
@@ -65,13 +66,11 @@ export function WeatherScreen() {
 
   return (
     <ScreenContainer showBack>
-      <View style={{ gap: theme.spacing.xs }}>
-        <Text variant="h1">{t('weather.title')}</Text>
-        <Pill icon={MapPin}>{t(`districts.${district}`)}</Pill>
-      </View>
+      <Text variant="h1">{t('weather.title')}</Text>
+      <Pill icon={MapPin}>{t(`districts.${district}`)}</Pill>
 
       {signedIn === false ? (
-        <Card tone="soft" style={{ gap: theme.spacing.sm }}>
+        <Card tone="soft">
           <Text variant="body">{t('voice.signInNeeded')}</Text>
           <Button
             label={t('voice.verifyNow')}
@@ -114,7 +113,7 @@ export function WeatherScreen() {
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        gap: 4,
+                        gap: theme.spacing.xxs,
                         paddingHorizontal: theme.spacing.sm,
                         paddingVertical: theme.spacing.xxs,
                         borderRadius: theme.radius.full,
@@ -123,8 +122,8 @@ export function WeatherScreen() {
                         backgroundColor: theme.color.surface.base,
                       }}
                     >
-                      <StatIcon size={14} color={theme.color.text.secondary} strokeWidth={2.25} />
-                      <Text variant="caption" weight="semibold" color={theme.color.text.secondary}>
+                      <StatIcon size={theme.iconSize.inline} color={theme.color.text.secondary} strokeWidth={2.25} />
+                      <Text variant="body" weight="semibold" color={theme.color.text.secondary}>
                         {s.text}
                       </Text>
                     </View>
@@ -145,7 +144,7 @@ export function WeatherScreen() {
             </View>
           ) : null}
 
-          <Text variant="h2">{t('weather.sevenDay')}</Text>
+          <SectionTitle>{t('weather.sevenDay')}</SectionTitle>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
             {forecast?.days.map((d, i) => {
               const DayIcon = CONDITION_ICON[d.condition];
@@ -155,7 +154,7 @@ export function WeatherScreen() {
                   style={{
                     width: '30%',
                     alignItems: 'center',
-                    gap: 2,
+                    gap: theme.spacing.xxs,
                     paddingVertical: theme.spacing.sm,
                     borderRadius: theme.radius.lg,
                     borderWidth: 1,
@@ -165,12 +164,12 @@ export function WeatherScreen() {
                   }}
                 >
                   <DayIcon size={28} color={theme.color.surface.brandDeep} strokeWidth={1.75} />
-                  <Text variant="caption" color={theme.color.text.muted}>
+                  <Text variant="body" color={theme.color.text.muted}>
                     {i === 0 ? t('weather.today') : t('weather.day', { n: i + 1 })}
                   </Text>
                   <Text variant="h2">{d.temp_max_c != null ? `${Math.round(d.temp_max_c)}°` : '—'}</Text>
                   {d.temp_min_c != null ? (
-                    <Text variant="caption" color={theme.color.text.muted}>{`${Math.round(d.temp_min_c)}°`}</Text>
+                    <Text variant="body" color={theme.color.text.muted}>{`${Math.round(d.temp_min_c)}°`}</Text>
                   ) : null}
                 </View>
               );

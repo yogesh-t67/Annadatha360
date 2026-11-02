@@ -29,12 +29,13 @@ export function TextField({ label, multiline, ...rest }: TextFieldProps) {
         textAlignVertical={multiline ? 'top' : 'center'}
         accessibilityLabel={label ?? rest.placeholder}
         style={{
-          minHeight: multiline ? 110 : 56,
+          // Single-line fields get a fixed height (room for Telugu's taller letters) so they are the same size
+          // in both languages; the Telugu font would otherwise make the field taller than in English.
+          ...(multiline ? { minHeight: 110, paddingVertical: theme.spacing.sm } : { height: theme.touchTarget.field, paddingVertical: 0 }),
           borderWidth: 1.5,
           borderColor: focused ? theme.color.border.focus : theme.color.border.default,
           borderRadius: theme.radius.md,
           paddingHorizontal: theme.spacing.md,
-          paddingVertical: theme.spacing.sm,
           backgroundColor: theme.color.surface.base,
           color: theme.color.text.primary,
           fontFamily: resolveFontFamily(i18n.language, 'medium'),

@@ -23,6 +23,7 @@ import { ScreenContainer } from '../../components/ScreenContainer';
 import { CropImage } from '../../components/CropImage';
 import { FeatureTile, TileGrid } from '../../components/FeatureTile';
 import { Notice } from '../../components/Notice';
+import { SectionTitle } from '../../components/SectionTitle';
 import { soilStates } from '../../data/farm';
 import { getDistrict } from '../../data/districts';
 import { CONDITION_ICON } from '../../data/weatherIcons';
@@ -98,9 +99,9 @@ export function IrrigationScreen() {
 
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-          <CropImage code={crop} size={56} />
+          <CropImage code={crop} size={72} />
           <View style={{ flex: 1 }}>
-            <Text variant="h2">{t(`crops.${crop}`)}</Text>
+            <Text variant="label" weight="bold">{t(`crops.${crop}`)}</Text>
             <Text variant="body" color={theme.color.text.muted}>
               {`${t(`stages.${stage}`)} · ${t(`districts.${district}`)}`}
             </Text>
@@ -110,7 +111,7 @@ export function IrrigationScreen() {
 
       {/* Rain in the next 3 days */}
       {signedIn === false ? (
-        <Card tone="soft" style={{ gap: theme.spacing.sm }}>
+        <Card tone="soft">
           <Text variant="body">{t('irrigation.signInForRain')}</Text>
           <Button
             label={t('voice.verifyNow')}
@@ -120,12 +121,12 @@ export function IrrigationScreen() {
           />
         </Card>
       ) : loading ? (
-        <Card style={{ alignItems: 'center', paddingVertical: theme.spacing.md }}>
+        <Card style={{ alignItems: 'center', paddingVertical: theme.spacing.lg }}>
           <ActivityIndicator color={theme.color.surface.brand} />
         </Card>
       ) : days ? (
-        <View style={{ gap: theme.spacing.xs }}>
-          <Text variant="h2">{t('irrigation.rainNext')}</Text>
+        <>
+          <SectionTitle>{t('irrigation.rainNext')}</SectionTitle>
           <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
             {days.slice(0, 3).map((d, i) => {
               const DayIcon = CONDITION_ICON[d.condition];
@@ -136,7 +137,7 @@ export function IrrigationScreen() {
                   style={{
                     flex: 1,
                     alignItems: 'center',
-                    gap: 2,
+                    gap: theme.spacing.xxs,
                     paddingVertical: theme.spacing.sm,
                     borderRadius: theme.radius.lg,
                     borderWidth: rain ? 2 : 1,
@@ -144,23 +145,23 @@ export function IrrigationScreen() {
                     backgroundColor: rain ? theme.color.tint.water.bg : theme.color.surface.base,
                   }}
                 >
-                  <Text variant="caption" weight="bold" color={theme.color.text.muted}>
+                  <Text variant="bodyStrong" color={theme.color.text.muted}>
                     {i === 0 ? t('weather.today') : i === 1 ? t('irrigation.tomorrow') : t('weather.day', { n: i + 1 })}
                   </Text>
-                  <DayIcon size={26} color={theme.color.surface.brandDeep} strokeWidth={1.75} />
+                  <DayIcon size={28} color={theme.color.surface.brandDeep} strokeWidth={1.75} />
                   <Text variant="bodyStrong">{`${Math.round(d.precipitation_mm ?? 0)} mm`}</Text>
-                  <Text variant="caption" color={theme.color.text.muted}>
+                  <Text variant="body" color={theme.color.text.muted}>
                     {`${d.precipitation_probability ?? 0}%`}
                   </Text>
                 </View>
               );
             })}
           </View>
-        </View>
+        </>
       ) : null}
 
       {/* Soil */}
-      <Text variant="h2">{t('irrigation.soilQuestion')}</Text>
+      <SectionTitle>{t('irrigation.soilQuestion')}</SectionTitle>
       <TileGrid>
         {soilStates.map((s) => (
           <FeatureTile
@@ -187,7 +188,7 @@ export function IrrigationScreen() {
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-          <VerdictIcon size={32} color={style.fg} strokeWidth={2.25} />
+          <VerdictIcon size={theme.iconSize.hero} color={style.fg} strokeWidth={2.25} />
           <Text variant="h2" color={style.fg} style={{ flex: 1 }}>
             {t(`irrigation.verdict.${advice.verdict}`)}
           </Text>
@@ -204,16 +205,16 @@ export function IrrigationScreen() {
         ))}
         {showTiming ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
-            <Sunrise size={18} color={theme.color.text.secondary} strokeWidth={2.25} />
-            <Text variant="caption" color={theme.color.text.secondary} style={{ flex: 1 }}>
+            <Sunrise size={theme.iconSize.inline} color={theme.color.text.secondary} strokeWidth={2.25} />
+            <Text variant="body" color={theme.color.text.secondary} style={{ flex: 1 }}>
               {t('irrigation.timing')}
             </Text>
           </View>
         ) : null}
         {advice.rainDay ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
-            <CloudRain size={18} color={theme.color.text.secondary} strokeWidth={2.25} />
-            <Text variant="caption" color={theme.color.text.secondary} style={{ flex: 1 }}>
+            <CloudRain size={theme.iconSize.inline} color={theme.color.text.secondary} strokeWidth={2.25} />
+            <Text variant="body" color={theme.color.text.secondary} style={{ flex: 1 }}>
               {t('irrigation.noSpray')}
             </Text>
           </View>

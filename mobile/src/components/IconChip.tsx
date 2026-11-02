@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react-native';
 
 import { theme, Tint } from '../theme';
 
-const TINT_ICON_COLOR: Record<Tint, string> = {
+export const TINT_ICON_COLOR: Record<Tint, string> = {
   leaf: theme.color.surface.brandDeep,
   sky: theme.color.status.infoText,
   water: theme.color.status.infoText,

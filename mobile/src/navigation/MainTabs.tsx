@@ -2,6 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Home, Mic, Sprout, Wrench } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
@@ -93,15 +94,15 @@ function TabIcon({ icon: Icon, focused }: { icon: LucideIcon; focused: boolean }
   return (
     <View
       style={{
-        width: 52,
-        height: 30,
+        width: 60,
+        height: 34,
         borderRadius: theme.radius.full,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: focused ? theme.color.surface.brandMid : 'transparent',
       }}
     >
-      <Icon size={20} color={focused ? theme.color.surface.brandDeep : theme.color.text.muted} strokeWidth={2.25} />
+      <Icon size={theme.iconSize.row} color={focused ? theme.color.surface.brandDeep : theme.color.text.muted} strokeWidth={2.25} />
     </View>
   );
 }
@@ -115,6 +116,7 @@ const tabs: { name: keyof MainTabParamList; component: React.ComponentType; icon
 
 export function MainTabs() {
   const { t, i18n } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -126,14 +128,17 @@ export function MainTabs() {
         tabBarActiveTintColor: theme.color.surface.brandDeep,
         tabBarInactiveTintColor: theme.color.text.muted,
         tabBarStyle: {
+          // Taller bar with bigger labels: the tabs are the farmer's main way around the app.
+          height: 72 + insets.bottom,
           paddingTop: theme.spacing.xs,
+          paddingBottom: insets.bottom + theme.spacing.xs,
           borderTopColor: theme.color.border.default,
           backgroundColor: theme.color.surface.base,
         },
         tabBarLabelStyle: {
           fontFamily: resolveFontFamily(i18n.language, 'semibold'),
-          fontSize: theme.typography.micro.fontSize,
-          marginTop: 2,
+          fontSize: theme.typography.caption.fontSize,
+          marginTop: theme.spacing.xxs,
         },
       }}
     >

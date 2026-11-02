@@ -49,13 +49,13 @@ const CATEGORY_STYLE: Record<SchemeSummary['category'], { icon: LucideIcon; tint
 function Section({ icon: Icon, title, items }: { icon: LucideIcon; title: string; items: string[] }) {
   if (items.length === 0) return null;
   return (
-    <View style={{ gap: 4 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <Icon size={18} color={theme.color.surface.brandDeep} strokeWidth={2.25} />
+    <View style={{ gap: theme.spacing.xxs }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
+        <Icon size={theme.iconSize.inline} color={theme.color.surface.brandDeep} strokeWidth={2.25} />
         <Text variant="bodyStrong">{title}</Text>
       </View>
       {items.map((line, i) => (
-        <View key={i} style={{ flexDirection: 'row', gap: theme.spacing.xs, paddingLeft: 4 }}>
+        <View key={i} style={{ flexDirection: 'row', gap: theme.spacing.xs, paddingLeft: theme.spacing.xxs }}>
           <Text variant="body" color={theme.color.surface.brand}>
             {items.length > 1 ? `${i + 1}.` : '•'}
           </Text>
@@ -114,12 +114,12 @@ function SchemeDetails({ slug }: { slug: string }) {
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
         onPress={toggle}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40 }}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs, minHeight: theme.touchTarget.minimum }}
       >
         <Text variant="bodyStrong" color={theme.color.surface.brandDeep}>
           {open ? t('schemes.hideDetails') : t('schemes.details')}
         </Text>
-        <Chevron size={20} color={theme.color.surface.brandDeep} strokeWidth={2.5} />
+        <Chevron size={theme.iconSize.inline} color={theme.color.surface.brandDeep} strokeWidth={2.5} />
       </Pressable>
 
       {open ? (
@@ -193,7 +193,7 @@ export function GovernmentSchemesScreen() {
       <Text variant="h1">{t('schemes.title')}</Text>
 
       {signedIn === false ? (
-        <Card tone="soft" style={{ gap: theme.spacing.sm }}>
+        <Card tone="soft">
           <Text variant="body">{t('voice.signInNeeded')}</Text>
           <Button
             label={t('voice.verifyNow')}
@@ -214,15 +214,15 @@ export function GovernmentSchemesScreen() {
         schemes.map((s) => {
           const style = CATEGORY_STYLE[s.category];
           return (
-            <Card key={s.slug} style={{ gap: theme.spacing.sm }}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm }}>
+            <Card key={s.slug}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
                 <IconChip icon={style.icon} tint={style.tint} />
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Text variant="h2">{s.name}</Text>
+                <View style={{ flex: 1, gap: theme.spacing.xxs }}>
+                  <Text variant="label" weight="bold">{s.name}</Text>
                   <Text variant="body" color={theme.color.text.muted}>
                     {s.summary}
                   </Text>
-                  <Text variant="caption" color={theme.color.text.muted}>
+                  <Text variant="body" color={theme.color.text.muted}>
                     {`${s.authority === 'central' ? t('schemes.central') : t(`schemes.stateGovt.${s.state === 'TG' ? 'ts' : 'ap'}`)} · ${t('schemes.verifiedOn', { date: s.last_verified_on })}`}
                   </Text>
                 </View>
@@ -238,8 +238,7 @@ export function GovernmentSchemesScreen() {
                   }}
                 >
                   <Text
-                    variant="caption"
-                    weight="semibold"
+                    variant="bodyStrong"
                     color={s.possibly_eligible ? theme.color.status.successText : theme.color.status.dangerText}
                   >
                     {s.possibly_eligible ? t('schemes.mayQualify') : t('schemes.mayNotQualify')}

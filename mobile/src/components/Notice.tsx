@@ -15,17 +15,17 @@ export function Notice({ message, icon: Icon = Info }: { message?: string; icon?
       accessibilityRole="text"
       style={{
         flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: theme.spacing.xs,
-        padding: theme.spacing.sm,
-        borderRadius: theme.radius.md,
+        alignItems: 'center',
+        gap: theme.spacing.sm,
+        padding: theme.spacing.md,
+        borderRadius: theme.radius.lg,
         borderWidth: 1,
         borderColor: theme.color.status.warningBorder,
         backgroundColor: theme.color.status.warningBg,
       }}
     >
-      <Icon size={16} color={theme.color.status.warningText} strokeWidth={2.25} style={{ marginTop: 2 }} />
-      <Text variant="caption" color={theme.color.status.warningText} style={{ flex: 1 }}>
+      <Icon size={theme.iconSize.row} color={theme.color.status.warningText} strokeWidth={2.25} />
+      <Text variant="body" color={theme.color.status.warningText} style={{ flex: 1 }}>
         {message ?? t('common.demoNotice')}
       </Text>
     </View>

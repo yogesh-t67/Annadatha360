@@ -31,8 +31,8 @@ function ToggleRow({
 }) {
   return (
     <Card>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, minHeight: 40 }}>
-        <Icon size={20} color={theme.color.surface.brandDeep} strokeWidth={2} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, minHeight: theme.touchTarget.minimum }}>
+        <Icon size={theme.iconSize.row} color={theme.color.surface.brandDeep} strokeWidth={2} />
         <Text variant="label" weight="semibold" style={{ flex: 1 }}>
           {label}
         </Text>
@@ -78,15 +78,15 @@ function VoicePicker() {
   let otherN = 0;
 
   return (
-    <Card style={{ gap: theme.spacing.sm }}>
+    <Card>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-        <Volume2 size={20} color={theme.color.surface.brandDeep} strokeWidth={2} />
-        <Text variant="label" weight="semibold" style={{ flex: 1 }}>
+        <Volume2 size={theme.iconSize.row} color={theme.color.surface.brandDeep} strokeWidth={2} />
+        <Text variant="label" weight="bold" style={{ flex: 1 }}>
           {t('settings.assistantVoice')}
         </Text>
       </View>
       {options.length === 0 ? (
-        <Text variant="caption" color={theme.color.text.muted}>
+        <Text variant="body" color={theme.color.text.muted}>
           {t('settings.noVoices')}
         </Text>
       ) : (
@@ -115,8 +115,8 @@ function VoicePicker() {
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 6,
-                  minHeight: 44,
+                  gap: theme.spacing.xs,
+                  minHeight: theme.touchTarget.minimum,
                   paddingHorizontal: theme.spacing.sm,
                   borderRadius: theme.radius.full,
                   borderWidth: selected ? 2 : 1,
@@ -124,14 +124,14 @@ function VoicePicker() {
                   backgroundColor: selected ? theme.color.surface.brandSoft : theme.color.surface.base,
                 }}
               >
-                {selected ? <Check size={16} color={theme.color.surface.brand} strokeWidth={3} /> : null}
+                {selected ? <Check size={theme.iconSize.inline} color={theme.color.surface.brand} strokeWidth={3} /> : null}
                 <Text variant="bodyStrong">{label}</Text>
               </Pressable>
             );
           })}
         </View>
       )}
-      <Text variant="caption" color={theme.color.text.muted}>
+      <Text variant="body" color={theme.color.text.muted}>
         {t('settings.voiceHint')}
       </Text>
     </Card>

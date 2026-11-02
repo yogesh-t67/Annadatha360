@@ -67,28 +67,31 @@ export const radius = {
   full: 999,
 } as const;
 
+/** Farmers read outdoors, often without glasses: body text is 17, nothing meaningful below 15. */
 export const fontSize = {
-  micro: 12,
-  caption: 14,
-  body: 16,
-  label: 17,
-  h2: 20,
-  h1: 26,
-  display: 30,
+  micro: 13,
+  caption: 15,
+  body: 17,
+  label: 18,
+  title: 24,
+  h2: 22,
+  h1: 28,
+  display: 32,
   hero: 54,
 } as const;
 
 export const lineHeight = {
-  micro: 16,
-  caption: 20,
-  body: 24,
-  label: 24,
+  micro: 18,
+  caption: 22,
+  body: 26,
+  label: 26,
+  title: 30,
   // h2/h1/display/hero use Baloo Tammudu 2 (see theme/index.ts), a rounded display font with
   // noticeably taller vertical metrics than Inter/NotoSansTelugu -- needs a more generous
   // line-height ratio (~1.5-1.6x) or glyph tops get clipped on Android, in every language.
-  h2: 32,
-  h1: 40,
-  display: 46,
+  h2: 34,
+  h1: 42,
+  display: 48,
   hero: 78,
 } as const;
 
@@ -163,4 +166,20 @@ export const breakpoint = {
 export const touchTarget = {
   /** Minimum hit-area side length; below this, low-literacy/outdoor users mis-tap. */
   minimum: 48,
+  /** Full-size button. */
+  button: 56,
+  /** Text and select fields (room for Telugu's tall letters, same height in both languages). */
+  field: 60,
+  /** Tappable list rows. */
+  row: 64,
+} as const;
+
+/** Icon sizes, so icons beside the same kind of text match across screens. */
+export const iconSize = {
+  /** Beside body/caption text and inside buttons. */
+  inline: 20,
+  /** In list rows, chips and beside headings. */
+  row: 24,
+  /** Status/hero icons. */
+  hero: 32,
 } as const;

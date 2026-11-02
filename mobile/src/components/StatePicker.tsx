@@ -42,16 +42,16 @@ export function StatePicker({
                 paddingHorizontal: theme.spacing.md,
                 paddingVertical: theme.spacing.sm,
                 borderRadius: theme.radius.lg,
-                borderWidth: selected ? 2.5 : 1,
+                borderWidth: selected ? 2 : 1,
                 borderColor: selected ? theme.color.surface.brand : theme.color.border.default,
                 backgroundColor: selected ? theme.color.surface.brandSoft : theme.color.surface.base,
                 transform: [{ scale: pressed ? 0.98 : 1 }],
               })}
             >
-              <Text variant="label" weight={selected ? 'bold' : 'medium'} style={{ paddingRight: 24 }}>
+              <Text variant="label" weight={selected ? 'bold' : 'medium'} style={{ paddingRight: theme.spacing.lg }}>
                 {t(`states.${r}`)}
               </Text>
-              <Text variant="caption" color={theme.color.text.muted}>
+              <Text variant="body" color={theme.color.text.muted}>
                 {t('farmLocation.districtCount', { count: districtsOf(r).length })}
               </Text>
               {selected ? <SelectedBadge /> : null}

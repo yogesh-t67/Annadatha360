@@ -41,7 +41,7 @@ export function Button({
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,
-        { minHeight: compact ? theme.touchTarget.minimum : 56 },
+        { minHeight: compact ? theme.touchTarget.minimum : theme.touchTarget.button },
         v.container,
         isDisabled && styles.disabled,
         pressed && !isDisabled && [v.pressed, { transform: [{ translateY: 2 }] }],
@@ -52,11 +52,12 @@ export function Button({
         <ActivityIndicator color={v.text} />
       ) : (
         <View style={styles.content}>
-          {Icon ? <Icon size={20} color={textColor} strokeWidth={2.25} /> : null}
-          <Text variant={compact ? 'bodyStrong' : 'label'} weight="bold" color={textColor} style={styles.label}>
+          {Icon ? <Icon size={theme.iconSize.row} color={textColor} strokeWidth={2.25} /> : null}
+          {/* Same label size for both button sizes, so one action looks the same on every screen. */}
+          <Text variant="label" weight="bold" color={textColor} style={styles.label}>
             {label}
           </Text>
-          {TrailingIcon ? <TrailingIcon size={20} color={textColor} strokeWidth={2.25} /> : null}
+          {TrailingIcon ? <TrailingIcon size={theme.iconSize.row} color={textColor} strokeWidth={2.25} /> : null}
         </View>
       )}
     </Pressable>
