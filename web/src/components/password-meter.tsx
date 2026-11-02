@@ -12,7 +12,7 @@ const LEVELS = {
 export function PasswordMeter({ password, email }: { password: string; email?: string }) {
   const { strength, missing } = passwordStrength(password, email);
   if (strength === "empty") {
-    return <p className="text-sm text-muted">At least 8 characters, mixing letters, numbers and symbols.</p>;
+    return <p className="text-sm text-muted">At least 8 characters. A short phrase you can remember works well.</p>;
   }
   const level = LEVELS[strength];
   return (

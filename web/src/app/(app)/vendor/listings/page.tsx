@@ -9,7 +9,35 @@ import { Dialog } from "@/components/dialog";
 import { Alert, Badge, Button, Card, PageTitle, SelectField, Spinner } from "@/components/ui";
 import { api, ApiError, fetcher } from "@/lib/api";
 import { type CatalogOptions, KIND_LABELS, type Listing, priceRange, UNIT_LABELS } from "@/lib/catalog";
-import { mediaUrl } from "@/lib/vendor";
+import { mediaUrl, type Vendor } from "@/lib/vendor";
+
+/** Says what to do next, so a vendor whose form is complete knows to press Submit. */
+function NotApprovedYet() {
+  const { data: vendor } = useSWR<Vendor>("/vendor", fetcher);
+  const ready = vendor?.editable && vendor.missing.length === 0;
+  if (ready) {
+    return (
+      <Alert kind="warning">
+        Your application is complete but not submitted yet. Submit it to start listing your products and services.{" "}
+        <Link href="/vendor/application?step=submit" className="font-medium underline">Go to Submit</Link>
+      </Alert>
+    );
+  }
+  if (vendor?.editable) {
+    return (
+      <Alert kind="info">
+        Finish and submit your application to start listing. {vendor.missing.length} item(s) still to fill in.{" "}
+        <Link href="/vendor/application" className="underline">Continue application</Link>
+      </Alert>
+    );
+  }
+  return (
+    <Alert kind="info">
+      You can add products and services once your application is approved.{" "}
+      <Link href="/vendor" className="underline">See your application status</Link>.
+    </Alert>
+  );
+}
 
 export default function ListingsPage() {
   const [category, setCategory] = useState("");
@@ -26,10 +54,7 @@ export default function ListingsPage() {
     return (
       <>
         <PageTitle title="Listings" />
-        <Alert kind="info">
-          You can add products and services once Annadata approves your application.{" "}
-          <Link href="/vendor" className="underline">See your application status</Link>.
-        </Alert>
+        <NotApprovedYet />
       </>
     );
   }

@@ -10,11 +10,11 @@ import { fetcher } from "@/lib/api";
 import { STATUS_LABELS, type Vendor } from "@/lib/vendor";
 
 const NEXT_STEP: Record<string, string> = {
-  draft: "Fill in your application and submit it. Annadata checks it before you can list products.",
+  draft: "Fill in your application and submit it. Once approved, you can list your products and services.",
   rejected: "Annadata asked for some changes. Fix them and submit again.",
   submitted: "Your application is waiting for review. We'll email you when it's decided.",
   under_review: "Annadata is reviewing your application. We'll email you when it's decided.",
-  approved: "You're approved. Adding your products and services comes next.",
+  approved: "You're approved. Add your products and services under Listings.",
   suspended: "Your account is suspended and hidden from farmers. Contact Annadata support.",
 };
 

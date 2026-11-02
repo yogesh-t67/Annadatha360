@@ -41,6 +41,10 @@ export function SetPasswordForm({
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
       {error && <Alert kind="error">{error}</Alert>}
+      {email && (
+        // Shown read-only, and marked as the username, so the browser saves the new password under this email.
+        <Field label="Account" type="email" name="username" autoComplete="username" value={email} readOnly className="[&_input]:bg-canvas [&_input]:text-muted" />
+      )}
       {askCurrent && (
         <Field
           label="Current password"
@@ -54,6 +58,7 @@ export function SetPasswordForm({
         <Field
           label="New password"
           type="password"
+          name="new-password"
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

@@ -4,6 +4,8 @@ import re
 os.environ["ANNADATA_ENV_FILE"] = ""  # never read a developer's backend/.env during tests
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault("JWT_SECRET", "test-secret-that-is-at-least-32-bytes-long")
+os.environ.setdefault("ERP_MFA_REQUIRED", "true")  # most tests cover the full login; the "off" case has its own tests
+os.environ.setdefault("VENDOR_AUTO_APPROVE", "false")  # most tests cover the review; auto-approval has its own tests
 
 import pytest
 from fastapi.testclient import TestClient

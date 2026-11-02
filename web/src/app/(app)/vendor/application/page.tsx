@@ -2,7 +2,8 @@
 
 import clsx from "clsx";
 import { CheckCircle2, Circle } from "lucide-react";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import useSWR from "swr";
 
 import { Alert, Badge, Card, PageTitle, Spinner } from "@/components/ui";
@@ -21,9 +22,18 @@ const STEPS = [
 ] as const;
 
 export default function ApplicationPage() {
+  return (
+    <Suspense>
+      <Application />
+    </Suspense>
+  );
+}
+
+function Application() {
   const { data: vendor, error, mutate } = useSWR<Vendor>("/vendor", fetcher);
   const { data: options } = useSWR<VendorOptions>("/vendor-options", fetcher, { revalidateOnFocus: false });
-  const [step, setStep] = useState<string>("business");
+  const initialStep = useSearchParams().get("step");
+  const [step, setStep] = useState<string>(STEPS.some((s) => s.key === initialStep) ? initialStep! : "business");
 
   if (error) return <Alert kind="error">{error.message ?? "Couldn't load your application."}</Alert>;
   if (!vendor || !options) return <Spinner />;

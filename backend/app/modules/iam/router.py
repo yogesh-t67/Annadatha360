@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import func, select
 
 from app.api.deps import DbSession
@@ -84,10 +84,15 @@ def _open_session(db, user: ErpUser, request: Request, method: str, mail: EmailS
 
 
 @router.post("/auth/login", response_model=LoginOut)
-def login(body: LoginIn, db: DbSession, request: Request):
+def login(body: LoginIn, db: DbSession, request: Request, mail: Email):
     user = service.check_password(db, body.email, body.password, client_ip(request))
-    stage = "mfa" if user.totp_enabled_at is not None else "mfa_setup"
-    return LoginOut(stage=stage, mfa_token=service.create_mfa_token(user))
+    if user.totp_enabled_at is not None:
+        return LoginOut(stage="mfa", mfa_token=service.create_mfa_token(user))
+    if get_settings().erp_mfa_required:
+        return LoginOut(stage="mfa_setup", mfa_token=service.create_mfa_token(user))
+    # Authenticator not required (testing): the password alone opens a session.
+    service.note_attempt(db, user.email, client_ip(request), "mfa", True)  # a complete login clears the lockout count
+    return LoginOut(stage="done", session=_open_session(db, user, request, "password", mail))
 
 
 @router.post("/auth/mfa/setup", response_model=MfaSetupOut)
@@ -140,6 +145,16 @@ def logout_all(principal: CurrentPrincipal, db: DbSession, request: Request):
     service.revoke_all_sessions(db, principal.user, "logout_all")
     record(db, "erp.logout_all", "erp_user", principal.user.id, actor_id=principal.user.id, request=request)
     db.commit()
+
+
+@router.get("/auth/link")
+def link_info(
+    token: Annotated[str, Query(max_length=200)],
+    purpose: Annotated[str, Query(pattern="^(invite|reset)$")],
+    db: DbSession,
+):
+    """Which account an emailed link is for (the link stays unused). Only someone holding the link can ask."""
+    return {"email": service.link_email(db, token, purpose)}
 
 
 @router.post("/auth/invite/accept", status_code=status.HTTP_204_NO_CONTENT)

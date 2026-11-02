@@ -5294,6 +5294,58 @@
         ]
       }
     },
+    "/api/v1/erp/auth/link": {
+      "get": {
+        "tags": [
+          "erp-auth"
+        ],
+        "summary": "Link Info",
+        "description": "Which account an emailed link is for (the link stays unused). Only someone holding the link can ask.",
+        "operationId": "link_info_api_v1_erp_auth_link_get",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "title": "Token"
+            }
+          },
+          {
+            "name": "purpose",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(invite|reset)$",
+              "title": "Purpose"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/erp/auth/invite/accept": {
       "post": {
         "tags": [
@@ -16220,19 +16272,36 @@
             "type": "string",
             "enum": [
               "mfa",
-              "mfa_setup"
+              "mfa_setup",
+              "done"
             ],
             "title": "Stage"
           },
           "mfa_token": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Mfa Token"
+          },
+          "session": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SessionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
         "required": [
-          "stage",
-          "mfa_token"
+          "stage"
         ],
         "title": "LoginOut"
       },

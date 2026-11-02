@@ -10,7 +10,7 @@ from app.modules.documents.models import ErpDocument
 from app.modules.iam.deps import CurrentPrincipal, Principal, require
 from app.modules.iam.permissions import P
 from app.modules.iam.router import Email
-from app.modules.vendors import rules, service
+from app.modules.vendors import review, rules, service
 from app.modules.vendors.models import EDITABLE_STATUSES, Vendor
 from app.modules.vendors.schemas import (
     AreaOut,
@@ -231,10 +231,20 @@ def submit(principal: Submitter, db: DbSession, request: Request, mail: Email, v
     vendor = service.editable_vendor(db, principal)
     service.submit(db, principal, vendor)
     service.run_kyc_checks(db, vendor, verifier)
+    if get_settings().vendor_auto_approve:
+        review.auto_approve(db, vendor)
+        record(db, "erp.vendor.auto_approve", "vendor", vendor.id, request=request)
     out = saved(db, principal, vendor, request, "erp.vendor.submit")
-    mail.send(
-        principal.user.email,
-        "Annadata 360: application received",
-        f"Thank you. We have received the application for {vendor.trade_name} and will review it soon.",
-    )
+    if vendor.status == "approved":
+        mail.send(
+            principal.user.email,
+            "Annadata 360: application approved",
+            f"{vendor.trade_name} is approved on Annadata 360. You can now add your products and services.",
+        )
+    else:
+        mail.send(
+            principal.user.email,
+            "Annadata 360: application received",
+            f"Thank you. We have received the application for {vendor.trade_name} and will review it soon.",
+        )
     return out

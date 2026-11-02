@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { type FormEvent, type ReactNode, useMemo, useState } from "react";
 
 import { DocumentField } from "@/components/document-field";
@@ -415,15 +416,17 @@ function LicenceForm({
   onDone,
   onCancel,
   allowedTypes,
+  presetType,
 }: {
   options: VendorOptions;
   initial?: Licence;
   onDone: (v: Vendor) => void;
   onCancel: () => void;
   allowedTypes: string[];
+  presetType?: string;
 }) {
   const [f, setF] = useState({
-    licence_type: initial?.licence_type ?? allowedTypes[0] ?? "",
+    licence_type: initial?.licence_type ?? presetType ?? allowedTypes[0] ?? "",
     number: initial?.number ?? "",
     issuing_authority: initial?.issuing_authority ?? "",
     valid_from: initial?.valid_from ?? "",
@@ -481,7 +484,7 @@ function LicenceForm({
 }
 
 export function LicencesStep({ vendor, options, onSaved, locked }: StepProps) {
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState<string | false>(false); // false, or the licence type being added ("" = any)
   const [editing, setEditing] = useState<string | null>(null);
   const [problem, setProblem] = useState("");
   const needed = vendor.missing.filter((m) => m.code.startsWith("licence"));
@@ -501,15 +504,31 @@ export function LicencesStep({ vendor, options, onSaved, locked }: StepProps) {
       {needed.length > 0 && (
         <Alert kind="warning">
           <p className="font-medium">Still needed:</p>
-          <ul className="mt-1 list-disc pl-5">
-            {needed.map((m) => (
-              <li key={m.code}>{m.message}</li>
-            ))}
+          <ul className="mt-2 space-y-2">
+            {needed.map((m) => {
+              const type = m.code.split(":")[1];
+              const missingLicence = m.code.startsWith("licence:");
+              const existing = vendor.licences.find((l) => l.licence_type === type);
+              return (
+                <li key={m.code} className="flex flex-wrap items-center justify-between gap-2">
+                  <span>{m.message}</span>
+                  {!locked && (
+                    <Button
+                      variant="secondary"
+                      className="h-8 text-xs"
+                      onClick={() => (missingLicence || !existing ? setAdding(type) : setEditing(existing.id))}
+                    >
+                      {missingLicence || !existing ? <><Plus className="size-3.5" /> Add this licence</> : <><Pencil className="size-3.5" /> Add the copy</>}
+                    </Button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </Alert>
       )}
       {problem && <Alert kind="error">{problem}</Alert>}
-      {vendor.licences.length === 0 && !adding && <p className="text-sm text-muted">No licences added yet.</p>}
+      {vendor.licences.length === 0 && adding === false && <p className="text-sm text-muted">No licences added yet.</p>}
       <ul className="space-y-3">
         {vendor.licences.map((l) =>
           editing === l.id ? (
@@ -552,10 +571,12 @@ export function LicencesStep({ vendor, options, onSaved, locked }: StepProps) {
         )}
       </ul>
       {!locked &&
-        (adding ? (
+        (adding !== false ? (
           <LicenceForm
+            key={adding}
             options={options}
             allowedTypes={allTypes}
+            presetType={adding || undefined}
             onCancel={() => setAdding(false)}
             onDone={(v) => {
               setAdding(false);
@@ -563,8 +584,8 @@ export function LicencesStep({ vendor, options, onSaved, locked }: StepProps) {
             }}
           />
         ) : (
-          <Button variant="secondary" onClick={() => setAdding(true)}>
-            <Plus className="size-4" /> Add a licence
+          <Button variant="secondary" onClick={() => setAdding("")}>
+            <Plus className="size-4" /> Add another licence
           </Button>
         ))}
     </Section>
@@ -591,7 +612,13 @@ export function SubmitStep({ vendor, onSaved, locked, goTo }: StepProps & { goTo
   }
 
   if (locked) {
-    return (
+    return vendor.status === "approved" ? (
+      <Section title="Approved">
+        <Alert kind="success">
+          Your application is approved. <Link href="/vendor/listings" className="underline">Add your products and services</Link>.
+        </Alert>
+      </Section>
+    ) : (
       <Section title="Submitted">
         <Alert kind="info">Your application is with Annadata. We&apos;ll email you when it&apos;s reviewed.</Alert>
       </Section>

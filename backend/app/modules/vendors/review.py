@@ -127,3 +127,13 @@ def owner_emails(db: Session, vendor: Vendor) -> list[str]:
             )
         )
     )
+
+
+def auto_approve(db: Session, vendor: Vendor) -> None:
+    """VENDOR_AUTO_APPROVE: a complete, just-submitted application is approved for everything it asked for, with no
+    one reviewing it. The GSTIN is not marked as checked, because nobody checked it."""
+    _check(vendor, "approve")
+    for cap in vendor.capabilities:
+        cap.status = "approved"
+    set_status(db, vendor, "approved", None, "Approved automatically (review is switched off)")
+    vendor.decided_at, vendor.decided_by_id = utcnow(), None

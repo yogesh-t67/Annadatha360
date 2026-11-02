@@ -6,12 +6,13 @@ import { type FormEvent, Suspense, useState } from "react";
 
 import { Alert, Button, Card, Field } from "@/components/ui";
 import { ApiError, auth } from "@/lib/api";
+import { safeNext } from "@/lib/next-path";
 
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") ?? "";
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(params.get("email") ?? ""); // filled in after setting a password
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,7 +22,11 @@ function LoginForm() {
     setError("");
     setLoading(true);
     try {
-      const { stage } = await auth<{ stage: "mfa" | "mfa_setup" }>("/login", { email, password });
+      const { stage } = await auth<{ stage: "mfa" | "mfa_setup" | "done" }>("/login", { email, password });
+      if (stage === "done") {
+        window.location.assign(safeNext(next)); // full load, so the app starts fresh with the new login
+        return;
+      }
       const q = next ? `?next=${encodeURIComponent(next)}` : "";
       router.push(stage === "mfa" ? `/login/code${q}` : `/login/setup${q}`);
     } catch (err) {

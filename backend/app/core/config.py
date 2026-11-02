@@ -86,6 +86,12 @@ class Settings(BaseSettings):
     # Empty = derived from JWT_SECRET (development only). Changing it makes stored secrets unreadable.
     field_encryption_key: str = ""
     erp_web_base_url: str = "http://localhost:3000"  # links in invite emails point here
+    # Authenticator app (6-digit code) at login. Off for now while testing; production refuses to start without it.
+    # Accounts that already set up the app are still asked for their code when this is off.
+    erp_mfa_required: bool = False
+    # Approve vendors as soon as they submit a complete application (no Super Admin review). On while testing;
+    # production refuses to start with it on. Admins can still suspend a vendor afterwards.
+    vendor_auto_approve: bool = True
     erp_access_token_ttl_minutes: int = 10
     erp_session_idle_minutes: int = 30  # logged out after this long without activity
     erp_session_max_hours: int = 12  # and after this long in any case
@@ -151,6 +157,10 @@ def get_settings() -> Settings:
             raise RuntimeError("FIELD_ENCRYPTION_KEY must be set in production")
         if not settings.turnstile_secret_key:
             raise RuntimeError("TURNSTILE_SECRET_KEY must be set in production (bot check on vendor sign-up)")
+        if not settings.erp_mfa_required:
+            raise RuntimeError("ERP_MFA_REQUIRED must be true in production (authenticator app at ERP login)")
+        if settings.vendor_auto_approve:
+            raise RuntimeError("VENDOR_AUTO_APPROVE must be false in production (vendor KYC is reviewed by a person)")
         if settings.ai_provider in ("fake", "gemini"):
             raise RuntimeError(f"AI_PROVIDER={settings.ai_provider} is for testing only, not production")
     return settings

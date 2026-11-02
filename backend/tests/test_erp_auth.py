@@ -270,13 +270,19 @@ def test_audit_log_records_who_did_what(client, super_admin, invite):
     ("password", "expected"),
     [
         ("Rice#7", "weak"),  # too short
-        ("ricecropfield", "weak"),  # one kind of character
-        ("12345678901234", "weak"),  # only numbers
+        ("12345678", "weak"),  # counting run
+        ("abcdefgh", "weak"),
+        ("qwertyui", "weak"),  # keyboard run
+        ("11111111", "weak"),  # too few different characters
+        ("9876543210", "weak"),
+        ("9440123456", "weak"),  # only numbers (a phone number)
         ("Password@123", "weak"),  # common word + numbers
         ("Annadata@2026", "weak"),
-        ("Rice#Crop9", "medium"),  # 8+ with 3 kinds
-        ("ricecropfield22", "medium"),  # 12+ with 2 kinds
-        ("Kh@rif-season-2026", "strong"),  # 12+ with 3+ kinds
+        ("kisanmitra", "medium"),  # any 8+ characters are fine; no mix needed
+        ("amrutha2026", "medium"),
+        ("Rice#Crop9", "strong"),  # 8+ with 3 kinds
+        ("ricecropfield", "strong"),  # 12+ characters
+        ("Kh@rif-season-2026", "strong"),
     ],
 )
 def test_password_strength(password, expected):
@@ -337,3 +343,97 @@ def test_entering_the_password_again_does_not_reset_wrong_code_count(client, sup
         client.post(f"{API}/auth/mfa/verify", json={"mfa_token": token, "code": "000000"})
     res = client.post(f"{API}/auth/login", json={"email": super_admin.email, "password": PASSWORD})
     assert res.status_code == 429
+
+
+# ---------- Authenticator switched off (testing) ----------
+
+
+@pytest.fixture
+def mfa_off(monkeypatch):
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "erp_mfa_required", False)
+
+
+def test_password_alone_logs_in_when_the_authenticator_is_off(client, super_admin, mfa_off):
+    res = client.post(f"{API}/auth/login", json={"email": super_admin.email, "password": PASSWORD})
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["stage"] == "done" and body["mfa_token"] is None
+    assert client.get(f"{API}/me", headers=headers(body["session"])).json()["email"] == super_admin.email
+    wrong = client.post(f"{API}/auth/login", json={"email": super_admin.email, "password": "wrong-password-1"})
+    assert wrong.status_code == 401  # the password is still checked, and lockout still applies
+
+
+def test_accounts_with_the_app_set_up_still_need_their_code(client, super_admin, monkeypatch):
+    super_admin.login()  # sets up the authenticator while it's required
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "erp_mfa_required", False)
+    res = client.post(f"{API}/auth/login", json={"email": super_admin.email, "password": PASSWORD})
+    assert res.json()["stage"] == "mfa"
+
+
+def test_production_refuses_to_start_without_the_authenticator(monkeypatch):
+    from app.core.config import Settings, get_settings
+
+    monkeypatch.setattr(
+        "app.core.config.Settings",
+        lambda: Settings(
+            app_env="production",
+            jwt_secret="x" * 40,
+            field_encryption_key="k",
+            turnstile_secret_key="t",
+            ai_provider="anthropic",
+            erp_mfa_required=False,
+        ),
+    )
+    get_settings.cache_clear()
+    try:
+        with pytest.raises(RuntimeError, match="ERP_MFA_REQUIRED"):
+            get_settings()
+    finally:
+        monkeypatch.undo()
+        get_settings.cache_clear()
+
+
+def test_a_link_tells_which_account_it_is_for_without_being_used(client, db_session, mail):
+    with db_session() as db:
+        token = re.search(r"token=([\w-]+)", create_super_admin(db, "Link@Annadata.test", "Link")).group(1)
+    res = client.get(f"{API}/auth/link", params={"token": token, "purpose": "invite"})
+    assert res.json() == {"email": "link@annadata.test"}
+    # Still works afterwards
+    assert client.post(f"{API}/auth/invite/accept", json={"token": token, "password": PASSWORD}).status_code == 204
+    used = client.get(f"{API}/auth/link", params={"token": token, "purpose": "invite"})
+    assert used.json()["error"]["code"] == "invalid_link"
+    # An invite token is not a reset token
+    assert client.get(f"{API}/auth/link", params={"token": token, "purpose": "reset"}).status_code == 400
+    client.post(f"{API}/auth/password/forgot", json={"email": "link@annadata.test"})
+    reset = mail.last_token("link@annadata.test")
+    assert client.get(f"{API}/auth/link", params={"token": reset, "purpose": "reset"}).json() == {
+        "email": "link@annadata.test"
+    }
+
+
+def test_production_refuses_to_start_with_vendor_auto_approval(monkeypatch):
+    from app.core.config import Settings, get_settings
+
+    monkeypatch.setattr(
+        "app.core.config.Settings",
+        lambda: Settings(
+            app_env="production",
+            jwt_secret="x" * 40,
+            field_encryption_key="k",
+            turnstile_secret_key="t",
+            ai_provider="anthropic",
+            erp_mfa_required=True,
+            vendor_auto_approve=True,
+        ),
+    )
+    get_settings.cache_clear()
+    try:
+        with pytest.raises(RuntimeError, match="VENDOR_AUTO_APPROVE"):
+            get_settings()
+    finally:
+        monkeypatch.undo()
+        get_settings.cache_clear()

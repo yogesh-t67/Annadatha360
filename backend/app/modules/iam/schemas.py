@@ -24,9 +24,11 @@ class LoginIn(BaseModel):
 
 
 class LoginOut(BaseModel):
-    # mfa: enter the 6-digit code; mfa_setup: first login, set up the authenticator app
-    stage: Literal["mfa", "mfa_setup"]
-    mfa_token: str
+    # mfa: enter the 6-digit code; mfa_setup: first login, set up the authenticator app;
+    # done: logged in with the password alone (ERP_MFA_REQUIRED off and no app set up) — session is filled in
+    stage: Literal["mfa", "mfa_setup", "done"]
+    mfa_token: str | None = None
+    session: "SessionOut | None" = None
 
 
 class MfaTokenIn(BaseModel):
@@ -117,3 +119,6 @@ class UserInviteIn(BaseModel):
 
 class UserInvitedOut(UserOut):
     invite_expires_hours: int
+
+
+LoginOut.model_rebuild()  # it refers to SessionOut, defined further down

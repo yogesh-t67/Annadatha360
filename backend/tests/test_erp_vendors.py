@@ -204,3 +204,48 @@ def test_options_for_the_form(client):
     assert {"seeds", "labour", "drone_spraying", "animal_feed", "veterinary"} <= codes
     assert len(options["districts"]) == len(rules.DISTRICT_CODES) >= 60
     assert {"code": "tg-hyderabad", "name": "Hyderabad", "state": "TG"} in options["districts"]
+
+
+# ---------- Automatic approval (review switched off) ----------
+
+
+def test_complete_application_is_approved_at_once_when_review_is_off(client, register, mail, monkeypatch, db_session):
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "vendor_auto_approve", True)
+    _, s = register()
+    complete_application(client, s)
+    res = client.post(f"{API}/vendor/submit", headers=headers(s))
+    assert res.status_code == 200, res.text
+    v = res.json()
+    assert v["status"] == "approved" and not v["editable"]
+    assert {c["status"] for c in v["capabilities"]} == {"approved"}
+    assert not v["gstin_verified"]  # nobody checked it
+    assert "application approved" in mail.sent[-1][1]
+    # Can list straight away
+    assert client.get(f"{API}/catalog/options", headers=headers(s)).status_code == 200
+
+
+def test_incomplete_application_is_still_refused_when_review_is_off(client, register, monkeypatch):
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "vendor_auto_approve", True)
+    _, s = register()
+    assert client.post(f"{API}/vendor/submit", headers=headers(s)).json()["error"]["code"] == "application_incomplete"
+
+
+def test_auto_approved_vendor_shows_who_approved_and_can_be_suspended(client, register, super_admin, monkeypatch):
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "vendor_auto_approve", True)
+    admin = super_admin.login()
+    _, s = register()
+    complete_application(client, s)
+    vendor_id = client.post(f"{API}/vendor/submit", headers=headers(s)).json()["id"]
+    detail = client.get(f"{API}/admin/vendors/{vendor_id}", headers=headers(admin)).json()
+    last = detail["history"][-1]
+    assert last["to_status"] == "approved" and last["by"] is None and "automatically" in last["reason"]
+    res = client.post(
+        f"{API}/admin/vendors/{vendor_id}/suspend", headers=headers(admin), json={"reason": "Checked later: fake GSTIN"}
+    )
+    assert res.json()["status"] == "suspended"

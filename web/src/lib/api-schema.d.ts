@@ -1132,6 +1132,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/erp/auth/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Link Info
+         * @description Which account an emailed link is for (the link stays unused). Only someone holding the link can ask.
+         */
+        get: operations["link_info_api_v1_erp_auth_link_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/erp/auth/invite/accept": {
         parameters: {
             query?: never;
@@ -4553,9 +4573,10 @@ export interface components {
              * Stage
              * @enum {string}
              */
-            stage: "mfa" | "mfa_setup";
+            stage: "mfa" | "mfa_setup" | "done";
             /** Mfa Token */
-            mfa_token: string;
+            mfa_token?: string | null;
+            session?: components["schemas"]["SessionOut"] | null;
         };
         /** RefreshIn */
         app__modules__iam__schemas__RefreshIn: {
@@ -7262,6 +7283,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    link_info_api_v1_erp_auth_link_get: {
+        parameters: {
+            query: {
+                token: string;
+                purpose: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

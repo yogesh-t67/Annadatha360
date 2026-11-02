@@ -76,8 +76,10 @@ def _now_ts() -> float:
 def password_strength(password: str, email: str = "") -> tuple[str, list[str]]:
     """Returns ("weak" | "medium" | "strong", what is missing). Weak is refused; the web app shows the same meter.
 
-    medium: 8+ characters with 3 of the 4 kinds (small, capital, number, symbol), or 12+ with 2 kinds.
-    strong: 12+ characters with 3 or more kinds.
+    Any 8+ characters are allowed (no mix of letter kinds required), except the passwords attackers try first:
+    a common word with numbers ("Password@123"), only numbers (phone numbers, dates), runs like "abcdefgh",
+    too few different characters, or the email's name.
+    strong: 12+ characters, or 8+ with 3 of the 4 kinds (small, capital, number, symbol). Otherwise medium.
     """
     kinds = sum(
         (
@@ -91,19 +93,27 @@ def password_strength(password: str, email: str = "") -> tuple[str, list[str]]:
     missing = []
     if len(password) < 8:
         missing.append("at least 8 characters")
-    if kinds < 2 or (kinds < 3 and len(password) < 12):
-        missing.append("a mix of small letters, capital letters, numbers and symbols")
-    if len(set(password)) < 5:
+    if len(set(lower)) < 4:
         missing.append("more different characters")
     letters = "".join(c for c in lower if c.isalpha())
-    if letters in COMMON_WORDS or lower.strip("0123456789") == "":
+    if letters in COMMON_WORDS or _is_run(lower):
         missing.append("not a common password")
+    elif lower.isdigit():
+        missing.append("not only numbers (like a phone number or date)")
     local = email.split("@")[0].lower()
     if len(local) >= 4 and local in lower:
         missing.append("not your email name")
     if missing:
         return "weak", missing
-    return ("strong" if len(password) >= 12 and kinds >= 3 else "medium"), []
+    return ("strong" if len(password) >= 12 or kinds >= 3 else "medium"), []
+
+
+def _is_run(text: str) -> bool:
+    """'12345678', '87654321', 'abcdefgh', 'qwertyui' style keyboard or counting runs."""
+    if len(text) < 4:
+        return False
+    steps = {ord(b) - ord(a) for a, b in zip(text, text[1:], strict=False)}
+    return steps in ({1}, {-1}) or text in "qwertyuiopasdfghjklzxcvbnm" or text in "1234567890"
 
 
 def check_password_policy(password: str, email: str) -> None:
@@ -436,15 +446,35 @@ def _new_link_token(db: Session, user: ErpUser, purpose: str, ttl: timedelta) ->
     return token
 
 
-def _use_link_token(db: Session, token: str, purpose: str, user_status: str) -> ErpUser | None:
+LINK_USER_STATUS = {"invite": "invited", "reset": "active"}  # who each kind of link is for
+
+
+def _find_link_token(db: Session, token: str, purpose: str) -> tuple[ErpUserToken, ErpUser] | None:
     row = db.scalar(select(ErpUserToken).where(ErpUserToken.token_hash == hash_secret(f"{purpose}:{token}")))
     if row is None or row.used_at is not None or _as_utc(row.expires_at) < utcnow():
         return None
     user = db.get(ErpUser, row.user_id)
-    if user is None or user.status != user_status or user.deleted_at is not None:
+    if user is None or user.status != LINK_USER_STATUS[purpose] or user.deleted_at is not None:
         return None
+    return row, user
+
+
+def _use_link_token(db: Session, token: str, purpose: str, user_status: str) -> ErpUser | None:
+    found = _find_link_token(db, token, purpose)
+    if found is None:
+        return None
+    row, user = found
     row.used_at = utcnow()
     return user
+
+
+def link_email(db: Session, token: str, purpose: str) -> str:
+    """The email an invite or reset link is for, without using the link up. Lets the page show which account the
+    new password is for (and lets password managers save it under that email)."""
+    found = _find_link_token(db, token, purpose)
+    if found is None:
+        raise AppError(400, "invalid_link", "This link has expired or was already used. Ask for a new one.")
+    return found[1].email
 
 
 def _link(path: str, token: str) -> str:
