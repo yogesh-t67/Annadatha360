@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 
-import { Alert, Button, Card, Field, SelectField, TextAreaField } from "@/components/ui";
+import { Alert, Button, Card, Field, SelectField, TextAreaField, RequiredNote } from "@/components/ui";
 import { api, ApiError, fetcher, type Schemas } from "@/lib/api";
 import { type CatalogOptions, type Listing, UNIT_LABELS } from "@/lib/catalog";
 import { mediaUrl, type VendorOptions } from "@/lib/vendor";
@@ -116,6 +116,7 @@ export function ListingForm({ options, listing }: { options: CatalogOptions; lis
 
   return (
     <form onSubmit={submit} className="space-y-6" noValidate>
+        <RequiredNote />
       {error && <Alert kind="error">{error}</Alert>}
       {saved && <Alert kind="success">Saved.</Alert>}
 
@@ -123,7 +124,7 @@ export function ListingForm({ options, listing }: { options: CatalogOptions; lis
         <h2 className="font-semibold">What it is</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <SelectField
-            label="Category"
+            label="Category" required
             value={category}
             onChange={(e) => changeCategory(e.target.value)}
             options={options.categories.map((c) => ({ value: c.code, label: c.name }))}
@@ -132,7 +133,7 @@ export function ListingForm({ options, listing }: { options: CatalogOptions; lis
           />
           {!product && cat && (
             <SelectField
-              label="Type"
+              label="Type" required
               value={itemType}
               onChange={(e) => setItemType(e.target.value)}
               placeholder="Choose…"
@@ -140,12 +141,12 @@ export function ListingForm({ options, listing }: { options: CatalogOptions; lis
               error={fields.item_type}
             />
           )}
-          <Field label="Name (English)" placeholder={product ? "e.g. BPT 5204 Paddy Seed" : "e.g. Tractor ploughing"} value={name.en} onChange={(e) => setName({ ...name, en: e.target.value })} error={fields["name.en"]} />
-          {product && <Field label="Brand (optional)" value={brand} onChange={(e) => setBrand(e.target.value)} />}
-          <Field label="Name in Telugu (optional)" lang="te" value={name.te} onChange={(e) => setName({ ...name, te: e.target.value })} />
-          <Field label="Name in Hindi (optional)" lang="hi" value={name.hi} onChange={(e) => setName({ ...name, hi: e.target.value })} />
+          <Field label="Name (English)" required placeholder={product ? "e.g. BPT 5204 Paddy Seed" : "e.g. Tractor ploughing"} value={name.en} onChange={(e) => setName({ ...name, en: e.target.value })} error={fields["name.en"]} />
+          {product && <Field label="Brand" optional value={brand} onChange={(e) => setBrand(e.target.value)} />}
+          <Field label="Name in Telugu" optional lang="te" value={name.te} onChange={(e) => setName({ ...name, te: e.target.value })} />
+          <Field label="Name in Hindi" optional lang="hi" value={name.hi} onChange={(e) => setName({ ...name, hi: e.target.value })} />
         </div>
-        <TextAreaField label="Description (optional)" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} hint="How to use, what's included, delivery area…" />
+        <TextAreaField label="Description" optional rows={3} value={description} onChange={(e) => setDescription(e.target.value)} hint="How to use, what's included, delivery area…" />
       </Card>
 
       {cat && cat.attributes.length > 0 && (
@@ -155,7 +156,9 @@ export function ListingForm({ options, listing }: { options: CatalogOptions; lis
             {cat.attributes.map((a) => (
               <Field
                 key={a.key}
-                label={`${a.label}${a.required ? "" : " (optional)"}`}
+                label={a.label}
+                required={a.required}
+                optional={!a.required}
                 value={attrs[a.key] ?? ""}
                 onChange={(e) => setAttrs({ ...attrs, [a.key]: e.target.value })}
                 error={fields[`attributes.${a.key}`]}
@@ -178,18 +181,18 @@ export function ListingForm({ options, listing }: { options: CatalogOptions; lis
         <div className="space-y-3">
           {rows.map((r, i) => (
             <div key={r.id ?? i} className="grid gap-3 rounded-md border border-line p-3 sm:grid-cols-[1.4fr_1fr_1fr_1fr_auto] sm:items-start">
-              <Field label={product ? "Pack size" : "Label"} placeholder={product ? "25 kg bag" : "Per acre"} value={r.label} onChange={(e) => setRow(i, { label: e.target.value })} error={fields[`variants.${i}.label`]} />
+              <Field required label={product ? "Pack size" : "Label"} placeholder={product ? "25 kg bag" : "Per acre"} value={r.label} onChange={(e) => setRow(i, { label: e.target.value })} error={fields[`variants.${i}.label`]} />
               {product ? (
                 <>
-                  <Field label="MRP ₹" inputMode="decimal" value={r.mrp} onChange={(e) => setRow(i, { mrp: e.target.value.replace(/[^\d.]/g, "") })} error={fields[`variants.${i}.mrp_paise`]} />
-                  <Field label="Selling price ₹" inputMode="decimal" value={r.price} onChange={(e) => setRow(i, { price: e.target.value.replace(/[^\d.]/g, "") })} error={fields[`variants.${i}.price_paise`]} />
-                  <Field label="In stock" inputMode="numeric" value={r.stock} onChange={(e) => setRow(i, { stock: e.target.value.replace(/\D/g, "") })} error={fields[`variants.${i}.stock_qty`]} />
+                  <Field label="MRP ₹" required inputMode="decimal" value={r.mrp} onChange={(e) => setRow(i, { mrp: e.target.value.replace(/[^\d.]/g, "") })} error={fields[`variants.${i}.mrp_paise`]} />
+                  <Field label="Selling price ₹" required inputMode="decimal" value={r.price} onChange={(e) => setRow(i, { price: e.target.value.replace(/[^\d.]/g, "") })} error={fields[`variants.${i}.price_paise`]} />
+                  <Field label="In stock" required inputMode="numeric" value={r.stock} onChange={(e) => setRow(i, { stock: e.target.value.replace(/\D/g, "") })} error={fields[`variants.${i}.stock_qty`]} />
                 </>
               ) : (
                 <>
-                  <SelectField label="Unit" value={r.unit} onChange={(e) => setRow(i, { unit: e.target.value })} options={(cat?.units ?? []).map((u) => ({ value: u, label: UNIT_LABELS[u] ?? u }))} error={fields[`variants.${i}.unit`]} />
-                  <Field label="Rate ₹" inputMode="decimal" value={r.price} onChange={(e) => setRow(i, { price: e.target.value.replace(/[^\d.]/g, "") })} error={fields[`variants.${i}.price_paise`]} />
-                  <Field label="Per day (optional)" inputMode="numeric" hint="How many you can do daily" value={r.capacity} onChange={(e) => setRow(i, { capacity: e.target.value.replace(/\D/g, "") })} />
+                  <SelectField label="Unit" required value={r.unit} onChange={(e) => setRow(i, { unit: e.target.value })} options={(cat?.units ?? []).map((u) => ({ value: u, label: UNIT_LABELS[u] ?? u }))} error={fields[`variants.${i}.unit`]} />
+                  <Field label="Rate ₹" required inputMode="decimal" value={r.price} onChange={(e) => setRow(i, { price: e.target.value.replace(/[^\d.]/g, "") })} error={fields[`variants.${i}.price_paise`]} />
+                  <Field label="Per day" optional inputMode="numeric" hint="How many you can do daily" value={r.capacity} onChange={(e) => setRow(i, { capacity: e.target.value.replace(/\D/g, "") })} />
                 </>
               )}
               <div className="sm:pt-7">

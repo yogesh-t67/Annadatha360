@@ -1,0 +1,160 @@
+/* GENERATED from design/tokens.json by design/build-tokens.mjs. Do not edit; change tokens.json and re-run. */
+@theme {
+  /* Palette: utilities like bg-green600, text-gray700 */
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+  --color-gray50: #F7F8F6;
+  --color-gray100: #EEF0EB;
+  --color-gray200: #DCE0D6;
+  --color-gray300: #B9C0B0;
+  --color-gray400: #8A9480;
+  --color-gray600: #5B6652;
+  --color-gray700: #424B3B;
+  --color-gray800: #2B3226;
+  --color-gray900: #171C14;
+  --color-canvas: #F6F8F3;
+  --color-green50: #EBF5EC;
+  --color-green100: #CFE8D2;
+  --color-green400: #36A35E;
+  --color-green500: #2F8F4E;
+  --color-green600: #1F7A3F;
+  --color-green700: #145C2F;
+  --color-amber50: #FDF3E2;
+  --color-amber200: #EFD9AE;
+  --color-amber500: #C97F0A;
+  --color-amber700: #8A5607;
+  --color-amber800: #7A4C06;
+  --color-red50: #FBEAEA;
+  --color-red500: #C53A3A;
+  --color-red700: #8E2525;
+  --color-blue50: #E6F0F7;
+  --color-blue200: #C9DDEB;
+  --color-blue500: #2A6F9E;
+  --color-blue700: #1C4E70;
+  --color-teal50: #E1F3F2;
+  --color-teal200: #BFE3E1;
+  --color-clay50: #FBECE4;
+  --color-clay200: #F0D2C3;
+
+  /* Meaning: utilities like bg-surface-brand, text-text-muted, border-border-default */
+  --color-text-primary: #171C14;
+  --color-text-secondary: #424B3B;
+  --color-text-muted: #5B6652;
+  --color-text-tertiary: #8A9480;
+  --color-text-inverse: #FFFFFF;
+  --color-text-inverse-muted: #CFE8D2;
+  --color-text-link: #145C2F;
+  --color-text-disabled: #B9C0B0;
+  --color-surface-base: #FFFFFF;
+  --color-surface-canvas: #F6F8F3;
+  --color-surface-sunken: #F7F8F6;
+  --color-surface-raised: #FFFFFF;
+  --color-surface-brand: #1F7A3F;
+  --color-surface-brand-deep: #145C2F;
+  --color-surface-brand-bright: #36A35E;
+  --color-surface-brand-soft: #EBF5EC;
+  --color-surface-brand-mid: #CFE8D2;
+  --color-surface-overlay: rgba(23, 28, 20, 0.5);
+  --color-surface-on-brand-glass: rgba(255, 255, 255, 0.14);
+  --color-surface-on-brand-line: rgba(255, 255, 255, 0.35);
+  --color-border-default: #DCE0D6;
+  --color-border-strong: #B9C0B0;
+  --color-border-focus: #1F7A3F;
+  --color-border-brand: #CFE8D2;
+  --color-interactive-primary-bg: #1F7A3F;
+  --color-interactive-primary-bg-hover: #145C2F;
+  --color-interactive-primary-bg-pressed: #145C2F;
+  --color-interactive-primary-lip: #145C2F;
+  --color-interactive-primary-bg-disabled: #DCE0D6;
+  --color-interactive-primary-text: #FFFFFF;
+  --color-interactive-primary-text-disabled: #8A9480;
+  --color-interactive-secondary-border: #CFE8D2;
+  --color-interactive-secondary-text: #145C2F;
+  --color-interactive-soft-bg: #EBF5EC;
+  --color-interactive-ghost-text: #145C2F;
+  --color-status-success-text: #145C2F;
+  --color-status-success-bg: #EBF5EC;
+  --color-status-warning-text: #7A4C06;
+  --color-status-warning-bg: #FDF3E2;
+  --color-status-warning-border: #EFD9AE;
+  --color-status-warning-dot: #C97F0A;
+  --color-status-danger-text: #8E2525;
+  --color-status-danger-bg: #FBEAEA;
+  --color-status-info-text: #1C4E70;
+  --color-status-info-bg: #E6F0F7;
+  --color-tint-leaf-bg: #EBF5EC;
+  --color-tint-leaf-border: #CFE8D2;
+  --color-tint-sky-bg: #E6F0F7;
+  --color-tint-sky-border: #C9DDEB;
+  --color-tint-water-bg: #E1F3F2;
+  --color-tint-water-border: #BFE3E1;
+  --color-tint-sun-bg: #FDF3E2;
+  --color-tint-sun-border: #EFD9AE;
+  --color-tint-clay-bg: #FBECE4;
+  --color-tint-clay-border: #F0D2C3;
+  --color-tint-stone-bg: #EEF0EB;
+  --color-tint-stone-border: #DCE0D6;
+  --color-price-up: #1F7A3F;
+  --color-price-down: #C53A3A;
+
+  /* Short names the ERP screens use (same values as above) */
+  --color-brand-50: #EBF5EC;
+  --color-brand-100: #CFE8D2;
+  --color-brand-600: #1F7A3F;
+  --color-brand-700: #145C2F;
+  --color-brand-800: #145C2F;
+  --color-accent: #C97F0A;
+  --color-accent-soft: #FDF3E2;
+  --color-ink: #171C14;
+  --color-muted: #5B6652;
+  --color-line: #DCE0D6;
+  --color-canvas: #F6F8F3;
+  --color-surface: #FFFFFF;
+  --color-danger: #8E2525;
+  --color-danger-bg: #FBEAEA;
+  --color-warning: #7A4C06;
+  --color-warning-bg: #FDF3E2;
+  --color-success: #145C2F;
+  --color-success-bg: #EBF5EC;
+  --color-info: #1C4E70;
+  --color-info-bg: #E6F0F7;
+
+  /* Corner radius: rounded-sm/md/lg/xl */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* Type sizes: text-micro … text-hero (with matching line height) */
+  --text-micro: 0.75rem;
+  --text-micro--line-height: 1rem;
+  --text-caption: 0.875rem;
+  --text-caption--line-height: 1.25rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-label: 1.0625rem;
+  --text-label--line-height: 1.5rem;
+  --text-h2: 1.25rem;
+  --text-h2--line-height: 2rem;
+  --text-h1: 1.625rem;
+  --text-h1--line-height: 2.5rem;
+  --text-display: 1.875rem;
+  --text-display--line-height: 2.875rem;
+  --text-hero: 3.375rem;
+  --text-hero--line-height: 4.875rem;
+
+  /* Spacing named like the app (the Tailwind 4px grid already matches: xs=2, md=4, lg=6 …) */
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-section: 64px;
+
+  /* Fonts: loaded by next/font in layout.tsx, which sets these variables */
+  --font-sans: var(--font-inter), var(--font-noto-telugu), "Inter", "Noto Sans Telugu", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-baloo), "Baloo Tammudu 2", var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}

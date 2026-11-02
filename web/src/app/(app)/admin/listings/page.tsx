@@ -162,7 +162,7 @@ export default function AdminListingsPage() {
             can&apos;t bring it back themselves.
           </p>
           <TextAreaField
-            label="Reason (the vendor sees this)"
+            label="Reason (the vendor sees this)" required
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             hint="At least 10 characters, e.g. “Photo shows a different brand.”"

@@ -3,7 +3,7 @@
 import { Eye, FileText, Upload } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
-import { Button } from "@/components/ui";
+import { Button, FieldLabel } from "@/components/ui";
 import { ApiError } from "@/lib/api";
 import { type DocumentRef, uploadDocument, viewDocument } from "@/lib/vendor";
 
@@ -18,8 +18,10 @@ export function DocumentField({
   onChange,
   disabled,
   error,
+  required,
 }: {
   label: string;
+  required?: boolean;
   kind: string;
   value: DocumentRef | null;
   onChange: (doc: DocumentRef) => void;
@@ -51,9 +53,9 @@ export function DocumentField({
 
   return (
     <div className="space-y-1.5">
-      <p id={id} className="text-sm font-medium">
+      <FieldLabel id={id} required={required}>
         {label}
-      </p>
+      </FieldLabel>
       <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed border-line p-3">
         {value ? (
           <>

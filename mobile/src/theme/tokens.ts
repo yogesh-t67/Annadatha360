@@ -1,96 +1,14 @@
 /**
  * Primitive tokens. Raw values only — never imported by screens or feature
  * components directly. Consumed exclusively by theme.ts to build semantic tokens.
+ *
+ * Colours, spacing, radius, font sizes and line heights come from design/tokens.json (shared with the ERP
+ * website) through tokens.generated.ts. Change them there and run: node design/build-tokens.mjs
+ * (Display-font line heights are ~1.5x the size so Baloo Tammudu 2 glyph tops are not clipped on Android.)
  */
+import { color } from './tokens.generated';
 
-export const color = {
-  white: '#FFFFFF',
-  black: '#000000',
-
-  gray50: '#F7F8F6',
-  gray100: '#EEF0EB',
-  gray200: '#DCE0D6',
-  gray300: '#B9C0B0',
-  gray400: '#8A9480',
-  gray600: '#5B6652',
-  gray700: '#424B3B',
-  gray800: '#2B3226',
-  gray900: '#171C14',
-
-  canvas: '#F6F8F3',
-
-  green50: '#EBF5EC',
-  green100: '#CFE8D2',
-  green400: '#36A35E',
-  green500: '#2F8F4E',
-  green600: '#1F7A3F',
-  green700: '#145C2F',
-
-  amber50: '#FDF3E2',
-  amber200: '#EFD9AE',
-  amber500: '#C97F0A',
-  amber700: '#8A5607',
-  amber800: '#7A4C06',
-
-  red50: '#FBEAEA',
-  red500: '#C53A3A',
-  red700: '#8E2525',
-
-  blue50: '#E6F0F7',
-  blue200: '#C9DDEB',
-  blue500: '#2A6F9E',
-  blue700: '#1C4E70',
-
-  teal50: '#E1F3F2',
-  teal200: '#BFE3E1',
-
-  clay50: '#FBECE4',
-  clay200: '#F0D2C3',
-} as const;
-
-export const spacing = {
-  xxs: 4,
-  xs: 8,
-  sm: 12,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  xxl: 48,
-  section: 64,
-} as const;
-
-export const radius = {
-  sm: 8,
-  md: 16,
-  lg: 20,
-  xl: 24,
-  full: 999,
-} as const;
-
-export const fontSize = {
-  micro: 12,
-  caption: 14,
-  body: 16,
-  label: 17,
-  h2: 20,
-  h1: 26,
-  display: 30,
-  hero: 54,
-} as const;
-
-export const lineHeight = {
-  micro: 16,
-  caption: 20,
-  body: 24,
-  label: 24,
-  // h2/h1/display/hero use Baloo Tammudu 2 (see theme/index.ts), a rounded display font with
-  // noticeably taller vertical metrics than Inter/NotoSansTelugu -- needs a more generous
-  // line-height ratio (~1.5-1.6x) or glyph tops get clipped on Android, in every language.
-  h2: 32,
-  h1: 40,
-  display: 46,
-  hero: 78,
-} as const;
+export { color, fontSize, lineHeight, radius, spacing } from './tokens.generated';
 
 /** Font family names must match the exact export names from @expo-google-fonts packages. */
 export const fontFamily = {

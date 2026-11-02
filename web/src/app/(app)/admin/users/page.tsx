@@ -6,7 +6,7 @@ import useSWR from "swr";
 
 import { useMe } from "@/components/app-shell";
 import { Dialog } from "@/components/dialog";
-import { Alert, Badge, Button, Card, Field, PageTitle, SelectField, Spinner } from "@/components/ui";
+import { Alert, Badge, Button, Card, Field, PageTitle, SelectField, Spinner, RequiredNote } from "@/components/ui";
 import { api, ApiError, fetcher, type Schemas } from "@/lib/api";
 
 type User = Schemas["UserOut"];
@@ -156,12 +156,13 @@ export default function UsersPage() {
 
       <Dialog open={inviting} onClose={() => setInviting(false)} title="Invite a staff user">
         <form onSubmit={invite} className="space-y-4">
+        <RequiredNote />
           {formError && <Alert kind="error">{formError}</Alert>}
-          <Field label="Full name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} error={fields.full_name} />
-          <Field label="Work email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} error={fields.email} />
-          <Field label="Mobile (optional)" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} error={fields.phone} />
+          <Field label="Full name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} error={fields.full_name} />
+          <Field label="Work email" required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} error={fields.email} />
+          <Field label="Mobile" optional type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} error={fields.phone} />
           <SelectField
-            label="Role"
+            label="Role" required
             value={form.role}
             onChange={(e) => setForm({ ...form, role: e.target.value })}
             options={[

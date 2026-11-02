@@ -202,18 +202,19 @@ function DecisionDialog({
                 </label>
               )}
             </div>
-            <TextAreaField label="Note (optional, internal)" rows={2} value={text} onChange={(e) => setText(e.target.value)} />
+            <TextAreaField label="Note (internal)" optional rows={2} value={text} onChange={(e) => setText(e.target.value)} />
           </>
         )}
         {(action === "reject" || action === "suspend") && (
           <TextAreaField
+            required
             label={action === "reject" ? "What needs to change? (the vendor sees this)" : "Reason (the vendor sees this)"}
             value={text}
             onChange={(e) => setText(e.target.value)}
             hint="At least 10 characters. Be specific, e.g. “PAN card copy is blurry, upload a clear scan.”"
           />
         )}
-        {action === "reinstate" && <TextAreaField label="Note (why it's resolved)" rows={2} value={text} onChange={(e) => setText(e.target.value)} />}
+        {action === "reinstate" && <TextAreaField label="Note (why it's resolved)" required rows={2} value={text} onChange={(e) => setText(e.target.value)} />}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel

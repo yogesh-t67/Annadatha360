@@ -135,7 +135,7 @@ function SetupFlow() {
             <form onSubmit={activate} className="mt-3 space-y-3">
               {error && <Alert kind="error">{error}</Alert>}
               <Field
-                label="Code"
+                label="Code" required
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 maxLength={6}

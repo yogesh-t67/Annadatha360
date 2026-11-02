@@ -6,7 +6,7 @@ import useSWR from "swr";
 
 import { useMe } from "@/components/app-shell";
 import { Dialog } from "@/components/dialog";
-import { Alert, Badge, Button, Card, Field, PageTitle, Spinner } from "@/components/ui";
+import { Alert, Badge, Button, Card, Field, PageTitle, Spinner, RequiredNote } from "@/components/ui";
 import { api, ApiError, fetcher, type Schemas } from "@/lib/api";
 
 type Member = Schemas["TeamMemberOut"];
@@ -109,10 +109,11 @@ export default function TeamPage() {
       )}
       <Dialog open={inviting} onClose={() => setInviting(false)} title="Invite a staff member">
         <form onSubmit={invite} className="space-y-4">
+        <RequiredNote />
           {formError && <Alert kind="error">{formError}</Alert>}
-          <Field label="Full name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} error={fields.full_name} />
-          <Field label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} error={fields.email} hint="They log in with this email" />
-          <Field label="Mobile (optional)" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} error={fields.phone} />
+          <Field label="Full name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} error={fields.full_name} />
+          <Field label="Email" required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} error={fields.email} hint="They log in with this email" />
+          <Field label="Mobile" optional type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} error={fields.phone} />
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setInviting(false)}>
               Cancel

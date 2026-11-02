@@ -1,15 +1,25 @@
+"use client";
+
 import clsx from "clsx";
 import { AlertCircle, CheckCircle2, Info, Loader2, TriangleAlert } from "lucide-react";
+import Image from "next/image";
 import type React from "react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
-import { forwardRef, useId } from "react";
+import { forwardRef, useId, useState } from "react";
 
 /** Small set of building blocks used by every ERP screen. */
 
-export function Logo({ size = "md" }: { size?: "md" | "lg" }) {
+/** The Annadata 360 logo (same image as the farmer app, copied in by design/build-tokens.mjs) and name. */
+export function Logo({ size = "md", showName = true }: { size?: "md" | "lg"; showName?: boolean }) {
+  const px = size === "lg" ? 72 : 36;
   return (
-    <span className={clsx("font-semibold tracking-tight text-ink", size === "lg" ? "text-2xl" : "text-lg")}>
-      Annadata <span className="text-brand-600">360</span>
+    <span className="inline-flex items-center gap-2.5">
+      <Image src="/brand/logo.jpg" alt="Annadata 360" width={px} height={px} priority className="rounded-full" />
+      {showName && (
+        <span className={clsx("font-display font-bold leading-none tracking-tight text-brand-800", size === "lg" ? "text-display" : "text-h2")}>
+          Annadata <span className="text-accent">360</span>
+        </span>
+      )}
     </span>
   );
 }
@@ -40,24 +50,75 @@ export function Button({ variant = "primary", loading, disabled, className, chil
   );
 }
 
+/**
+ * Field label with the required / optional marker used on every ERP form:
+ * required → red "*" after the label; optional → grey "(optional)".
+ */
+export function FieldLabel({
+  htmlFor,
+  id,
+  children,
+  required,
+  optional,
+}: {
+  htmlFor?: string;
+  id?: string;
+  children: ReactNode;
+  required?: boolean;
+  optional?: boolean;
+}) {
+  const Tag = htmlFor ? "label" : "p";
+  return (
+    <Tag htmlFor={htmlFor} id={id} className="block text-sm font-medium text-ink">
+      {children}
+      {required && (
+        <span className="ml-0.5 text-danger" aria-hidden>
+          *
+        </span>
+      )}
+      {required && <span className="sr-only"> (required)</span>}
+      {optional && !required && <span className="ml-1 font-normal text-muted">(optional)</span>}
+    </Tag>
+  );
+}
+
+/** "Fields marked * are required", shown at the top of forms that have required fields. */
+export function RequiredNote() {
+  return (
+    <p className="text-xs text-muted">
+      Fields marked <span className="text-danger">*</span> are required.
+    </p>
+  );
+}
+
+/** A required field left empty after the person has been in it. */
+function useRequiredCheck(required: boolean | undefined, value: unknown) {
+  const [touched, setTouched] = useState(false);
+  const empty = value === undefined || value === null || String(value).trim() === "";
+  return { missing: !!required && touched && empty, onBlur: () => setTouched(true) };
+}
+
 type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   hint?: ReactNode;
   error?: string;
+  optional?: boolean;
 };
 
 export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
-  { label, hint, error, className, id, ...rest },
+  { label, hint, error, optional, className, id, onBlur, ...rest },
   ref,
 ) {
   const autoId = useId();
   const inputId = id ?? autoId;
+  const check = useRequiredCheck(rest.required && !rest.readOnly, rest.value);
+  error = error ?? (check.missing ? "This field is required" : undefined);
   const describedBy = error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined;
   return (
     <div className={clsx("space-y-1.5", className)}>
-      <label htmlFor={inputId} className="block text-sm font-medium text-ink">
+      <FieldLabel htmlFor={inputId} required={rest.required} optional={optional}>
         {label}
-      </label>
+      </FieldLabel>
       <input
         ref={ref}
         id={inputId}
@@ -67,6 +128,10 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
           "block h-10 w-full rounded-md border bg-surface px-3 text-sm text-ink placeholder:text-muted/70",
           error ? "border-danger" : "border-line focus:border-brand-600",
         )}
+        onBlur={(e) => {
+          check.onBlur();
+          onBlur?.(e);
+        }}
         {...rest}
       />
       {error ? (
@@ -130,18 +195,25 @@ type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   hint?: ReactNode;
   options: { value: string; label: string }[];
   placeholder?: string;
+  optional?: boolean;
 };
 
-export function SelectField({ label, error, hint, options, placeholder, className, id, ...rest }: SelectProps) {
+export function SelectField({ label, error, hint, options, placeholder, optional, className, id, onBlur, ...rest }: SelectProps) {
   const autoId = useId();
   const selectId = id ?? autoId;
+  const check = useRequiredCheck(rest.required && !rest.disabled, rest.value);
+  error = error ?? (check.missing ? "Please choose one" : undefined);
   return (
     <div className={clsx("space-y-1.5", className)}>
-      <label htmlFor={selectId} className="block text-sm font-medium">
+      <FieldLabel htmlFor={selectId} required={rest.required} optional={optional}>
         {label}
-      </label>
+      </FieldLabel>
       <select
         id={selectId}
+        onBlur={(e) => {
+          check.onBlur();
+          onBlur?.(e);
+        }}
         aria-invalid={error ? true : undefined}
         className={clsx(
           "block h-10 w-full rounded-md border bg-surface px-3 text-sm",
@@ -178,18 +250,29 @@ export function Badge({ tone = "neutral", children }: { tone?: "neutral" | "succ
   );
 }
 
-type TextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string; hint?: ReactNode };
+type TextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  label: string;
+  error?: string;
+  hint?: ReactNode;
+  optional?: boolean;
+};
 
-export function TextAreaField({ label, error, hint, className, id, ...rest }: TextAreaProps) {
+export function TextAreaField({ label, error, hint, optional, className, id, onBlur, ...rest }: TextAreaProps) {
   const autoId = useId();
   const areaId = id ?? autoId;
+  const check = useRequiredCheck(rest.required && !rest.readOnly, rest.value);
+  error = error ?? (check.missing ? "This field is required" : undefined);
   return (
     <div className={clsx("space-y-1.5", className)}>
-      <label htmlFor={areaId} className="block text-sm font-medium">
+      <FieldLabel htmlFor={areaId} required={rest.required} optional={optional}>
         {label}
-      </label>
+      </FieldLabel>
       <textarea
         id={areaId}
+        onBlur={(e) => {
+          check.onBlur();
+          onBlur?.(e);
+        }}
         rows={4}
         aria-invalid={error ? true : undefined}
         className={clsx(

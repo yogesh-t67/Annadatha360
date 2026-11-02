@@ -41,7 +41,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "tokens": "node ../design/build-tokens.mjs",
+    "tokens:check": "node ../design/build-tokens.mjs --check"
   },
   "private": true
 }

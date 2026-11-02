@@ -142,7 +142,7 @@ export default function AdminLicencesPage() {
               I opened the copy, and the number, name and dates match.
             </label>
           ) : (
-            <TextAreaField label="What's wrong? (the vendor sees this)" value={reason} onChange={(e) => setReason(e.target.value)} hint="At least 10 characters." />
+            <TextAreaField label="What's wrong? (the vendor sees this)" required value={reason} onChange={(e) => setReason(e.target.value)} hint="At least 10 characters." />
           )}
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setTarget(null)}>

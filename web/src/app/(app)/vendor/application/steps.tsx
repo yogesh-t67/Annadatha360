@@ -6,7 +6,7 @@ import Link from "next/link";
 import { type FormEvent, type ReactNode, useMemo, useState } from "react";
 
 import { DocumentField } from "@/components/document-field";
-import { Alert, Badge, Button, Field, SelectField } from "@/components/ui";
+import { Alert, Badge, Button, Field, SelectField, RequiredNote } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import {
   BUSINESS_TYPE_LABELS,
@@ -130,12 +130,13 @@ export function BusinessStep({ vendor, options, onSaved, locked }: StepProps) {
 
   return (
     <Section title="Business details" intro="As shown on your PAN card and GST certificate.">
+        <RequiredNote />
       <form onSubmit={submit} className="space-y-5" noValidate>
         {error && <Alert kind="error">{error}</Alert>}
         <fieldset disabled={locked} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <SelectField
-              label="Type"
+              label="Type" required
               value={f.kind}
               onChange={set("kind")}
               options={[
@@ -145,7 +146,7 @@ export function BusinessStep({ vendor, options, onSaved, locked }: StepProps) {
             />
             {business && (
               <SelectField
-                label="Business type"
+                label="Business type" required
                 value={f.business_type}
                 onChange={set("business_type")}
                 placeholder="Choose…"
@@ -153,18 +154,18 @@ export function BusinessStep({ vendor, options, onSaved, locked }: StepProps) {
                 error={fields.business_type}
               />
             )}
-            <Field label="Shop / business name (shown to farmers)" value={f.trade_name} onChange={set("trade_name")} error={fields.trade_name} />
-            <Field label={business ? "Legal name (as on GST certificate)" : "Name as on PAN card"} value={f.legal_name} onChange={set("legal_name")} error={fields.legal_name} />
+            <Field label="Shop / business name (shown to farmers)" required value={f.trade_name} onChange={set("trade_name")} error={fields.trade_name} />
+            <Field required label={business ? "Legal name (as on GST certificate)" : "Name as on PAN card"} value={f.legal_name} onChange={set("legal_name")} error={fields.legal_name} />
             {business && (
-              <Field label="GSTIN" placeholder="37ABCDE1234F1Z5" maxLength={15} value={f.gstin} onChange={(e) => setF({ ...f, gstin: e.target.value.toUpperCase() })} error={fields.gstin} />
+              <Field label="GSTIN" required placeholder="37ABCDE1234F1Z5" maxLength={15} value={f.gstin} onChange={(e) => setF({ ...f, gstin: e.target.value.toUpperCase() })} error={fields.gstin} />
             )}
-            <Field label="PAN" placeholder="ABCDE1234F" maxLength={10} value={f.pan} onChange={(e) => setF({ ...f, pan: e.target.value.toUpperCase() })} error={fields.pan} />
+            <Field label="PAN" required placeholder="ABCDE1234F" maxLength={10} value={f.pan} onChange={(e) => setF({ ...f, pan: e.target.value.toUpperCase() })} error={fields.pan} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Address" className="sm:col-span-2" value={f.address_line} onChange={set("address_line")} error={fields.address_line} />
-            <SelectField label="District" value={f.district_code} onChange={set("district_code")} placeholder="Choose…" options={districtOptions} error={fields.district_code} />
+            <Field label="Address" required className="sm:col-span-2" value={f.address_line} onChange={set("address_line")} error={fields.address_line} />
+            <SelectField label="District" required value={f.district_code} onChange={set("district_code")} placeholder="Choose…" options={districtOptions} error={fields.district_code} />
             <Field
-              label="Pincode"
+              label="Pincode" required
               inputMode="numeric"
               maxLength={6}
               value={f.pincode}
@@ -172,12 +173,12 @@ export function BusinessStep({ vendor, options, onSaved, locked }: StepProps) {
               error={fields.pincode}
               hint={vendor.postal_district && f.pincode === vendor.pincode ? `Post office district: ${vendor.postal_district}` : undefined}
             />
-            <Field label="Contact phone" type="tel" value={f.contact_phone} onChange={set("contact_phone")} error={fields.contact_phone} />
-            <Field label="Contact email" type="email" value={f.contact_email} onChange={set("contact_email")} error={fields.contact_email} />
+            <Field label="Contact phone" required type="tel" value={f.contact_phone} onChange={set("contact_phone")} error={fields.contact_phone} />
+            <Field label="Contact email" optional type="email" value={f.contact_email} onChange={set("contact_email")} error={fields.contact_email} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {business && <DocumentField label="GST registration certificate" kind="gst_certificate" value={gstDoc} onChange={setGstDoc} disabled={locked} />}
-            <DocumentField label="PAN card" kind="pan_card" value={panDoc} onChange={setPanDoc} disabled={locked} />
+            {business && <DocumentField required label="GST registration certificate" kind="gst_certificate" value={gstDoc} onChange={setGstDoc} disabled={locked} />}
+            <DocumentField required label="PAN card" kind="pan_card" value={panDoc} onChange={setPanDoc} disabled={locked} />
           </div>
         </fieldset>
         <SaveBar busy={busy} saved={saved} locked={locked} />
@@ -240,7 +241,7 @@ export function OfferingsStep({ vendor, options, onSaved, locked }: StepProps) {
           ))}
           {codes.includes("labour") && (
             <Field
-              label="How many workers are in your labour team?"
+              label="How many workers are in your labour team?" required
               inputMode="numeric"
               className="max-w-xs"
               value={team}
@@ -376,13 +377,14 @@ export function BankStep({ vendor, onSaved, locked }: StepProps) {
       )}
       {editing && !locked && (
         <form onSubmit={submit} className="space-y-5" noValidate>
+        <RequiredNote />
           {error && <Alert kind="error">{error}</Alert>}
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Account holder name" value={f.holder_name} onChange={(e) => setF({ ...f, holder_name: e.target.value })} error={fields.holder_name} />
-            <Field label="IFSC" placeholder="SBIN0001234" maxLength={11} value={f.ifsc} onChange={(e) => setF({ ...f, ifsc: e.target.value.toUpperCase() })} error={fields.ifsc} hint="On your cheque book or passbook" />
-            <Field label="Account number" inputMode="numeric" autoComplete="off" value={f.account_number} onChange={(e) => setF({ ...f, account_number: e.target.value.replace(/\D/g, "") })} error={fields.account_number} />
+            <Field label="Account holder name" required value={f.holder_name} onChange={(e) => setF({ ...f, holder_name: e.target.value })} error={fields.holder_name} />
+            <Field label="IFSC" required placeholder="SBIN0001234" maxLength={11} value={f.ifsc} onChange={(e) => setF({ ...f, ifsc: e.target.value.toUpperCase() })} error={fields.ifsc} hint="On your cheque book or passbook" />
+            <Field label="Account number" required inputMode="numeric" autoComplete="off" value={f.account_number} onChange={(e) => setF({ ...f, account_number: e.target.value.replace(/\D/g, "") })} error={fields.account_number} />
             <Field
-              label="Account number again"
+              label="Account number again" required
               inputMode="numeric"
               autoComplete="off"
               value={f.confirm}
@@ -390,7 +392,7 @@ export function BankStep({ vendor, onSaved, locked }: StepProps) {
               error={mismatch ? "The two numbers don't match" : undefined}
             />
           </div>
-          <DocumentField label="Cancelled cheque or bank passbook" kind="cancelled_cheque" value={cheque} onChange={setCheque} />
+          <DocumentField required label="Cancelled cheque or bank passbook" kind="cancelled_cheque" value={cheque} onChange={setCheque} />
           <div className="flex items-center gap-3 border-t border-line pt-4">
             <Button type="submit" loading={busy} disabled={!f.holder_name || !f.ifsc || !f.account_number || f.confirm !== f.account_number}>
               Save bank account
@@ -452,10 +454,11 @@ function LicenceForm({
 
   return (
     <form onSubmit={submit} className="space-y-4 rounded-md border border-line bg-canvas p-4" noValidate>
+        <RequiredNote />
       {error && <Alert kind="error">{error}</Alert>}
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
-          label="Licence"
+          label="Licence" required
           value={f.licence_type}
           onChange={(e) => {
             setF({ ...f, licence_type: e.target.value });
@@ -463,14 +466,14 @@ function LicenceForm({
           }}
           options={allowedTypes.map((t) => ({ value: t, label: options.licence_types[t] }))}
         />
-        <Field label="Licence number" value={f.number} onChange={(e) => setF({ ...f, number: e.target.value })} error={fields.number} />
-        <Field label="Issued by (optional)" placeholder="e.g. Joint Director of Agriculture, Guntur" value={f.issuing_authority} onChange={(e) => setF({ ...f, issuing_authority: e.target.value })} />
+        <Field label="Licence number" required value={f.number} onChange={(e) => setF({ ...f, number: e.target.value })} error={fields.number} />
+        <Field label="Issued by" optional placeholder="e.g. Joint Director of Agriculture, Guntur" value={f.issuing_authority} onChange={(e) => setF({ ...f, issuing_authority: e.target.value })} />
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Valid from" type="date" value={f.valid_from} onChange={(e) => setF({ ...f, valid_from: e.target.value })} />
-          <Field label="Valid until" type="date" value={f.valid_until} onChange={(e) => setF({ ...f, valid_until: e.target.value })} error={fields.valid_until} />
+          <Field label="Valid from" optional type="date" value={f.valid_from} onChange={(e) => setF({ ...f, valid_from: e.target.value })} />
+          <Field label="Valid until" required type="date" value={f.valid_until} onChange={(e) => setF({ ...f, valid_until: e.target.value })} error={fields.valid_until} />
         </div>
       </div>
-      <DocumentField label="Copy of the licence" kind={f.licence_type} value={doc} onChange={setDoc} />
+      <DocumentField required label="Copy of the licence" kind={f.licence_type} value={doc} onChange={setDoc} />
       <div className="flex gap-2">
         <Button type="submit" loading={busy} disabled={!f.licence_type || !f.number || !f.valid_until}>
           {initial ? "Save licence" : "Add licence"}

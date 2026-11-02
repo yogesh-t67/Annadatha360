@@ -47,7 +47,7 @@ export function SetPasswordForm({
       )}
       {askCurrent && (
         <Field
-          label="Current password"
+          label="Current password" required
           type="password"
           autoComplete="current-password"
           value={current}
@@ -56,7 +56,7 @@ export function SetPasswordForm({
       )}
       <div className="space-y-2">
         <Field
-          label="New password"
+          label="New password" required
           type="password"
           name="new-password"
           autoComplete="new-password"
@@ -66,7 +66,7 @@ export function SetPasswordForm({
         <PasswordMeter password={password} email={email} />
       </div>
       <Field
-        label="Type it again"
+        label="Type it again" required
         type="password"
         autoComplete="new-password"
         value={confirm}

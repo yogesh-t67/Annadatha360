@@ -7,7 +7,7 @@ import useSWR from "swr";
 
 import { Dialog } from "@/components/dialog";
 import { DocumentField } from "@/components/document-field";
-import { Alert, Badge, Button, Card, Field, PageTitle, Spinner } from "@/components/ui";
+import { Alert, Badge, Button, Card, Field, PageTitle, Spinner, RequiredNote } from "@/components/ui";
 import { api, ApiError, fetcher } from "@/lib/api";
 import { type DocumentRef, type Licence, type Vendor, viewDocument } from "@/lib/vendor";
 
@@ -56,15 +56,16 @@ function RenewDialog({ licence, onClose, onDone }: { licence: Licence | null; on
   return (
     <Dialog open={licence !== null} onClose={onClose} title={`Renew: ${licence?.licence_name.split(" (")[0] ?? ""}`}>
       <form onSubmit={submit} className="space-y-4">
+        <RequiredNote />
         <p className="text-sm text-muted">Annadata checks the new copy. Your listings stay as they are until it&apos;s approved.</p>
         {error && <Alert kind="error">{error}</Alert>}
-        <Field label="New licence number" value={f.number} onChange={(e) => setF({ ...f, number: e.target.value })} />
-        <Field label="Issued by (optional)" value={f.issuing_authority} onChange={(e) => setF({ ...f, issuing_authority: e.target.value })} />
+        <Field label="New licence number" required value={f.number} onChange={(e) => setF({ ...f, number: e.target.value })} />
+        <Field label="Issued by" optional value={f.issuing_authority} onChange={(e) => setF({ ...f, issuing_authority: e.target.value })} />
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Valid from" type="date" value={f.valid_from} onChange={(e) => setF({ ...f, valid_from: e.target.value })} />
-          <Field label="Valid until" type="date" value={f.valid_until} onChange={(e) => setF({ ...f, valid_until: e.target.value })} />
+          <Field label="Valid from" optional type="date" value={f.valid_from} onChange={(e) => setF({ ...f, valid_from: e.target.value })} />
+          <Field label="Valid until" required type="date" value={f.valid_until} onChange={(e) => setF({ ...f, valid_until: e.target.value })} />
         </div>
-        {licence && <DocumentField label="Copy of the renewed licence" kind={licence.licence_type} value={doc} onChange={setDoc} />}
+        {licence && <DocumentField required label="Copy of the renewed licence" kind={licence.licence_type} value={doc} onChange={setDoc} />}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel

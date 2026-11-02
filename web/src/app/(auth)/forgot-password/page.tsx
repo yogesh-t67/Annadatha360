@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
           <p className="mt-1 text-sm text-muted">Enter your email and we&apos;ll send you a link to choose a new one.</p>
           <form onSubmit={submit} className="mt-6 space-y-4">
             {error && <Alert kind="error">{error}</Alert>}
-            <Field label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Field label="Email" required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             <Button type="submit" loading={loading} disabled={!email} className="w-full">
               Send reset link
             </Button>

@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "api:types": "openapi-typescript openapi.json -o src/lib/api-schema.d.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "tokens": "node ../design/build-tokens.mjs",
+    "tokens:check": "node ../design/build-tokens.mjs --check"
   },
   "dependencies": {
     "clsx": "^2.1.1",

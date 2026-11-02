@@ -6,7 +6,7 @@ import Link from "next/link";
 import { type FormEvent, useCallback, useState } from "react";
 
 import { Turnstile, useTurnstileSiteKey } from "@/components/turnstile";
-import { Alert, Button, Card, Field } from "@/components/ui";
+import { Alert, Button, Card, Field, RequiredNote } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 
 const KINDS = [
@@ -66,9 +66,10 @@ export default function RegisterPage() {
       <h1 className="text-xl font-semibold">Register as a vendor</h1>
       <p className="mt-1 text-sm text-muted">Sell seeds, fertilizer and farm products, or offer rental, services and labour to farmers in Andhra Pradesh and Telangana.</p>
       <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
+        <RequiredNote />
         {error && <Alert kind="error">{error}</Alert>}
         <fieldset>
-          <legend className="mb-1.5 text-sm font-medium">You are a</legend>
+          <legend className="mb-1.5 text-sm font-medium">You are a <span className="text-danger" aria-hidden>*</span></legend>
           <div className="grid grid-cols-2 gap-2">
             {KINDS.map((k) => (
               <label
@@ -85,10 +86,10 @@ export default function RegisterPage() {
             ))}
           </div>
         </fieldset>
-        <Field label="Shop or business name" hint="Farmers will see this name" value={form.trade_name} onChange={set("trade_name")} error={errors.trade_name} />
-        <Field label="Your full name" autoComplete="name" value={form.full_name} onChange={set("full_name")} error={errors.full_name} />
-        <Field label="Mobile number" type="tel" inputMode="tel" autoComplete="tel" placeholder="98765 43210" value={form.phone} onChange={set("phone")} error={errors.phone} />
-        <Field label="Email" type="email" autoComplete="email" hint="You'll log in with this email" value={form.email} onChange={set("email")} error={errors.email} />
+        <Field label="Shop or business name" required hint="Farmers will see this name" value={form.trade_name} onChange={set("trade_name")} error={errors.trade_name} />
+        <Field label="Your full name" required autoComplete="name" value={form.full_name} onChange={set("full_name")} error={errors.full_name} />
+        <Field label="Mobile number" required type="tel" inputMode="tel" autoComplete="tel" placeholder="98765 43210" value={form.phone} onChange={set("phone")} error={errors.phone} />
+        <Field label="Email" required type="email" autoComplete="email" hint="You'll log in with this email" value={form.email} onChange={set("email")} error={errors.email} />
         {siteKey && <Turnstile siteKey={siteKey} onToken={onToken} resetKey={resetCaptcha} />}
         <Button
           type="submit"
