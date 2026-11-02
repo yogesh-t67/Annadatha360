@@ -15,11 +15,12 @@ export interface TextProps extends RNTextProps {
 /**
  * Telugu stacks vowel signs above and conjuncts below the base letter, so its glyphs are much taller
  * than Latin at the same size. Android clips anything outside the line box, so text gets a taller line
- * (~1.8x font size). Applied in every language, not only Telugu, so cards and rows keep the same size
+ * (1.7x font size: Noto Sans Telugu's tallest glyphs measure 1.48em, and Android puts ~64% of the line above
+ * the baseline, so ~1.57x is the minimum; 1.7x leaves room for stacked marks). Applied in every language, not only Telugu, so cards and rows keep the same size
  * when the farmer switches language.
  */
 function teluguLineHeight(fontSize: number, base: number): number {
-  return Math.max(base, Math.round(fontSize * 1.8));
+  return Math.max(base, Math.round(fontSize * 1.7));
 }
 
 /**

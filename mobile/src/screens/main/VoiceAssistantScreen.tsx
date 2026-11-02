@@ -265,7 +265,7 @@ export function VoiceAssistantScreen() {
         <FarmerAvatar
           state={avatarState}
           mood={avatarMood}
-          size={150}
+          size={120}
           onPress={onMicPress}
           disabled={asking}
           accessibilityLabel={status}

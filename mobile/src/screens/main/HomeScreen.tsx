@@ -67,7 +67,7 @@ export function HomeScreen() {
         <FarmerAvatar
           state={voicePhase === 'playing' ? 'speaking' : voicePhase === 'preparing' ? 'thinking' : 'idle'}
           mood="happy"
-          size={150}
+          size={120}
           onPress={() => {
             stopSpeaking();
             talk();

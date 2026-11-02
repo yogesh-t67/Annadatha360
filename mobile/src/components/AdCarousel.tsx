@@ -10,9 +10,9 @@ import { TINT_ICON_COLOR } from './IconChip';
 
 /**
  * Fixed, so every ad is the same size in both languages whatever its text length: padding + 2-line title +
- * 2-line body + call-to-action line at the app's line heights (same in Telugu and English).
+ * 1-line body + call-to-action line at the app's line heights (same in Telugu and English).
  */
-const CARD_HEIGHT = 200;
+const CARD_HEIGHT = 156;
 const AUTO_ADVANCE_MS = 5000;
 
 /**
@@ -108,7 +108,8 @@ function AdCard({ ad, width, onPress }: { ad: Ad; width: number; onPress: () => 
           flexDirection: 'row',
           alignItems: 'center',
           gap: theme.spacing.sm,
-          padding: theme.spacing.md,
+          paddingHorizontal: theme.spacing.md,
+          paddingVertical: theme.spacing.sm,
           borderRadius: theme.radius.lg,
           borderWidth: 1,
           borderColor: theme.color.tint[ad.tint].border,
@@ -136,7 +137,7 @@ function AdCard({ ad, width, onPress }: { ad: Ad; width: number; onPress: () => 
         <Text variant="label" weight="bold" numberOfLines={2}>
           {title}
         </Text>
-        <Text variant="caption" color={theme.color.text.muted} numberOfLines={2}>
+        <Text variant="caption" color={theme.color.text.muted} numberOfLines={1}>
           {t(`ads.items.${ad.id}.body`)}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xxs }}>
@@ -148,15 +149,15 @@ function AdCard({ ad, width, onPress }: { ad: Ad; width: number; onPress: () => 
       </View>
       <View
         style={{
-          width: 80,
-          height: 80,
+          width: 64,
+          height: 64,
           borderRadius: theme.radius.xl,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: theme.color.surface.base,
         }}
       >
-        <ad.icon size={40} color={accent} strokeWidth={1.75} />
+        <ad.icon size={theme.iconSize.hero} color={accent} strokeWidth={1.75} />
       </View>
     </Pressable>
   );
